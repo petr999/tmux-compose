@@ -27,6 +27,7 @@ func (runner Runner) Run() {
 	err := cmd.Obj.Run()
 	if err != nil {
 		LogFunc(err)
+		OsStruct.Exit(1)
 	}
 
 }

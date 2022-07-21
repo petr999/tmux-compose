@@ -18,6 +18,7 @@ func TestRunFatal(t *testing.T) {
 		timesLogFuncWasCalled++
 		logFuncArgs = v
 	}
+
 	timesExitWasCalled := 0
 	var exitCode int
 	exit := func(code int) {
