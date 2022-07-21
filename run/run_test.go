@@ -18,6 +18,12 @@ func TestRunFatal(t *testing.T) {
 		timesLogFuncWasCalled++
 		logFuncArgs = v
 	}
+	timesExitWasCalled := 0
+	var exitCode int
+	exit := func(code int) {
+		timesExitWasCalled++
+		exitCode = code
+	}
 
 	runner := Runner{
 		CmdNameArgs: func(dcConfigReader dc_config.Reader) (string, []string) {
@@ -29,6 +35,7 @@ func TestRunFatal(t *testing.T) {
 			Stdout: &stdout,
 			Stderr: &stderr,
 			Stdin:  &stdin,
+			Exit:   exit,
 		},
 		LogFunc: fatal,
 	}
@@ -38,7 +45,14 @@ func TestRunFatal(t *testing.T) {
 	if timesLogFuncWasCalled != 1 {
 		t.Errorf(`Log func was called %v times`, timesLogFuncWasCalled)
 	}
-	if logFuncArgs == nil {
-		t.Errorf(`Wrong argument of log function: %s`, logFuncArgs)
+	if len(logFuncArgs) != 1 {
+		t.Errorf(`Wrong argument of log function: %v`, logFuncArgs)
 	}
+	if timesExitWasCalled != 1 {
+		t.Errorf(`Exit func was called %v times`, timesExitWasCalled)
+	}
+	if exitCode != 1 {
+		t.Errorf(`Wrong argument of Exit function: %v`, exitCode)
+	}
+
 }

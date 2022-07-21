@@ -1,7 +1,9 @@
 package runexec
 
 import (
+	"fmt"
 	"io"
+	"log"
 	"os/exec"
 )
 
@@ -50,4 +52,9 @@ type OsStruct struct {
 	Stdout io.Writer
 	Stderr io.Writer
 	Stdin  io.Reader
+	Exit   func(code int)
+}
+
+func LogFunc(v ...any) {
+	log.Output(2, fmt.Sprint(v...))
 }
