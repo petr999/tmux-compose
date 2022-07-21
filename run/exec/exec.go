@@ -1,4 +1,4 @@
-package runexec
+package exec
 
 import (
 	"fmt"

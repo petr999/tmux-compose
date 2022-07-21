@@ -2,7 +2,7 @@ package run
 
 import (
 	"tmux_compose/dc_config"
-	"tmux_compose/runexec"
+	"tmux_compose/run/exec"
 )
 
 type LogFuncType func(v ...any)
@@ -11,8 +11,8 @@ type CmdNameArgsType func(dcConfigReader dc_config.Reader) (string, []string)
 type Runner struct {
 	CmdNameArgs    CmdNameArgsType
 	DcConfigReader dc_config.Reader
-	ExecStruct     runexec.ExecInterface
-	OsStruct       *runexec.OsStruct
+	ExecStruct     exec.ExecInterface
+	OsStruct       *exec.OsStruct
 	LogFunc        LogFuncType
 }
 
