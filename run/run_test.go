@@ -7,11 +7,26 @@ import (
 	"tmux_compose/run/exec"
 )
 
-func TestRunFatal(t *testing.T) {
-	var stdout bytes.Buffer
-	var stderr bytes.Buffer
-	var stdin bytes.Buffer
+func makeRunner(cmdName string, exit exec.OsStructExit, fatal LogFuncType) Runner {
+	var stdout, stderr, stdin bytes.Buffer
 
+	return Runner{
+		CmdNameArgs: func(dcConfigReader dc_config.Reader) (string, []string) {
+			return cmdName, make([]string, 0)
+		},
+		DcConfigReader: dc_config.DcConfig{},
+		ExecStruct:     exec.ExecStruct{},
+		OsStruct: &exec.OsStruct{
+			Stdout: &stdout,
+			Stderr: &stderr,
+			Stdin:  &stdin,
+			Exit:   exit,
+		},
+		LogFunc: fatal,
+	}
+}
+
+func TestRunFatal(t *testing.T) {
 	timesLogFuncWasCalled := 0
 	var logFuncArgs []any
 	fatal := func(v ...any) {
@@ -26,20 +41,7 @@ func TestRunFatal(t *testing.T) {
 		exitCode = code
 	}
 
-	runner := Runner{
-		CmdNameArgs: func(dcConfigReader dc_config.Reader) (string, []string) {
-			return `/\\nonexistent`, make([]string, 0)
-		},
-		DcConfigReader: dc_config.DcConfig{},
-		ExecStruct:     exec.ExecStruct{},
-		OsStruct: &exec.OsStruct{
-			Stdout: &stdout,
-			Stderr: &stderr,
-			Stdin:  &stdin,
-			Exit:   exit,
-		},
-		LogFunc: fatal,
-	}
+	runner := makeRunner(`/\\nonexistent`, exit, fatal)
 
 	runner.Run()
 

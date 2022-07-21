@@ -48,11 +48,13 @@ func (cmd cmdType) StdCommute(os *OsStruct) error {
 	return nil
 }
 
+type OsStructExit func(code int)
+
 type OsStruct struct {
 	Stdout io.Writer
 	Stderr io.Writer
 	Stdin  io.Reader
-	Exit   func(code int)
+	Exit   OsStructExit
 }
 
 func LogFunc(v ...any) {
