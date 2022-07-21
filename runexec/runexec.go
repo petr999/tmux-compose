@@ -1,12 +1,12 @@
-package run
+package runexec
 
 import (
 	"io"
 	"os/exec"
 )
 
-type execInterface interface {
-	GetCommand(name string, arg ...string) Cmd
+type ExecInterface interface {
+	GetCommand(name string, arg ...string) cmdType
 }
 
 type CmdInterface struct {
@@ -15,9 +15,9 @@ type CmdInterface struct {
 
 type ExecStruct struct{}
 
-func (execStruct ExecStruct) GetCommand(name string, arg ...string) Cmd {
+func (execStruct ExecStruct) GetCommand(name string, arg ...string) cmdType {
 	cmd := exec.Command(name, arg...)
-	return Cmd{
+	return cmdType{
 		cmd,
 		&cmd.Stdout,
 		&cmd.Stderr,
@@ -25,7 +25,7 @@ func (execStruct ExecStruct) GetCommand(name string, arg ...string) Cmd {
 	}
 }
 
-type Cmd struct {
+type cmdType struct {
 	Obj interface {
 		Run() error
 	}
@@ -34,11 +34,11 @@ type Cmd struct {
 	Stdin  *io.Reader
 }
 
-func (cmd Cmd) Run() error {
+func (cmd cmdType) Run() error {
 	return cmd.Obj.Run()
 }
 
-func (cmd Cmd) StdCommute(os *OsStruct) error {
+func (cmd cmdType) StdCommute(os *OsStruct) error {
 	*cmd.Stdout = os.Stdout
 	*cmd.Stderr = os.Stderr
 	*cmd.Stdin = os.Stdin

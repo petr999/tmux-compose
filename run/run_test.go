@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"testing"
 	"tmux_compose/dc_config"
+	"tmux_compose/runexec"
 )
 
 func TestRunFatal(t *testing.T) {
@@ -23,8 +24,8 @@ func TestRunFatal(t *testing.T) {
 			return `/\\nonexistent`, make([]string, 0)
 		},
 		DcConfigReader: dc_config.DcConfig{},
-		ExecStruct:     ExecStruct{},
-		OsStruct: &OsStruct{
+		ExecStruct:     runexec.ExecStruct{},
+		OsStruct: &runexec.OsStruct{
 			Stdout: &stdout,
 			Stderr: &stderr,
 			Stdin:  &stdin,
