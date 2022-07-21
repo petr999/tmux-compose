@@ -1,19 +1,20 @@
 package runner
 
 import (
-	"log"
-	"os"
-	"os/exec"
+	"tmux_compose/dc_config"
 )
 
-func Run() {
-	cmd := exec.Command(`id`)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	cmd.Stdin = os.Stdin
+type LogFunc func(v ...any)
 
-	err := cmd.Run()
+func Run(dcConfigReader dc_config.Reader, execStruct execInterface, osStruct *OsStruct, logFunc LogFunc) {
+	cmdName, args := cmdNameArgs(dcConfigReader)
+
+	cmd := execStruct.GetCommand(cmdName, args...)
+	stdCommute(&cmd, osStruct)
+
+	err := cmd.Obj.Run()
 	if err != nil {
-		log.Fatal(err)
+		logFunc(err)
 	}
+
 }
