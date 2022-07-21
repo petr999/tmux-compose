@@ -4,16 +4,24 @@ import (
 	"log"
 	"os"
 	"tmux_compose/dc_config"
-	"tmux_compose/runner"
+	"tmux_compose/run"
 )
 
-func main() {
-	osStruct := runner.OsStruct{
-		Stdout: os.Stdout,
-		Stderr: os.Stderr,
-		Stdin:  os.Stdin,
-	}
-	execStruct := runner.ExecStruct{}
+var runner run.Runner
 
-	runner.Run(dc_config.DcConfig{}, &execStruct, &osStruct, log.Fatal)
+func init() {
+	runner = run.Runner{
+		DcConfigReader: dc_config.DcConfig{},
+		ExecStruct:     run.ExecStruct{},
+		OsStruct: &run.OsStruct{
+			Stdout: os.Stdout,
+			Stderr: os.Stderr,
+			Stdin:  os.Stdin,
+		},
+		LogFunc: log.Fatal,
+	}
+}
+
+func main() {
+	runner.Run()
 }

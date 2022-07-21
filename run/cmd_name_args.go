@@ -1,4 +1,4 @@
-package runner
+package run
 
 import "tmux_compose/dc_config"
 
