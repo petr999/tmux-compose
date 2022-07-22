@@ -8,23 +8,30 @@ import (
 )
 
 type ExecInterface interface {
-	GetCommand(name string, arg ...string) cmdType
+	MakeCommand(name string, arg ...string)
+	GetCommand() *cmdType
 }
 
 type CmdInterface struct {
 	Run func() error
 }
 
-type ExecStruct struct{}
+type ExecStruct struct {
+	cmd *cmdType
+}
 
-func (execStruct ExecStruct) GetCommand(name string, arg ...string) cmdType {
+func (execStruct *ExecStruct) MakeCommand(name string, arg ...string) {
 	cmd := exec.Command(name, arg...)
-	return cmdType{
+	execStruct.cmd = &cmdType{
 		cmd,
 		&cmd.Stdout,
 		&cmd.Stderr,
 		&cmd.Stdin,
 	}
+}
+
+func (execStruct *ExecStruct) GetCommand() *cmdType {
+	return execStruct.cmd
 }
 
 type cmdType struct {
@@ -36,11 +43,11 @@ type cmdType struct {
 	Stdin  *io.Reader
 }
 
-func (cmd cmdType) Run() error {
+func (cmd *cmdType) Run() error {
 	return cmd.Obj.Run()
 }
 
-func (cmd cmdType) StdCommute(os *OsStruct) error {
+func (cmd *cmdType) StdCommute(os *OsStruct) error {
 	*cmd.Stdout = os.Stdout
 	*cmd.Stderr = os.Stderr
 	*cmd.Stdin = os.Stdin

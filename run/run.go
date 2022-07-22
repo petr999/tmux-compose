@@ -16,12 +16,13 @@ type Runner struct {
 	LogFunc        LogFuncType
 }
 
-func (runner Runner) Run() {
+func (runner *Runner) Run() {
 	DcConfigReader, ExecStruct, OsStruct, LogFunc := runner.DcConfigReader, runner.ExecStruct, runner.OsStruct, runner.LogFunc
 	CmdNameArgs := runner.CmdNameArgs
 	cmdName, args := CmdNameArgs(DcConfigReader)
 
-	cmd := ExecStruct.GetCommand(cmdName, args...)
+	ExecStruct.MakeCommand(cmdName, args...)
+	cmd := ExecStruct.GetCommand()
 	cmd.StdCommute(OsStruct)
 
 	err := cmd.Obj.Run()
