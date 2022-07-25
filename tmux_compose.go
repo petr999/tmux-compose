@@ -16,7 +16,7 @@ func init() {
 		CmdNameArgs:    cmd_name_args.CmdNameArgs,
 		DcConfigReader: dc_config.DcConfig{},
 		ExecStruct:     &exec.ExecStruct{},
-		OsStruct:       &exec.OsStruct{Stdout: os.Stdout, Stderr: os.Stderr, Stdin: os.Stdin, Exit: os.Exit}, // Getenv: os.Getenv},
+		OsStruct:       &exec.OsStruct{Stdout: os.Stdout, Stderr: os.Stderr, Stdin: os.Stdin, Exit: os.Exit, Getenv: os.Getenv},
 		LogFunc:        exec.LogFunc,
 	}
 }

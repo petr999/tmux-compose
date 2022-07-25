@@ -15,9 +15,9 @@ import (
 const loremString = `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin facilisis mi sapien, vitae accumsan libero malesuada in. Suspendisse sodales finibus sagittis. Proin et augue vitae dui scelerisque imperdiet. Suspendisse et pulvinar libero. Vestibulum id porttitor augue. Vivamus lobortis lacus et libero ultricies accumsan. Donec non feugiat enim, nec tempus nunc. Mauris rutrum, diam euismod elementum ultricies, purus tellus faucibus augue, sit amet tristique diam purus eu arcu. Integer elementum urna non justo fringilla fermentum. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Quisque sollicitudin elit in metus imperdiet, et gravida tortor hendrerit. In volutpat tellus quis sapien rutrum, sit amet cursus augue ultricies. Morbi tincidunt arcu id commodo mollis. Aliquam laoreet purus sed justo pulvinar, quis porta risus lobortis. In commodo leo id porta mattis.`
 
 type stdHandlesType struct {
-	Stdout io.Writer
-	Stderr io.Writer
-	Stdin  io.Reader
+	Stdout *bytes.Buffer
+	Stderr *bytes.Buffer
+	Stdin  *bytes.Buffer
 }
 
 func makeRunnerCommon() (*stdHandlesType, *Runner) {
@@ -253,14 +253,39 @@ func TestCmdRunWasCalledWithArgs(t *testing.T) {
 	}
 }
 
-// func TestStdoutByConfig(t *testing.T) {
-// 	osStruct := exec.OsStruct{
-// 		Getenv: func(key string) string {
-// 			if key == DryRunEnvVarName {
-// 				return `1`
-// 			}
-// 			return ``
-// 		},
-// 	}
-// 	runner := makeRunner(Runner{OsStruct: osStruct})
-// }
+func makeRunnerDry(Getenv func(key string) string) (*stdHandlesType, *Runner) {
+	var stdoutBuf, stderrBuf, stdinBuf bytes.Buffer
+	stdout, stderr, stdin := &stdoutBuf, &stderrBuf, &stdinBuf
+	osStruct := exec.OsStruct{
+		Stdout: stdout,
+		Stderr: stderr,
+		Stdin:  stdin,
+		Exit:   func(code int) {},
+		Getenv: Getenv,
+	}
+
+	stdHandles, runner := makeRunnerCommon()
+
+	runner.OsStruct = &osStruct
+	return stdHandles, runner
+}
+
+func TestStdoutByConfig(t *testing.T) {
+
+	Getenv := func(key string) string {
+		if key == DryRunEnvVarName {
+			return `1`
+		}
+		return ``
+	}
+	stdHandles, runner := makeRunnerDry(Getenv)
+
+	stdout, _, _ := stdHandles.Stdout, stdHandles.Stderr, stdHandles.Stdin
+
+	runner.Run()
+
+	if stdout.Len() == 0 {
+		t.Errorf("Empty stdout: '%v'", stdout)
+	}
+
+}
