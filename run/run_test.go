@@ -41,14 +41,21 @@ func makeRunnerCommon() (*stdHandlesType, *Runner) {
 
 }
 
+func makeRunner(tle *testLogfuncExitType) (stdHandles *stdHandlesType, runner *Runner) {
+	stdHandles, runner = makeRunnerCommon()
+
+	runner.OsStruct.Exit = *tle.exit
+	runner.LogFunc = *tle.fatal
+
+	return stdHandles, runner
+}
+
 func makeRunnerForFatal(cmdName string, tle *testLogfuncExitType) (*stdHandlesType, *Runner) {
-	stdHandles, runner := makeRunnerCommon()
+	stdHandles, runner := makeRunner(tle)
 
 	runner.CmdNameArgs = func(dcConfigReader dc_config.Reader) (string, []string) {
 		return cmdName, make([]string, 0)
 	}
-	runner.OsStruct.Exit = *tle.exit
-	runner.LogFunc = *tle.fatal
 
 	return stdHandles, runner
 }
@@ -98,9 +105,7 @@ func (execStructDouble *ExecStructDouble) SetCommand(cmd *exec.CmdType) {
 }
 
 func makeRunnerForCmdRun(osExecCmdRunDouble *OsExecCmdRunDouble, tle *testLogfuncExitType) *Runner {
-	_, runner := makeRunnerCommon()
-	runner.LogFunc = *tle.fatal
-	runner.OsStruct.Exit = *tle.exit
+	_, runner := makeRunner(tle)
 
 	runner.ExecStruct = &ExecStructDouble{
 		osExecCmdRunDouble: osExecCmdRunDouble,
@@ -295,9 +300,7 @@ func makeRunnerDry(Getenv func(key string) string, tle *testLogfuncExitType) (*s
 		Getenv: Getenv,
 	}
 
-	stdHandles, runner := makeRunnerCommon()
-	runner.OsStruct.Exit = *tle.exit
-	runner.LogFunc = *tle.fatal
+	stdHandles, runner := makeRunner(tle)
 
 	runner.OsStruct = &osStruct
 	return stdHandles, runner
