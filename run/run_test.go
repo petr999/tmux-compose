@@ -41,10 +41,6 @@ func makeRunnerCommon() (*stdHandlesType, *Runner) {
 
 }
 
-// func makeRunner(runner *Runner) (*stdHandlesType, *Runner) {
-
-// }
-
 func makeRunnerForFatal(cmdName string, exit exec.OsStructExit, fatal LogFuncType) (*stdHandlesType, *Runner) {
 	stdHandles, runner := makeRunnerCommon()
 
@@ -168,14 +164,9 @@ func TestRunFatalAndStdHandles(t *testing.T) {
 func TestCmdRunWasCalled(t *testing.T) {
 
 	osExecCmdRunDouble := &OsExecCmdRunDouble{}
-	// fmt.Printf(`Test osExecCmdRunDouble: '%p'`, osExecCmdRunDouble)
 	runner := makeRunnerForCmdRun(osExecCmdRunDouble)
 
 	runner.Run()
-
-	// fmt.Printf(`Test osExecCmdRunDouble: '%p'`, osExecCmdRunDouble)
-	// fmt.Printf(`Test GetCommand(): '%p'`, runner.ExecStruct.GetCommand())
-	// fmt.Printf(`Test GetCommand().Obj: '%p'`, runner.ExecStruct.GetCommand().Obj)
 
 	if osExecCmdRunDouble.timesOsExecCmdRunWasCalled != 1 {
 		t.Errorf(`os/exec.Command().Run() was called not once but '%v' times`, osExecCmdRunDouble.timesOsExecCmdRunWasCalled)
