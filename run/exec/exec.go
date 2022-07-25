@@ -1,7 +1,6 @@
 package exec
 
 import (
-	"fmt"
 	"io"
 	"log"
 	"os/exec"
@@ -71,6 +70,9 @@ type OsStruct struct {
 	Getenv OsStructGetEnv
 }
 
-func LogFunc(v ...any) {
-	log.Output(2, fmt.Sprint(v...))
+func GetLogFunc(writer io.Writer) func(s string) {
+	logger := log.New(writer, "", 0)
+	return func(s string) {
+		logger.Output(2, s)
+	}
 }

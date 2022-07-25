@@ -2,7 +2,6 @@ package run
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"math/rand"
 	"reflect"
@@ -121,7 +120,7 @@ func makeRunnerForCmdRun(osExecCmdRunDouble *OsExecCmdRunDouble, tle *testLogfun
 type testLogfuncExitType struct {
 	timesLogFuncWasCalled *int
 	logFuncArgs           *[]any
-	fatal                 func(v ...any)
+	fatal                 func(s string)
 	timesExitWasCalled    *int
 	exitCode              *int
 	exit                  func(code int)
@@ -147,9 +146,9 @@ func (tle *testLogfuncExitType) PerformTestWascalledsAndArgs(t *testing.T, tlfwc
 func getTestLogfuncExitType() testLogfuncExitType {
 	timesLogFuncWasCalled := 0
 	var logFuncArgs []any
-	var fatal LogFuncType = func(v ...any) {
+	var fatal LogFuncType = func(s string) {
 		timesLogFuncWasCalled++
-		logFuncArgs = v
+		logFuncArgs = append(logFuncArgs, s)
 	}
 
 	timesExitWasCalled := 0
@@ -303,11 +302,9 @@ func makeRunnerDry(Getenv func(key string) string, tle *testLogfuncExitType) (*s
 
 	stdHandles, runner := makeRunner(tle)
 	fatal := runner.LogFunc
-	runner.LogFunc = func(v ...any) {
-		for _, vElem := range v {
-			stdHandles.Stderr.WriteString(fmt.Sprint(vElem))
-		}
-		fatal(v...)
+	runner.LogFunc = func(s string) {
+		stdHandles.Stderr.WriteString(s)
+		fatal(s)
 	}
 
 	runner.OsStruct = &osStruct

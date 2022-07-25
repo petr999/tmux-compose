@@ -1,13 +1,14 @@
 package run
 
 import (
+	"fmt"
 	"tmux_compose/dc_config"
 	"tmux_compose/run/exec"
 )
 
 const DryRunEnvVarName = `TMUX_COMPOSE_DRY_RUN`
 
-type LogFuncType func(v ...any)
+type LogFuncType func(s string)
 type CmdNameArgsType func(dcConfigReader dc_config.Reader) (string, []string)
 
 type Runner struct {
@@ -30,7 +31,7 @@ func (runner *Runner) Run() {
 	err := cmd.Run()
 
 	if err != nil {
-		LogFunc(err)
+		LogFunc(fmt.Sprintf("%v,\n", err))
 		OsStruct.Exit(1)
 	}
 

@@ -12,12 +12,14 @@ var runner run.Runner
 
 func init() {
 
+	osStruct := &exec.OsStruct{Stdout: os.Stdout, Stderr: os.Stderr, Stdin: os.Stdin, Exit: os.Exit, Getenv: os.Getenv}
+
 	runner = run.Runner{
 		CmdNameArgs:    cmd_name_args.CmdNameArgs,
 		DcConfigReader: dc_config.DcConfig{},
 		ExecStruct:     &exec.ExecStruct{},
-		OsStruct:       &exec.OsStruct{Stdout: os.Stdout, Stderr: os.Stderr, Stdin: os.Stdin, Exit: os.Exit, Getenv: os.Getenv},
-		LogFunc:        exec.LogFunc,
+		OsStruct:       osStruct,
+		LogFunc:        exec.GetLogFunc(osStruct.Stderr),
 	}
 }
 
