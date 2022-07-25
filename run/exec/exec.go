@@ -9,7 +9,8 @@ import (
 
 type ExecInterface interface {
 	MakeCommand(name string, arg ...string)
-	GetCommand() *cmdType
+	GetCommand() *CmdType
+	SetCommand(*CmdType)
 }
 
 type CmdInterface struct {
@@ -17,24 +18,28 @@ type CmdInterface struct {
 }
 
 type ExecStruct struct {
-	cmd *cmdType
+	cmd *CmdType
 }
 
 func (execStruct *ExecStruct) MakeCommand(name string, arg ...string) {
 	cmd := exec.Command(name, arg...)
-	execStruct.cmd = &cmdType{
+	execStruct.SetCommand(&CmdType{
 		cmd,
 		&cmd.Stdout,
 		&cmd.Stderr,
 		&cmd.Stdin,
-	}
+	})
 }
 
-func (execStruct *ExecStruct) GetCommand() *cmdType {
+func (execStruct *ExecStruct) GetCommand() *CmdType {
 	return execStruct.cmd
 }
 
-type cmdType struct {
+func (execStruct *ExecStruct) SetCommand(cmd *CmdType) {
+	execStruct.cmd = cmd
+}
+
+type CmdType struct {
 	Obj interface {
 		Run() error
 	}
@@ -43,25 +48,27 @@ type cmdType struct {
 	Stdin  *io.Reader
 }
 
-func (cmd *cmdType) Run() error {
+func (cmd *CmdType) Run() error {
 	return cmd.Obj.Run()
 }
 
-func (cmd *cmdType) StdCommute(os *OsStruct) error {
-	*cmd.Stdout = os.Stdout
-	*cmd.Stderr = os.Stderr
-	*cmd.Stdin = os.Stdin
+func (Cmd *CmdType) StdCommute(os *OsStruct) error {
+	*Cmd.Stdout = os.Stdout
+	*Cmd.Stderr = os.Stderr
+	*Cmd.Stdin = os.Stdin
 
 	return nil
 }
 
 type OsStructExit func(code int)
+type OsStructGetEnv func(key string) string
 
 type OsStruct struct {
 	Stdout io.Writer
 	Stderr io.Writer
 	Stdin  io.Reader
 	Exit   OsStructExit
+	Getenv OsStructGetEnv
 }
 
 func LogFunc(v ...any) {

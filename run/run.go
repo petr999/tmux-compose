@@ -5,6 +5,8 @@ import (
 	"tmux_compose/run/exec"
 )
 
+const DryRunEnvVarName = `TMUX_COMPOSE_DRY_RUN`
+
 type LogFuncType func(v ...any)
 type CmdNameArgsType func(dcConfigReader dc_config.Reader) (string, []string)
 
@@ -25,7 +27,8 @@ func (runner *Runner) Run() {
 	cmd := ExecStruct.GetCommand()
 	cmd.StdCommute(OsStruct)
 
-	err := cmd.Obj.Run()
+	err := cmd.Run()
+
 	if err != nil {
 		LogFunc(err)
 		OsStruct.Exit(1)
