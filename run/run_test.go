@@ -2,6 +2,7 @@ package run
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"math/rand"
 	"reflect"
@@ -44,8 +45,8 @@ func makeRunnerCommon() (*stdHandlesType, *Runner) {
 func makeRunner(tle *testLogfuncExitType) (stdHandles *stdHandlesType, runner *Runner) {
 	stdHandles, runner = makeRunnerCommon()
 
-	runner.OsStruct.Exit = *tle.exit
-	runner.LogFunc = *tle.fatal
+	runner.OsStruct.Exit = tle.exit
+	runner.LogFunc = tle.fatal
 
 	return stdHandles, runner
 }
@@ -120,10 +121,10 @@ func makeRunnerForCmdRun(osExecCmdRunDouble *OsExecCmdRunDouble, tle *testLogfun
 type testLogfuncExitType struct {
 	timesLogFuncWasCalled *int
 	logFuncArgs           *[]any
-	fatal                 *func(v ...any)
+	fatal                 func(v ...any)
 	timesExitWasCalled    *int
 	exitCode              *int
-	exit                  *func(code int)
+	exit                  func(code int)
 }
 
 func (tle *testLogfuncExitType) PerformTestWascalledsAndArgs(t *testing.T, tlfwcExpected int, lfaExpected []any, tewcExpected int, exitCodeExpected int) {
@@ -146,7 +147,7 @@ func (tle *testLogfuncExitType) PerformTestWascalledsAndArgs(t *testing.T, tlfwc
 func getTestLogfuncExitType() testLogfuncExitType {
 	timesLogFuncWasCalled := 0
 	var logFuncArgs []any
-	fatal := func(v ...any) {
+	var fatal LogFuncType = func(v ...any) {
 		timesLogFuncWasCalled++
 		logFuncArgs = v
 	}
@@ -160,10 +161,10 @@ func getTestLogfuncExitType() testLogfuncExitType {
 	return testLogfuncExitType{
 		timesLogFuncWasCalled: &timesLogFuncWasCalled,
 		logFuncArgs:           &logFuncArgs,
-		fatal:                 &fatal,
+		fatal:                 fatal,
 		timesExitWasCalled:    &timesExitWasCalled,
 		exitCode:              &exitCode,
-		exit:                  &exit,
+		exit:                  exit,
 	}
 }
 
@@ -301,6 +302,13 @@ func makeRunnerDry(Getenv func(key string) string, tle *testLogfuncExitType) (*s
 	}
 
 	stdHandles, runner := makeRunner(tle)
+	fatal := runner.LogFunc
+	runner.LogFunc = func(v ...any) {
+		for _, vElem := range v {
+			stdHandles.Stderr.WriteString(fmt.Sprint(vElem))
+		}
+		fatal(v...)
+	}
 
 	runner.OsStruct = &osStruct
 	return stdHandles, runner
@@ -318,7 +326,7 @@ func TestStdoutByConfig(t *testing.T) {
 	tle := getTestLogfuncExitType()
 	stdHandles, runner := makeRunnerDry(Getenv, &tle)
 
-	stdout, _, _ := stdHandles.Stdout, stdHandles.Stderr, stdHandles.Stdin
+	stdout, stderr, _ := stdHandles.Stdout, stdHandles.Stderr, stdHandles.Stdin
 
 	runner.Run()
 
@@ -326,6 +334,10 @@ func TestStdoutByConfig(t *testing.T) {
 
 	if stdout.Len() == 0 {
 		t.Errorf("Empty stdout: '%v'", stdout)
+	}
+
+	if stderr.Len() != 0 {
+		t.Errorf("Non-empty stderr: '%v'", stderr)
 	}
 
 }
