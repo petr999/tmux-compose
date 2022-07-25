@@ -41,14 +41,14 @@ func makeRunnerCommon() (*stdHandlesType, *Runner) {
 
 }
 
-func makeRunnerForFatal(cmdName string, exit exec.OsStructExit, fatal LogFuncType) (*stdHandlesType, *Runner) {
+func makeRunnerForFatal(cmdName string, tle *testLogfuncExitType) (*stdHandlesType, *Runner) {
 	stdHandles, runner := makeRunnerCommon()
 
 	runner.CmdNameArgs = func(dcConfigReader dc_config.Reader) (string, []string) {
 		return cmdName, make([]string, 0)
 	}
-	runner.OsStruct.Exit = exit
-	runner.LogFunc = fatal
+	runner.OsStruct.Exit = *tle.exit
+	runner.LogFunc = *tle.fatal
 
 	return stdHandles, runner
 }
@@ -97,8 +97,10 @@ func (execStructDouble *ExecStructDouble) SetCommand(cmd *exec.CmdType) {
 	execStructDouble.cmd = cmd
 }
 
-func makeRunnerForCmdRun(osExecCmdRunDouble *OsExecCmdRunDouble) *Runner {
+func makeRunnerForCmdRun(osExecCmdRunDouble *OsExecCmdRunDouble, tle *testLogfuncExitType) *Runner {
 	_, runner := makeRunnerCommon()
+	runner.LogFunc = *tle.fatal
+	runner.OsStruct.Exit = *tle.exit
 
 	runner.ExecStruct = &ExecStructDouble{
 		osExecCmdRunDouble: osExecCmdRunDouble,
@@ -110,7 +112,33 @@ func makeRunnerForCmdRun(osExecCmdRunDouble *OsExecCmdRunDouble) *Runner {
 	return runner
 }
 
-func TestRunFatalAndStdHandles(t *testing.T) {
+type testLogfuncExitType struct {
+	timesLogFuncWasCalled *int
+	logFuncArgs           *[]any
+	fatal                 *func(v ...any)
+	timesExitWasCalled    *int
+	exitCode              *int
+	exit                  *func(code int)
+}
+
+func (tle *testLogfuncExitType) PerformTestWascalledsAndArgs(t *testing.T, tlfwcExpected int, lfaExpected []any, tewcExpected int, exitCodeExpected int) {
+
+	if *tle.timesLogFuncWasCalled != tlfwcExpected {
+		t.Errorf(`Log func was called %v times`, *tle.timesLogFuncWasCalled)
+	}
+	if len(*tle.logFuncArgs) != len(lfaExpected) {
+		t.Errorf(`Wrong argument of log function: %v`, *tle.logFuncArgs)
+	}
+	if *tle.timesExitWasCalled != tewcExpected {
+		t.Errorf(`Exit func was called %v times`, *tle.timesExitWasCalled)
+	}
+	if *tle.exitCode != exitCodeExpected {
+		t.Errorf(`Wrong argument of Exit function: %v`, *tle.exitCode)
+	}
+
+}
+
+func getTestLogfuncExitType() testLogfuncExitType {
 	timesLogFuncWasCalled := 0
 	var logFuncArgs []any
 	fatal := func(v ...any) {
@@ -124,23 +152,23 @@ func TestRunFatalAndStdHandles(t *testing.T) {
 		timesExitWasCalled++
 		exitCode = code
 	}
+	return testLogfuncExitType{
+		timesLogFuncWasCalled: &timesLogFuncWasCalled,
+		logFuncArgs:           &logFuncArgs,
+		fatal:                 &fatal,
+		timesExitWasCalled:    &timesExitWasCalled,
+		exitCode:              &exitCode,
+		exit:                  &exit,
+	}
+}
 
-	stdHandles, runner := makeRunnerForFatal(`/\\nonexistent`, exit, fatal)
+func TestRunFatalAndStdHandles(t *testing.T) {
+	tle := getTestLogfuncExitType()
+	stdHandles, runner := makeRunnerForFatal(`/\\nonexistent`, &tle)
 
 	runner.Run()
 
-	if timesLogFuncWasCalled != 1 {
-		t.Errorf(`Log func was called %v times`, timesLogFuncWasCalled)
-	}
-	if len(logFuncArgs) != 1 {
-		t.Errorf(`Wrong argument of log function: %v`, logFuncArgs)
-	}
-	if timesExitWasCalled != 1 {
-		t.Errorf(`Exit func was called %v times`, timesExitWasCalled)
-	}
-	if exitCode != 1 {
-		t.Errorf(`Wrong argument of Exit function: %v`, exitCode)
-	}
+	tle.PerformTestWascalledsAndArgs(t, 1, []any{`some error`}, 1, 1)
 
 	cmd := runner.ExecStruct.GetCommand()
 	if cmd == nil {
@@ -162,11 +190,13 @@ func TestRunFatalAndStdHandles(t *testing.T) {
 }
 
 func TestCmdRunWasCalled(t *testing.T) {
-
+	tle := getTestLogfuncExitType()
 	osExecCmdRunDouble := &OsExecCmdRunDouble{}
-	runner := makeRunnerForCmdRun(osExecCmdRunDouble)
+	runner := makeRunnerForCmdRun(osExecCmdRunDouble, &tle)
 
 	runner.Run()
+
+	tle.PerformTestWascalledsAndArgs(t, 0, []any{}, 0, 0)
 
 	if osExecCmdRunDouble.timesOsExecCmdRunWasCalled != 1 {
 		t.Errorf(`os/exec.Command().Run() was called not once but '%v' times`, osExecCmdRunDouble.timesOsExecCmdRunWasCalled)
@@ -215,9 +245,7 @@ func getLongArgs(amount int) []string {
 }
 
 func TestCmdRunWasCalledWithArgs(t *testing.T) {
-
 	const amount = 55
-
 	longArgs := getLongArgs(amount)
 
 	// name, args
@@ -233,12 +261,15 @@ func TestCmdRunWasCalledWithArgs(t *testing.T) {
 	for _, cmdArgs := range cmdsArgs {
 		for name, args := range cmdArgs {
 			osExecCmdRunDouble := &OsExecCmdRunDouble{}
-			runner := makeRunnerForCmdRun(osExecCmdRunDouble)
+			tle := getTestLogfuncExitType()
+			runner := makeRunnerForCmdRun(osExecCmdRunDouble, &tle)
 			runner.CmdNameArgs = func(dcConfigReader dc_config.Reader) (string, []string) {
 				return name, args
 			}
 
 			runner.Run()
+
+			tle.PerformTestWascalledsAndArgs(t, 0, []any{}, 0, 0)
 
 			if osExecCmdRunDouble.timesOsExecCmdRunWasCalled != 1 {
 				t.Errorf(`os/exec.Command().Run() was called not once but '%v' times`, osExecCmdRunDouble.timesOsExecCmdRunWasCalled)
@@ -253,7 +284,7 @@ func TestCmdRunWasCalledWithArgs(t *testing.T) {
 	}
 }
 
-func makeRunnerDry(Getenv func(key string) string) (*stdHandlesType, *Runner) {
+func makeRunnerDry(Getenv func(key string) string, tle *testLogfuncExitType) (*stdHandlesType, *Runner) {
 	var stdoutBuf, stderrBuf, stdinBuf bytes.Buffer
 	stdout, stderr, stdin := &stdoutBuf, &stderrBuf, &stdinBuf
 	osStruct := exec.OsStruct{
@@ -265,6 +296,8 @@ func makeRunnerDry(Getenv func(key string) string) (*stdHandlesType, *Runner) {
 	}
 
 	stdHandles, runner := makeRunnerCommon()
+	runner.OsStruct.Exit = *tle.exit
+	runner.LogFunc = *tle.fatal
 
 	runner.OsStruct = &osStruct
 	return stdHandles, runner
@@ -278,11 +311,15 @@ func TestStdoutByConfig(t *testing.T) {
 		}
 		return ``
 	}
-	stdHandles, runner := makeRunnerDry(Getenv)
+
+	tle := getTestLogfuncExitType()
+	stdHandles, runner := makeRunnerDry(Getenv, &tle)
 
 	stdout, _, _ := stdHandles.Stdout, stdHandles.Stderr, stdHandles.Stdin
 
 	runner.Run()
+
+	tle.PerformTestWascalledsAndArgs(t, 0, []any{}, 0, 0)
 
 	if stdout.Len() == 0 {
 		t.Errorf("Empty stdout: '%v'", stdout)
