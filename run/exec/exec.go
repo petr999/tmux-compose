@@ -36,33 +36,36 @@ type ExecStruct struct {
 	cmd *CmdType
 }
 
-type dryRunCommand struct {
-}
+type cmdObjDryRun struct{}
 
-func (cmd *dryRunCommand) Run() error {
+func (cmd *cmdObjDryRun) Run() error {
 	return nil
 }
 
 func (execStruct *ExecStruct) MakeCommand(dryRun *MakeCommandDryRunType,
 	nameArgs NameArgsType) {
-	// cmd & CmdType{
-	// 	&cmd.Stdout,
-	// 	&cmd.Stderr,
-	// 	&cmd.Stdin,
-	// }
 
-	// func(name, arg...){
+	var execStructCmd *CmdType
+	if len(dryRun.DryRun) > 0 {
+		cmd := &cmdObjDryRun{}
+		execStructCmd = &CmdType{
+			Obj:    cmd,
+			Stdout: &dryRun.OsStruct.Stdout,
+			Stderr: &dryRun.OsStruct.Stderr,
+			Stdin:  &dryRun.OsStruct.Stdin,
+		}
+	} else {
+		cmd := exec.Command(nameArgs.Name, nameArgs.Args...)
+		execStructCmd = &CmdType{
+			Obj:    cmd,
+			Stdout: &cmd.Stdout,
+			Stderr: &cmd.Stderr,
+			Stdin:  &cmd.Stdin,
+		}
+	}
 
 	// }
-	// if len(dryRun) == 0 {
-	cmd := exec.Command(nameArgs.Name, nameArgs.Args...)
-	// }
-	execStruct.SetCommand(&CmdType{
-		cmd,
-		&cmd.Stdout,
-		&cmd.Stderr,
-		&cmd.Stdin,
-	})
+	execStruct.SetCommand(execStructCmd)
 }
 
 func (execStruct *ExecStruct) GetCommand() *CmdType {
