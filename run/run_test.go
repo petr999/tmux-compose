@@ -131,7 +131,7 @@ type testLogfuncExitType struct {
 	exit                  func(code int)
 }
 
-func (tle *testLogfuncExitType) PerformTestWascalledsAndArgs(t *testing.T, tlfwcExpected int, lfaExpected []any, tewcExpected int, exitCodeExpected int) {
+func (tle *testLogfuncExitType) LogfuncAndExitTestWascalledsAndArgs(t *testing.T, tlfwcExpected int, lfaExpected []any, tewcExpected int, exitCodeExpected int) {
 
 	if *tle.timesLogFuncWasCalled != tlfwcExpected {
 		t.Errorf(`Log func was called %v times`, *tle.timesLogFuncWasCalled)
@@ -178,7 +178,7 @@ func TestRunFatalAndStdHandles(t *testing.T) {
 
 	runner.Run()
 
-	tle.PerformTestWascalledsAndArgs(t, 1, []any{`some error`}, 1, 1)
+	tle.LogfuncAndExitTestWascalledsAndArgs(t, 1, []any{`some error`}, 1, 1)
 
 	cmd := runner.ExecStruct.GetCommand()
 	if cmd == nil {
@@ -206,7 +206,7 @@ func TestCmdRunWasCalled(t *testing.T) {
 
 	runner.Run()
 
-	tle.PerformTestWascalledsAndArgs(t, 0, []any{}, 0, 0)
+	tle.LogfuncAndExitTestWascalledsAndArgs(t, 0, []any{}, 0, 0)
 
 	if osExecCmdRunDouble.timesOsExecCmdRunWasCalled != 1 {
 		t.Errorf(`os/exec.Command().Run() was called not once but '%v' times`, osExecCmdRunDouble.timesOsExecCmdRunWasCalled)
@@ -279,7 +279,7 @@ func TestCmdRunWasCalledWithArgs(t *testing.T) {
 
 			runner.Run()
 
-			tle.PerformTestWascalledsAndArgs(t, 0, []any{}, 0, 0)
+			tle.LogfuncAndExitTestWascalledsAndArgs(t, 0, []any{}, 0, 0)
 
 			if osExecCmdRunDouble.timesOsExecCmdRunWasCalled != 1 {
 				t.Errorf(`os/exec.Command().Run() was called not once but '%v' times`, osExecCmdRunDouble.timesOsExecCmdRunWasCalled)
@@ -331,7 +331,7 @@ func TestStdoutByConfig(t *testing.T) {
 
 		runner.Run()
 
-		tle.PerformTestWascalledsAndArgs(t, 0, []any{}, 0, 0)
+		tle.LogfuncAndExitTestWascalledsAndArgs(t, 0, []any{}, 0, 0)
 
 		if stdout.Len() == 0 {
 			t.Errorf("Empty stdout: '%v'", stdout)
@@ -355,7 +355,6 @@ func TestStdoutByConfig(t *testing.T) {
 }
 
 func TestStdoutByCommand(t *testing.T) {
-
 	namesArgs := [][][]string{{{`docker-compose`}, {`up`}},
 		{{`docker-compose`}, {`up`, `-d`}}}
 	for _, nameArgs := range namesArgs {
@@ -367,12 +366,12 @@ func TestStdoutByCommand(t *testing.T) {
 		tle := getTestLogfuncExitType()
 
 		stdHandles, runner := makeRunnerDry(dryGetenv, &tle)
-		stdout, stderr, _ := stdHandles.Stdout, stdHandles.Stderr, stdHandles.Stdin
+		stdout, stderr := stdHandles.Stdout, stdHandles.Stderr
 		runner.CmdNameArgs = cmdNameArgs
 
 		runner.Run()
 
-		tle.PerformTestWascalledsAndArgs(t, 0, []any{}, 0, 0)
+		tle.LogfuncAndExitTestWascalledsAndArgs(t, 0, []any{}, 0, 0)
 
 		if stdout.Len() == 0 {
 			t.Errorf("Empty stdout: '%v'", stdout)
@@ -389,3 +388,23 @@ func TestStdoutByCommand(t *testing.T) {
 		}
 	}
 }
+
+func getCmdNameArgsByDcyml(osStruct *exec.OsStruct) CmdNameArgsType {
+	panic("unimplemented")
+}
+
+// func TestCommandByDcyml(t *testing.T) {
+// 	cmdNameArgs := getCmdNameArgsByDcyml()
+// 	tle := getTestLogfuncExitType()
+
+// 	stdHandles, runner := makeRunnerDry(dryGetenv, &tle)
+// 	// stdout, stderr := stdHandles.Stdout, stdHandles.Stderr
+
+// 	cmdNameArgs := getCmdNameArgsByDcyml(runner.OsStruct)
+// 	runner.CmdNameArgs = cmdNameArgs
+
+// 	runner.Run()
+
+// 	tle.LogfuncAndExitTestWascalledsAndArgs(t, 0, []any{}, 0, 0)
+
+// }
