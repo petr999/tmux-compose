@@ -24,7 +24,8 @@ func (runner *Runner) Run() {
 	CmdNameArgs := runner.CmdNameArgs
 	cmdName, args := CmdNameArgs(DcConfigReader)
 
-	ExecStruct.MakeCommand(cmdName, args...)
+	ExecStruct.MakeCommand(&exec.MakeCommandDryRunType{DryRun: OsStruct.Getenv(DryRunEnvVarName), OsStruct: OsStruct},
+		exec.NameArgsType{Name: cmdName, Args: args})
 	cmd := ExecStruct.GetCommand()
 	cmd.StdCommute(OsStruct)
 

@@ -33,6 +33,7 @@ func makeRunnerCommon() (*stdHandlesType, *Runner) {
 			Stderr: stderr,
 			Stdin:  stdin,
 			Exit:   func(code int) {},
+			Getenv: func(string) string { return `` },
 		},
 		CmdNameArgs: func(dcConfigReader dc_config.Reader) (string, []string) {
 			return ``, make([]string, 0)
@@ -80,11 +81,13 @@ type ExecStructDouble struct {
 	Stdin              io.Reader
 }
 
-func (execStructDouble *ExecStructDouble) MakeCommand(name string, arg ...string) {
+func (execStructDouble *ExecStructDouble) MakeCommand(dryRun *exec.MakeCommandDryRunType,
+	nameArgs exec.NameArgsType) {
+	// osStruct *exec.OsStruct, name string, arg ...string) {
 
 	osExecCmdRunDouble := execStructDouble.osExecCmdRunDouble
-	osExecCmdRunDouble.nameOsExecCommandWasCalled = name
-	osExecCmdRunDouble.argsOsExecCommandWasCalled = arg
+	osExecCmdRunDouble.nameOsExecCommandWasCalled = nameArgs.Name
+	osExecCmdRunDouble.argsOsExecCommandWasCalled = nameArgs.Args
 
 	cmd := &exec.CmdType{
 		Obj:    osExecCmdRunDouble,

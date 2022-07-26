@@ -6,8 +6,24 @@ import (
 	"os/exec"
 )
 
+type OsStructInterface interface {
+	Exit(code int)
+	Getenv(key string) string
+}
+
+type MakeCommandDryRunType struct {
+	DryRun   string
+	OsStruct *OsStruct
+}
+type NameArgsType struct {
+	Name string
+	Args []string
+}
+
 type ExecInterface interface {
-	MakeCommand(name string, arg ...string)
+	MakeCommand(*MakeCommandDryRunType,
+		NameArgsType,
+	)
 	GetCommand() *CmdType
 	SetCommand(*CmdType)
 }
@@ -20,8 +36,27 @@ type ExecStruct struct {
 	cmd *CmdType
 }
 
-func (execStruct *ExecStruct) MakeCommand(name string, arg ...string) {
-	cmd := exec.Command(name, arg...)
+type dryRunCommand struct {
+}
+
+func (cmd *dryRunCommand) Run() error {
+	return nil
+}
+
+func (execStruct *ExecStruct) MakeCommand(dryRun *MakeCommandDryRunType,
+	nameArgs NameArgsType) {
+	// cmd & CmdType{
+	// 	&cmd.Stdout,
+	// 	&cmd.Stderr,
+	// 	&cmd.Stdin,
+	// }
+
+	// func(name, arg...){
+
+	// }
+	// if len(dryRun) == 0 {
+	cmd := exec.Command(nameArgs.Name, nameArgs.Args...)
+	// }
 	execStruct.SetCommand(&CmdType{
 		cmd,
 		&cmd.Stdout,
