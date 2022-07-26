@@ -336,6 +336,11 @@ func TestStdoutByConfig(t *testing.T) {
 		t.Errorf("Empty stdout: '%v'", stdout)
 	}
 
+	emptyCmd := `["",[]]`
+	if stdout.String() != emptyCmd {
+		t.Errorf("No empty command '%v' in stdout: '%v'", emptyCmd, stdout)
+	}
+
 	if stderr.Len() != 0 {
 		t.Errorf("Non-empty stderr: '%v'", stderr)
 	}
