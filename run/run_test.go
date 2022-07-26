@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"io"
 	"math/rand"
+	"os"
 	"reflect"
 	"regexp"
 	"strings"
@@ -324,25 +325,33 @@ func TestStdoutByConfig(t *testing.T) {
 	}
 
 	tle := getTestLogfuncExitType()
-	stdHandles, runner := makeRunnerDry(Getenv, &tle)
 
-	stdout, stderr, _ := stdHandles.Stdout, stdHandles.Stderr, stdHandles.Stdin
+	actByGetenv := func(getenv func(string) string) {
 
-	runner.Run()
+		stdHandles, runner := makeRunnerDry(getenv, &tle)
+		stdout, stderr, _ := stdHandles.Stdout, stdHandles.Stderr, stdHandles.Stdin
 
-	tle.PerformTestWascalledsAndArgs(t, 0, []any{}, 0, 0)
+		runner.Run()
 
-	if stdout.Len() == 0 {
-		t.Errorf("Empty stdout: '%v'", stdout)
+		tle.PerformTestWascalledsAndArgs(t, 0, []any{}, 0, 0)
+
+		if stdout.Len() == 0 {
+			t.Errorf("Empty stdout: '%v'", stdout)
+		}
+
+		emptyCmd := `["",[]]`
+		if stdout.String() != emptyCmd {
+			t.Errorf("No match of stdout '%v' to empty command: '%v'", stdout, emptyCmd)
+		}
+
+		if stderr.Len() != 0 {
+			t.Errorf("Non-empty stderr: '%v'", stderr)
+		}
 	}
 
-	emptyCmd := `["",[]]`
-	if stdout.String() != emptyCmd {
-		t.Errorf("No match of stdout '%v' to empty command: '%v'", stdout, emptyCmd)
-	}
-
-	if stderr.Len() != 0 {
-		t.Errorf("Non-empty stderr: '%v'", stderr)
-	}
+	actByGetenv(Getenv)
+	os.Setenv(DryRunEnvVarName, `1`)
+	actByGetenv(os.Getenv)
+	os.Unsetenv(DryRunEnvVarName)
 
 }
