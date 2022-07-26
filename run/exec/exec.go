@@ -4,12 +4,14 @@ import (
 	"encoding/json"
 	"io"
 	"log"
+	"os"
 	"os/exec"
 )
 
 type OsStructInterface interface {
 	Exit(code int)
 	Getenv(key string) string
+	Chdir(dir string) error
 }
 
 type MakeCommandDryRunType struct {
@@ -111,6 +113,7 @@ func (Cmd *CmdType) StdCommute(os *OsStruct) error {
 
 type OsStructExit func(code int)
 type OsStructGetEnv func(key string) string
+type OsStructChdir func(dir string) error
 
 type OsStruct struct {
 	Stdout io.Writer
@@ -118,6 +121,11 @@ type OsStruct struct {
 	Stdin  io.Reader
 	Exit   OsStructExit
 	Getenv OsStructGetEnv
+	Chdir  OsStructChdir
+}
+
+func MakeOsStruct() *OsStruct {
+	return &OsStruct{Stdout: os.Stdout, Stderr: os.Stderr, Stdin: os.Stdin, Exit: os.Exit, Getenv: os.Getenv, Chdir: os.Chdir}
 }
 
 func GetLogFunc(writer io.Writer) func(s string) {

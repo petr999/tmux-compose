@@ -36,6 +36,7 @@ func makeRunnerCommon() (*stdHandlesType, *Runner) {
 			Stdin:  stdin,
 			Exit:   func(code int) {},
 			Getenv: func(string) string { return `` },
+			Chdir:  func(string) error { return nil },
 		},
 		CmdNameArgs: func(dcConfigReader dc_config.Reader) (string, []string) {
 			return ``, []string{}
@@ -389,9 +390,9 @@ func TestStdoutByCommand(t *testing.T) {
 	}
 }
 
-func getCmdNameArgsByDcyml(osStruct *exec.OsStruct) CmdNameArgsType {
-	panic("unimplemented")
-}
+// func getCmdNameArgsByDcyml(osStruct *exec.OsStruct) CmdNameArgsType {
+// 	panic("unimplemented")
+// }
 
 // func TestCommandByDcyml(t *testing.T) {
 // 	cmdNameArgs := getCmdNameArgsByDcyml()
