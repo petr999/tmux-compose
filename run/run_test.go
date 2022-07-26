@@ -338,7 +338,7 @@ func TestStdoutByConfig(t *testing.T) {
 
 	emptyCmd := `["",[]]`
 	if stdout.String() != emptyCmd {
-		t.Errorf("No empty command '%v' in stdout: '%v'", emptyCmd, stdout)
+		t.Errorf("No match of stdout '%v' to empty command: '%v'", stdout, emptyCmd)
 	}
 
 	if stderr.Len() != 0 {
