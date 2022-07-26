@@ -2,6 +2,7 @@ package run
 
 import (
 	"bytes"
+	"encoding/json"
 	"io"
 	"math/rand"
 	"os"
@@ -313,14 +314,14 @@ func makeRunnerDry(Getenv func(key string) string, tle *testLogfuncExitType) (*s
 	return stdHandles, runner
 }
 
-func TestStdoutByConfig(t *testing.T) {
-
-	Getenv := func(key string) string {
-		if key == DryRunEnvVarName {
-			return `1`
-		}
-		return ``
+var dryGetenv = func(key string) string {
+	if key == DryRunEnvVarName {
+		return `1`
 	}
+	return ``
+}
+
+func TestStdoutByConfig(t *testing.T) {
 
 	actByGetenv := func(getenv func(string) string) {
 		tle := getTestLogfuncExitType()
@@ -346,9 +347,45 @@ func TestStdoutByConfig(t *testing.T) {
 		}
 	}
 
-	actByGetenv(Getenv)
+	actByGetenv(dryGetenv)
 	os.Setenv(DryRunEnvVarName, `1`)
 	actByGetenv(os.Getenv)
 	os.Unsetenv(DryRunEnvVarName)
 
+}
+
+func TestStdoutByCommand(t *testing.T) {
+
+	namesArgs := [][][]string{{{`docker-compose`}, {`up`}},
+		{{`docker-compose`}, {`up`, `-d`}}}
+	for _, nameArgs := range namesArgs {
+		name, args := nameArgs[0][0], nameArgs[1]
+		cmdNameArgs := func(dcConfigReader dc_config.Reader) (string, []string) {
+			return name, args
+		}
+
+		tle := getTestLogfuncExitType()
+
+		stdHandles, runner := makeRunnerDry(dryGetenv, &tle)
+		stdout, stderr, _ := stdHandles.Stdout, stdHandles.Stderr, stdHandles.Stdin
+		runner.CmdNameArgs = cmdNameArgs
+
+		runner.Run()
+
+		tle.PerformTestWascalledsAndArgs(t, 0, []any{}, 0, 0)
+
+		if stdout.Len() == 0 {
+			t.Errorf("Empty stdout: '%v'", stdout)
+		}
+
+		cmdOutputArr, _ := json.Marshal([]any{name, args})
+		cmdOutput := string(cmdOutputArr[:]) + "\n"
+		if stdout.String() != cmdOutput {
+			t.Errorf("No match of stdout '%v' to empty command: '%v'", stdout, cmdOutput)
+		}
+
+		if stderr.Len() != 0 {
+			t.Errorf("Non-empty stderr: '%v'", stderr)
+		}
+	}
 }
