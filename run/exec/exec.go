@@ -1,6 +1,7 @@
 package exec
 
 import (
+	"encoding/json"
 	"io"
 	"log"
 	"os/exec"
@@ -36,9 +37,20 @@ type ExecStruct struct {
 	cmd *CmdType
 }
 
-type cmdObjDryRun struct{}
+type cmdObjDryRun struct {
+	nameArgs NameArgsType
+	stdout   io.Writer
+}
 
 func (cmd *cmdObjDryRun) Run() error {
+	outVal, err := json.Marshal([]any{cmd.nameArgs.Name, cmd.nameArgs.Args})
+	if err != nil {
+		log.Panic(`can not serialize cmd name and args`)
+	}
+	_, err = cmd.stdout.Write(append(outVal, "\n"...))
+	if err != nil {
+		log.Panicf(`Writing output value: '%v'`, err)
+	}
 	return nil
 }
 
@@ -47,7 +59,7 @@ func (execStruct *ExecStruct) MakeCommand(dryRun *MakeCommandDryRunType,
 
 	var execStructCmd *CmdType
 	if len(dryRun.DryRun) > 0 {
-		cmd := &cmdObjDryRun{}
+		cmd := &cmdObjDryRun{nameArgs, dryRun.OsStruct.Stdout}
 		execStructCmd = &CmdType{
 			Obj:    cmd,
 			Stdout: &dryRun.OsStruct.Stdout,

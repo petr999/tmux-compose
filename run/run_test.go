@@ -37,7 +37,7 @@ func makeRunnerCommon() (*stdHandlesType, *Runner) {
 			Getenv: func(string) string { return `` },
 		},
 		CmdNameArgs: func(dcConfigReader dc_config.Reader) (string, []string) {
-			return ``, make([]string, 0)
+			return ``, []string{}
 		},
 	}
 
@@ -294,24 +294,22 @@ func TestCmdRunWasCalledWithArgs(t *testing.T) {
 }
 
 func makeRunnerDry(Getenv func(key string) string, tle *testLogfuncExitType) (*stdHandlesType, *Runner) {
-	var stdoutBuf, stderrBuf, stdinBuf bytes.Buffer
-	stdout, stderr, stdin := &stdoutBuf, &stderrBuf, &stdinBuf
-	osStruct := exec.OsStruct{
-		Stdout: stdout,
-		Stderr: stderr,
-		Stdin:  stdin,
-		Exit:   func(code int) {},
-		Getenv: Getenv,
-	}
+	// var stdoutBuf, stderrBuf, stdinBuf bytes.Buffer
+	// stdout, stderr, stdin := &stdoutBuf, &stderrBuf, &stdinBuf
 
 	stdHandles, runner := makeRunner(tle)
+	runner.OsStruct.Exit = func(code int) {}
+	runner.OsStruct.Getenv = Getenv
 	fatal := runner.LogFunc
 	runner.LogFunc = func(s string) {
 		stdHandles.Stderr.WriteString(s)
 		fatal(s)
 	}
 
-	runner.OsStruct = &osStruct
+	// fmt.Printf("stdout: '%p', runner.OsStruct.Stdout: '%p' \n", stdout, runner.OsStruct.Stdout)
+	// fmt.Printf("stderr: '%p', runner.OsStruct.Stderr: '%p' \n", stderr, runner.OsStruct.Stderr)
+
+	// runner.OsStruct = &osStruct
 	return stdHandles, runner
 }
 
@@ -324,9 +322,8 @@ func TestStdoutByConfig(t *testing.T) {
 		return ``
 	}
 
-	tle := getTestLogfuncExitType()
-
 	actByGetenv := func(getenv func(string) string) {
+		tle := getTestLogfuncExitType()
 
 		stdHandles, runner := makeRunnerDry(getenv, &tle)
 		stdout, stderr, _ := stdHandles.Stdout, stdHandles.Stderr, stdHandles.Stdin
@@ -339,7 +336,7 @@ func TestStdoutByConfig(t *testing.T) {
 			t.Errorf("Empty stdout: '%v'", stdout)
 		}
 
-		emptyCmd := `["",[]]`
+		emptyCmd := `["",[]]` + "\n"
 		if stdout.String() != emptyCmd {
 			t.Errorf("No match of stdout '%v' to empty command: '%v'", stdout, emptyCmd)
 		}
