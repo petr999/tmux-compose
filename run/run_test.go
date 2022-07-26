@@ -86,7 +86,6 @@ type ExecStructDouble struct {
 
 func (execStructDouble *ExecStructDouble) MakeCommand(dryRun *exec.MakeCommandDryRunType,
 	nameArgs exec.NameArgsType) {
-	// osStruct *exec.OsStruct, name string, arg ...string) {
 
 	osExecCmdRunDouble := execStructDouble.osExecCmdRunDouble
 	osExecCmdRunDouble.nameOsExecCommandWasCalled = nameArgs.Name
