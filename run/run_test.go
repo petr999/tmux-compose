@@ -296,8 +296,6 @@ func TestCmdRunWasCalledWithArgs(t *testing.T) {
 }
 
 func makeRunnerDry(Getenv func(key string) string, tle *testLogfuncExitType) (*stdHandlesType, *Runner) {
-	// var stdoutBuf, stderrBuf, stdinBuf bytes.Buffer
-	// stdout, stderr, stdin := &stdoutBuf, &stderrBuf, &stdinBuf
 
 	stdHandles, runner := makeRunner(tle)
 	runner.OsStruct.Exit = func(code int) {}
@@ -308,10 +306,6 @@ func makeRunnerDry(Getenv func(key string) string, tle *testLogfuncExitType) (*s
 		fatal(s)
 	}
 
-	// fmt.Printf("stdout: '%p', runner.OsStruct.Stdout: '%p' \n", stdout, runner.OsStruct.Stdout)
-	// fmt.Printf("stderr: '%p', runner.OsStruct.Stderr: '%p' \n", stderr, runner.OsStruct.Stderr)
-
-	// runner.OsStruct = &osStruct
 	return stdHandles, runner
 }
 
