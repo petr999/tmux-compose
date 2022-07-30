@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"io"
 	"log"
-	"os"
 	"os/exec"
+	"tmux_compose/types"
 )
 
 type OsStructInterface interface {
@@ -16,7 +16,7 @@ type OsStructInterface interface {
 
 type MakeCommandDryRunType struct {
 	DryRun   string
-	OsStruct *OsStruct
+	OsStruct *types.OsStruct
 }
 type NameArgsType struct {
 	Name string
@@ -103,31 +103,12 @@ func (cmd *CmdType) Run() error {
 	return cmd.Obj.Run()
 }
 
-func (Cmd *CmdType) StdCommute(os *OsStruct) error {
+func (Cmd *CmdType) StdCommute(os *types.OsStruct) error {
 	*Cmd.Stdout = os.Stdout
 	*Cmd.Stderr = os.Stderr
 	*Cmd.Stdin = os.Stdin
 
 	return nil
-}
-
-type OsStructExit func(code int)
-type OsStructGetEnv func(key string) string
-type OsStructChdir func(dir string) error
-type OsStructGetwd func() (dir string, err error)
-
-type OsStruct struct {
-	Stdout io.Writer
-	Stderr io.Writer
-	Stdin  io.Reader
-	Exit   OsStructExit
-	Getenv OsStructGetEnv
-	Chdir  OsStructChdir
-	Getwd  OsStructGetwd
-}
-
-func MakeOsStruct() *OsStruct {
-	return &OsStruct{Stdout: os.Stdout, Stderr: os.Stderr, Stdin: os.Stdin, Exit: os.Exit, Getenv: os.Getenv, Chdir: os.Chdir, Getwd: os.Getwd}
 }
 
 func GetLogFunc(writer io.Writer) func(s string) {

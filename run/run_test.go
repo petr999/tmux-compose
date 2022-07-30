@@ -3,27 +3,42 @@ package run
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
-	"io/fs"
+	"io/ioutil"
 	"math/rand"
 	"os"
 	"path/filepath"
 	"reflect"
 	"regexp"
+	"runtime"
 	"strings"
 	"testing"
 	"tmux_compose/cmd_name_args"
 	"tmux_compose/dc_config"
 	"tmux_compose/run/exec"
+	"tmux_compose/types"
 )
 
 const loremString = `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin facilisis mi sapien, vitae accumsan libero malesuada in. Suspendisse sodales finibus sagittis. Proin et augue vitae dui scelerisque imperdiet. Suspendisse et pulvinar libero. Vestibulum id porttitor augue. Vivamus lobortis lacus et libero ultricies accumsan. Donec non feugiat enim, nec tempus nunc. Mauris rutrum, diam euismod elementum ultricies, purus tellus faucibus augue, sit amet tristique diam purus eu arcu. Integer elementum urna non justo fringilla fermentum. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Quisque sollicitudin elit in metus imperdiet, et gravida tortor hendrerit. In volutpat tellus quis sapien rutrum, sit amet cursus augue ultricies. Morbi tincidunt arcu id commodo mollis. Aliquam laoreet purus sed justo pulvinar, quis porta risus lobortis. In commodo leo id porta mattis.`
+
+const dcConfigSample = "version: \"3.9\"\n\n" +
+	"services:\n" +
+	"  nginx:\n" +
+	"    image: nginx:latest\n" +
+	"  h2o:\n" +
+	"    image: lkwg82/h2o-http2-server:latest\n" +
+	"  dumbclicker:\n" +
+	"    image: busybox:latest\n" +
+	"    command: sh -c 'while :; do echo -ne  GET / HTTP/1.0\"\\n\\n\" | nc h2o 8080 | head -5 | tail -1; echo -ne  GET / HTTP/1.0\"\\n\\n\" | nc nginx 80 | head -2 | tail -1; sleep 1; done'\n"
 
 type stdHandlesType struct {
 	Stdout *bytes.Buffer
 	Stderr *bytes.Buffer
 	Stdin  *bytes.Buffer
 }
+
+var projDir string = getProjDir()
 
 func makeRunnerCommon() (*stdHandlesType, *Runner) {
 	var stdoutBuf, stderrBuf, stdinBuf bytes.Buffer
@@ -33,7 +48,7 @@ func makeRunnerCommon() (*stdHandlesType, *Runner) {
 	return &stdHandles, &Runner{
 		DcConfigReader: dc_config.DcConfig{},
 		ExecStruct:     &exec.ExecStruct{},
-		OsStruct: &exec.OsStruct{
+		OsStruct: &types.OsStruct{
 			Stdout: stdout,
 			Stderr: stderr,
 			Stdin:  stdin,
@@ -386,25 +401,6 @@ func TestStdoutByCommand(t *testing.T) {
 	}
 }
 
-type FsDouble struct{}
-
-func (fsDouble FsDouble) ReadFile(fsys fs.FS, name string) ([]byte, error) {
-	return []byte("version: \"3.9\"\n\n" +
-		"services:\n" +
-		"  nginx:\n" +
-		"    image: nginx:latest\n" +
-		"  h2o:\n" +
-		"    image: lkwg82/h2o-http2-server:latest\n" +
-		"  dumbclicker:\n" +
-		"    image: busybox:latest\n" +
-		"    command: sh -c 'while :; do echo -ne  GET / HTTP/1.0\"\\n\\n\" | nc h2o 8080 | head -5 | tail -1; echo -ne  GET / HTTP/1.0\"\\n\\n\" | nc nginx 80 | head -2 | tail -1; sleep 1; done'\n",
-	), nil
-}
-
-func getFsDouble() dc_config.FsInterface {
-	return FsDouble{}
-}
-
 type DcConfigOsStructDouble struct {
 }
 
@@ -416,19 +412,39 @@ func (osStruct DcConfigOsStructDouble) Getwd() (dir string, err error) {
 	return `/path/to/dumbclicker`, nil
 }
 
-func getDcConfigReader(osStruct dc_config.DcConfigOsInterface, fsStruct dc_config.FsInterface) dc_config.DcConfig {
+func (osStruct DcConfigOsStructDouble) ReadFile(name string) ([]byte, error) {
+	return []byte(dcConfigSample), nil
+}
+
+func getDcConfigReader(osStruct dc_config.DcConfigOsInterface) dc_config.DcConfig {
 	fqfn, _ := osStruct.Getwd()
 	fqfn = filepath.Join(fqfn, `docker-compose.yml`)
-	return dc_config.DcConfig{OsStruct: osStruct, FsStruct: fsStruct, Fqfn: fqfn}
+	return dc_config.DcConfig{OsStruct: osStruct, Fqfn: fqfn}
+}
+
+func getProjDir() string {
+	_, testFilename, _, _ := runtime.Caller(0)
+	projDir, err := filepath.Abs(filepath.Join(filepath.Dir(testFilename), `..`))
+	if err != nil {
+		panic(fmt.Sprintf("Empty project directory: '%v'", projDir))
+	}
+	return projDir
 }
 
 func TestCommandByDcyml(t *testing.T) {
+	fname := filepath.Join(projDir, `testdata`, `sample.sh`)
+	dryRunOutputBytes, _ := ioutil.ReadFile(fname)
+	if len(dryRunOutputBytes) == 0 {
+		panic(fmt.Sprintf("Empty shell template: '%v'", fname))
+	}
+	dryRunSample := string(dryRunOutputBytes)
+
 	tle := getTestLogfuncExitType()
 
 	stdHandles, runner := makeRunnerDry(dryGetenv, &tle)
 
 	cmdNameArgs := cmd_name_args.CmdNameArgs
-	dcConfigReader := getDcConfigReader(DcConfigOsStructDouble{}, getFsDouble())
+	dcConfigReader := getDcConfigReader(DcConfigOsStructDouble{})
 	runner.CmdNameArgs, runner.DcConfigReader = cmdNameArgs, dcConfigReader
 
 	runner.Run()
@@ -441,8 +457,12 @@ func TestCommandByDcyml(t *testing.T) {
 	}
 
 	emptyCmd := `["",[]]` + "\n"
-	if stdout.String() != emptyCmd {
-		t.Errorf("No match of stdout '%v' to empty command: '%v'", stdout, emptyCmd)
+	if stdout.String() == emptyCmd {
+		t.Errorf("Match of stdout '%v' to empty command: '%v'", stdout, emptyCmd)
+	}
+
+	if stdout.String() != dryRunSample+"\n" {
+		t.Errorf("No match of stdout '%v' to expected command: '%v'", stdout, dryRunSample)
 	}
 
 	if stderr.Len() != 0 {

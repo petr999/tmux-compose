@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"tmux_compose/dc_config"
 	"tmux_compose/run/exec"
+	"tmux_compose/types"
 )
 
 const DryRunEnvVarName = `TMUX_COMPOSE_DRY_RUN`
@@ -15,7 +16,7 @@ type Runner struct {
 	CmdNameArgs    CmdNameArgsType
 	DcConfigReader dc_config.ReaderInterface
 	ExecStruct     exec.ExecInterface
-	OsStruct       *exec.OsStruct
+	OsStruct       *types.OsStruct
 	LogFunc        LogFuncType
 }
 
