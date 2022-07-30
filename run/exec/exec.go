@@ -114,6 +114,7 @@ func (Cmd *CmdType) StdCommute(os *OsStruct) error {
 type OsStructExit func(code int)
 type OsStructGetEnv func(key string) string
 type OsStructChdir func(dir string) error
+type OsStructGetwd func() (dir string, err error)
 
 type OsStruct struct {
 	Stdout io.Writer
@@ -122,10 +123,11 @@ type OsStruct struct {
 	Exit   OsStructExit
 	Getenv OsStructGetEnv
 	Chdir  OsStructChdir
+	Getwd  OsStructGetwd
 }
 
 func MakeOsStruct() *OsStruct {
-	return &OsStruct{Stdout: os.Stdout, Stderr: os.Stderr, Stdin: os.Stdin, Exit: os.Exit, Getenv: os.Getenv, Chdir: os.Chdir}
+	return &OsStruct{Stdout: os.Stdout, Stderr: os.Stderr, Stdin: os.Stdin, Exit: os.Exit, Getenv: os.Getenv, Chdir: os.Chdir, Getwd: os.Getwd}
 }
 
 func GetLogFunc(writer io.Writer) func(s string) {

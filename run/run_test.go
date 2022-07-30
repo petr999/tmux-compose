@@ -4,12 +4,15 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
+	"io/fs"
 	"math/rand"
 	"os"
+	"path/filepath"
 	"reflect"
 	"regexp"
 	"strings"
 	"testing"
+	"tmux_compose/cmd_name_args"
 	"tmux_compose/dc_config"
 	"tmux_compose/run/exec"
 )
@@ -38,7 +41,7 @@ func makeRunnerCommon() (*stdHandlesType, *Runner) {
 			Getenv: func(string) string { return `` },
 			Chdir:  func(string) error { return nil },
 		},
-		CmdNameArgs: func(dcConfigReader dc_config.Reader) (string, []string) {
+		CmdNameArgs: func(dcConfigReader dc_config.ReaderInterface) (string, []string) {
 			return ``, []string{}
 		},
 	}
@@ -57,7 +60,7 @@ func makeRunner(tle *testLogfuncExitType) (stdHandles *stdHandlesType, runner *R
 func makeRunnerForFatal(cmdName string, tle *testLogfuncExitType) (*stdHandlesType, *Runner) {
 	stdHandles, runner := makeRunner(tle)
 
-	runner.CmdNameArgs = func(dcConfigReader dc_config.Reader) (string, []string) {
+	runner.CmdNameArgs = func(dcConfigReader dc_config.ReaderInterface) (string, []string) {
 		return cmdName, make([]string, 0)
 	}
 
@@ -273,7 +276,7 @@ func TestCmdRunWasCalledWithArgs(t *testing.T) {
 			osExecCmdRunDouble := &OsExecCmdRunDouble{}
 			tle := getTestLogfuncExitType()
 			runner := makeRunnerForCmdRun(osExecCmdRunDouble, &tle)
-			runner.CmdNameArgs = func(dcConfigReader dc_config.Reader) (string, []string) {
+			runner.CmdNameArgs = func(dcConfigReader dc_config.ReaderInterface) (string, []string) {
 				return name, args
 			}
 
@@ -353,7 +356,7 @@ func TestStdoutByCommand(t *testing.T) {
 		{{`docker-compose`}, {`up`, `-d`}}}
 	for _, nameArgs := range namesArgs {
 		name, args := nameArgs[0][0], nameArgs[1]
-		cmdNameArgs := func(dcConfigReader dc_config.Reader) (string, []string) {
+		cmdNameArgs := func(dcConfigReader dc_config.ReaderInterface) (string, []string) {
 			return name, args
 		}
 
@@ -383,22 +386,67 @@ func TestStdoutByCommand(t *testing.T) {
 	}
 }
 
-// func getCmdNameArgsByDcyml(osStruct *exec.OsStruct) CmdNameArgsType {
-// 	panic("unimplemented")
-// }
+type FsDouble struct{}
 
-// func TestCommandByDcyml(t *testing.T) {
-// 	cmdNameArgs := getCmdNameArgsByDcyml()
-// 	tle := getTestLogfuncExitType()
+func (fsDouble FsDouble) ReadFile(fsys fs.FS, name string) ([]byte, error) {
+	return []byte("version: \"3.9\"\n\n" +
+		"services:\n" +
+		"  nginx:\n" +
+		"    image: nginx:latest\n" +
+		"  h2o:\n" +
+		"    image: lkwg82/h2o-http2-server:latest\n" +
+		"  dumbclicker:\n" +
+		"    image: busybox:latest\n" +
+		"    command: sh -c 'while :; do echo -ne  GET / HTTP/1.0\"\\n\\n\" | nc h2o 8080 | head -5 | tail -1; echo -ne  GET / HTTP/1.0\"\\n\\n\" | nc nginx 80 | head -2 | tail -1; sleep 1; done'\n",
+	), nil
+}
 
-// 	stdHandles, runner := makeRunnerDry(dryGetenv, &tle)
-// 	// stdout, stderr := stdHandles.Stdout, stdHandles.Stderr
+func getFsDouble() dc_config.FsInterface {
+	return FsDouble{}
+}
 
-// 	cmdNameArgs := getCmdNameArgsByDcyml(runner.OsStruct)
-// 	runner.CmdNameArgs = cmdNameArgs
+type DcConfigOsStructDouble struct {
+}
 
-// 	runner.Run()
+func (osStruct DcConfigOsStructDouble) Chdir(dir string) error {
+	return nil
+}
 
-// 	tle.LogfuncAndExitTestWascalledsAndArgs(t, 0, []any{}, 0, 0)
+func (osStruct DcConfigOsStructDouble) Getwd() (dir string, err error) {
+	return `/path/to/dumbclicker`, nil
+}
 
-// }
+func getDcConfigReader(osStruct dc_config.DcConfigOsInterface, fsStruct dc_config.FsInterface) dc_config.DcConfig {
+	fqfn, _ := osStruct.Getwd()
+	fqfn = filepath.Join(fqfn, `docker-compose.yml`)
+	return dc_config.DcConfig{OsStruct: osStruct, FsStruct: fsStruct, Fqfn: fqfn}
+}
+
+func TestCommandByDcyml(t *testing.T) {
+	tle := getTestLogfuncExitType()
+
+	stdHandles, runner := makeRunnerDry(dryGetenv, &tle)
+
+	cmdNameArgs := cmd_name_args.CmdNameArgs
+	dcConfigReader := getDcConfigReader(DcConfigOsStructDouble{}, getFsDouble())
+	runner.CmdNameArgs, runner.DcConfigReader = cmdNameArgs, dcConfigReader
+
+	runner.Run()
+
+	tle.LogfuncAndExitTestWascalledsAndArgs(t, 0, []any{}, 0, 0)
+
+	stdout, stderr := stdHandles.Stdout, stdHandles.Stderr
+	if stdout.Len() == 0 {
+		t.Errorf("Empty stdout: '%v'", stdout)
+	}
+
+	emptyCmd := `["",[]]` + "\n"
+	if stdout.String() != emptyCmd {
+		t.Errorf("No match of stdout '%v' to empty command: '%v'", stdout, emptyCmd)
+	}
+
+	if stderr.Len() != 0 {
+		t.Errorf("Non-empty stderr: '%v'", stderr)
+	}
+
+}

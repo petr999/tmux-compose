@@ -9,11 +9,11 @@ import (
 const DryRunEnvVarName = `TMUX_COMPOSE_DRY_RUN`
 
 type LogFuncType func(s string)
-type CmdNameArgsType func(dcConfigReader dc_config.Reader) (string, []string)
+type CmdNameArgsType func(dcConfigReader dc_config.ReaderInterface) (string, []string)
 
 type Runner struct {
 	CmdNameArgs    CmdNameArgsType
-	DcConfigReader dc_config.Reader
+	DcConfigReader dc_config.ReaderInterface
 	ExecStruct     exec.ExecInterface
 	OsStruct       *exec.OsStruct
 	LogFunc        LogFuncType
