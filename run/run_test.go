@@ -30,6 +30,7 @@ type stdHandlesType struct {
 
 var projDir = getProjDir()
 var dcConfigSample = getDcConfigSample()
+var cmdNameArgsEmpty = types.CmdNameArgsType{Workdir: ``, Name: ``, Args: []string{}}
 
 func getProjDir() string {
 	_, testFilename, _, _ := runtime.Caller(0)
@@ -71,8 +72,8 @@ func makeRunnerCommon() (*stdHandlesType, *Runner) {
 			Getenv: func(string) string { return `` },
 			Chdir:  func(string) error { return nil },
 		},
-		CmdNameArgs: func(dcConfigReader dc_config.ReaderInterface) (string, []string) {
-			return ``, []string{}
+		CmdNameArgs: func(dcConfigReader dc_config.ReaderInterface) (types.CmdNameArgsType, error) {
+			return cmdNameArgsEmpty, nil
 		},
 	}
 
@@ -90,8 +91,8 @@ func makeRunner(tle *testLogfuncExitType) (stdHandles *stdHandlesType, runner *R
 func makeRunnerForFatal(cmdName string, tle *testLogfuncExitType) (*stdHandlesType, *Runner) {
 	stdHandles, runner := makeRunner(tle)
 
-	runner.CmdNameArgs = func(dcConfigReader dc_config.ReaderInterface) (string, []string) {
-		return cmdName, make([]string, 0)
+	runner.CmdNameArgs = func(dcConfigReader dc_config.ReaderInterface) (types.CmdNameArgsType, error) {
+		return cmdNameArgsEmpty, nil
 	}
 
 	return stdHandles, runner
@@ -118,7 +119,7 @@ type ExecStructDouble struct {
 }
 
 func (execStructDouble *ExecStructDouble) MakeCommand(dryRun *exec.MakeCommandDryRunType,
-	nameArgs exec.NameArgsType) {
+	nameArgs types.CmdNameArgsType) {
 
 	osExecCmdRunDouble := execStructDouble.osExecCmdRunDouble
 	osExecCmdRunDouble.nameOsExecCommandWasCalled = nameArgs.Name
@@ -306,8 +307,8 @@ func TestCmdRunWasCalledWithArgs(t *testing.T) {
 			osExecCmdRunDouble := &OsExecCmdRunDouble{}
 			tle := getTestLogfuncExitType()
 			runner := makeRunnerForCmdRun(osExecCmdRunDouble, &tle)
-			runner.CmdNameArgs = func(dcConfigReader dc_config.ReaderInterface) (string, []string) {
-				return name, args
+			runner.CmdNameArgs = func(dcConfigReader dc_config.ReaderInterface) (types.CmdNameArgsType, error) {
+				return types.CmdNameArgsType{Workdir: ``, Name: name, Args: args}, nil
 			}
 
 			runner.Run()
@@ -386,8 +387,8 @@ func TestStdoutByCommand(t *testing.T) {
 		{{`docker-compose`}, {`up`, `-d`}}}
 	for _, nameArgs := range namesArgs {
 		name, args := nameArgs[0][0], nameArgs[1]
-		cmdNameArgs := func(dcConfigReader dc_config.ReaderInterface) (string, []string) {
-			return name, args
+		cmdNameArgs := func(dcConfigReader dc_config.ReaderInterface) (types.CmdNameArgsType, error) {
+			return types.CmdNameArgsType{Workdir: ``, Name: name, Args: args}, nil
 		}
 
 		tle := getTestLogfuncExitType()

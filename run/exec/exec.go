@@ -18,14 +18,11 @@ type MakeCommandDryRunType struct {
 	DryRun   string
 	OsStruct *types.OsStruct
 }
-type NameArgsType struct {
-	Name string
-	Args []string
-}
+type nameArgsType = types.CmdNameArgsType
 
 type ExecInterface interface {
 	MakeCommand(*MakeCommandDryRunType,
-		NameArgsType,
+		nameArgsType,
 	)
 	GetCommand() *CmdType
 	SetCommand(*CmdType)
@@ -40,7 +37,7 @@ type ExecStruct struct {
 }
 
 type cmdObjDryRun struct {
-	nameArgs NameArgsType
+	nameArgs nameArgsType
 	stdout   io.Writer
 }
 
@@ -57,7 +54,7 @@ func (cmd *cmdObjDryRun) Run() error {
 }
 
 func (execStruct *ExecStruct) MakeCommand(dryRun *MakeCommandDryRunType,
-	nameArgs NameArgsType) {
+	nameArgs nameArgsType) {
 
 	var execStructCmd *CmdType
 	if len(dryRun.DryRun) > 0 {

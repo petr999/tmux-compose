@@ -10,10 +10,11 @@ import (
 const DryRunEnvVarName = `TMUX_COMPOSE_DRY_RUN`
 
 type LogFuncType func(s string)
-type CmdNameArgsType func(dcConfigReader dc_config.ReaderInterface) (string, []string)
+
+type CmdNameArgsFunc func(dcConfigReader dc_config.ReaderInterface) (types.CmdNameArgsType, error)
 
 type Runner struct {
-	CmdNameArgs    CmdNameArgsType
+	CmdNameArgs    CmdNameArgsFunc
 	DcConfigReader dc_config.ReaderInterface
 	ExecStruct     exec.ExecInterface
 	OsStruct       *types.OsStruct
@@ -23,14 +24,18 @@ type Runner struct {
 func (runner *Runner) Run() {
 	DcConfigReader, ExecStruct, OsStruct, LogFunc := runner.DcConfigReader, runner.ExecStruct, runner.OsStruct, runner.LogFunc
 	CmdNameArgs := runner.CmdNameArgs
-	cmdName, args := CmdNameArgs(DcConfigReader)
+	cmdNameArgs, err := CmdNameArgs(DcConfigReader)
+	if err != nil {
+		LogFunc(fmt.Sprintf("%v,\n", err))
+		OsStruct.Exit(1)
+	}
 
 	ExecStruct.MakeCommand(&exec.MakeCommandDryRunType{DryRun: OsStruct.Getenv(DryRunEnvVarName), OsStruct: OsStruct},
-		exec.NameArgsType{Name: cmdName, Args: args})
+		cmdNameArgs)
 	cmd := ExecStruct.GetCommand()
 	cmd.StdCommute(OsStruct)
 
-	err := cmd.Run()
+	err = cmd.Run()
 
 	if err != nil {
 		LogFunc(fmt.Sprintf("%v,\n", err))
