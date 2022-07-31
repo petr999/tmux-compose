@@ -165,19 +165,19 @@ type testLogfuncExitType struct {
 	exit                  func(code int)
 }
 
-func (tle *testLogfuncExitType) LogfuncAndExitTestWascalledsAndArgs(t *testing.T, tlfwcExpected int, lfaExpected []any, tewcExpected int, exitCodeExpected int) {
+func (tle *testLogfuncExitType) LogfuncAndExitTestWascalledsAndArgs(t *testing.T, tlfwcExpected int, lfaExpected []string, tewcExpected int, exitCodeExpected int) {
 
 	if *tle.timesLogFuncWasCalled != tlfwcExpected {
-		t.Errorf(`Log func was called %v times`, *tle.timesLogFuncWasCalled)
+		t.Errorf(`Log func was called '%v' times`, *tle.timesLogFuncWasCalled)
 	}
 	if len(*tle.logFuncArgs) != len(lfaExpected) {
-		t.Errorf(`Wrong argument of log function: %v`, *tle.logFuncArgs)
+		t.Errorf(`Wrong argument of log function: '%v'`, *tle.logFuncArgs)
 	}
 	if *tle.timesExitWasCalled != tewcExpected {
-		t.Errorf(`Exit func was called %v times`, *tle.timesExitWasCalled)
+		t.Errorf(`Exit func was called '%v' times`, *tle.timesExitWasCalled)
 	}
 	if *tle.exitCode != exitCodeExpected {
-		t.Errorf(`Wrong argument of Exit function: %v`, *tle.exitCode)
+		t.Errorf(`Wrong argument of Exit function: '%v'`, *tle.exitCode)
 	}
 
 }
@@ -212,7 +212,7 @@ func TestRunFatalAndStdHandles(t *testing.T) {
 
 	runner.Run()
 
-	tle.LogfuncAndExitTestWascalledsAndArgs(t, 1, []any{`some error`}, 1, 1)
+	tle.LogfuncAndExitTestWascalledsAndArgs(t, 1, []string{`some error`}, 1, 1)
 
 	cmd := runner.ExecStruct.GetCommand()
 	if cmd == nil {
@@ -235,12 +235,13 @@ func TestRunFatalAndStdHandles(t *testing.T) {
 
 func TestCmdRunWasCalled(t *testing.T) {
 	tle := getTestLogfuncExitType()
+
 	osExecCmdRunDouble := &OsExecCmdRunDouble{}
 	runner := makeRunnerForCmdRun(osExecCmdRunDouble, &tle)
 
 	runner.Run()
 
-	tle.LogfuncAndExitTestWascalledsAndArgs(t, 0, []any{}, 0, 0)
+	tle.LogfuncAndExitTestWascalledsAndArgs(t, 0, []string{}, 0, 0)
 
 	if osExecCmdRunDouble.timesOsExecCmdRunWasCalled != 1 {
 		t.Errorf(`os/exec.Command().Run() was called not once but '%v' times`, osExecCmdRunDouble.timesOsExecCmdRunWasCalled)
@@ -313,7 +314,7 @@ func TestCmdRunWasCalledWithArgs(t *testing.T) {
 
 			runner.Run()
 
-			tle.LogfuncAndExitTestWascalledsAndArgs(t, 0, []any{}, 0, 0)
+			tle.LogfuncAndExitTestWascalledsAndArgs(t, 0, []string{}, 0, 0)
 
 			if osExecCmdRunDouble.timesOsExecCmdRunWasCalled != 1 {
 				t.Errorf(`os/exec.Command().Run() was called not once but '%v' times`, osExecCmdRunDouble.timesOsExecCmdRunWasCalled)
@@ -331,7 +332,7 @@ func TestCmdRunWasCalledWithArgs(t *testing.T) {
 func makeRunnerDry(Getenv func(key string) string, tle *testLogfuncExitType) (*stdHandlesType, *Runner) {
 
 	stdHandles, runner := makeRunner(tle)
-	runner.OsStruct.Exit = func(code int) {}
+	// runner.OsStruct.Exit = func(code int) {}
 	runner.OsStruct.Getenv = Getenv
 	fatal := runner.LogFunc
 	runner.LogFunc = func(s string) {
@@ -359,7 +360,7 @@ func TestStdoutByConfig(t *testing.T) {
 
 		runner.Run()
 
-		tle.LogfuncAndExitTestWascalledsAndArgs(t, 0, []any{}, 0, 0)
+		tle.LogfuncAndExitTestWascalledsAndArgs(t, 0, []string{}, 0, 0)
 
 		if stdout.Len() == 0 {
 			t.Errorf("Empty stdout: '%v'", stdout)
@@ -399,7 +400,7 @@ func TestStdoutByCommand(t *testing.T) {
 
 		runner.Run()
 
-		tle.LogfuncAndExitTestWascalledsAndArgs(t, 0, []any{}, 0, 0)
+		tle.LogfuncAndExitTestWascalledsAndArgs(t, 0, []string{}, 0, 0)
 
 		if stdout.Len() == 0 {
 			t.Errorf("Empty stdout: '%v'", stdout)
@@ -418,6 +419,7 @@ func TestStdoutByCommand(t *testing.T) {
 }
 
 type DcConfigOsStructDouble struct {
+	MethodsToFail map[string]bool
 }
 
 func (osStruct DcConfigOsStructDouble) Chdir(dir string) error {
@@ -429,13 +431,68 @@ func (osStruct DcConfigOsStructDouble) Getwd() (dir string, err error) {
 }
 
 func (osStruct DcConfigOsStructDouble) ReadFile(name string) ([]byte, error) {
-	return []byte(dcConfigSample), nil
+	if _, ok := osStruct.MethodsToFail["ReadFile"]; !ok {
+		return []byte(dcConfigSample), nil
+	} else { // ok to fail
+		return []byte{}, fmt.Errorf("failed to read file: '%v'. error is: 'not found'", name)
+	}
 }
 
 func getDcConfigReader(osStruct dc_config.DcConfigOsInterface) dc_config.DcConfig {
-	fqfn, _ := osStruct.Getwd()
-	fqfn = filepath.Join(fqfn, `docker-compose.yml`)
+	workDir, _ := osStruct.Getwd()
+	fqfn := filepath.Join(workDir, `docker-compose.yml`)
 	return dc_config.DcConfig{OsStruct: osStruct, Fqfn: fqfn}
+}
+
+func TestFailReadDcConfig(t *testing.T) {
+	methodsToFailAndErrors := [][][]string{
+		{
+			{`ReadFile`},
+			{"error reading config:\n\treading config file: '/path/to/dumbclicker/docker-compose.yml' error:\n\tfailed to read file: '/path/to/dumbclicker/docker-compose.yml'. error is: 'not found',\n"},
+		},
+	}
+	for _, methodsNamesAndErrors := range methodsToFailAndErrors {
+		methodsNames := methodsNamesAndErrors[0]
+		lfaExpected := methodsNamesAndErrors[1]
+		methodsToFail := make(map[string]bool, len(methodsNames))
+		for _, methodName := range methodsNames {
+			methodsToFail[methodName] = true
+		}
+
+		dcConfigReader := getDcConfigReader(DcConfigOsStructDouble{
+			MethodsToFail: map[string]bool{`ReadFile`: true},
+		})
+
+		tle := getTestLogfuncExitType()
+
+		stdHandles, runner := makeRunnerDry(dryGetenv, &tle)
+
+		cmdNameArgs := cmd_name_args.CmdNameArgs
+		runner.CmdNameArgs, runner.DcConfigReader = cmdNameArgs, dcConfigReader
+
+		runner.Run()
+
+		tle.LogfuncAndExitTestWascalledsAndArgs(t, 1, lfaExpected, 1, 1)
+
+		stdout, stderr := stdHandles.Stdout, stdHandles.Stderr
+		if stdout.Len() != 0 {
+			t.Errorf("Not empty stdout: '%v'", stdout)
+		}
+
+		// emptyCmd := `["",[]]` + "\n"
+		// if stdout.String() == emptyCmd {
+		// 	t.Errorf("Match of stdout '%v' to empty command: '%v'", stdout, emptyCmd)
+		// }
+
+		// if stdout.String() != dryRunSample+"\n" {
+		// 	t.Errorf("No match of stdout '%v' to expected command: '%v'", stdout, dryRunSample)
+		// }
+
+		if stderr.String() != lfaExpected[0] {
+			t.Errorf("Wrong DcConfig read error on stderr: '%v'", stderr)
+		}
+
+	}
 }
 
 func TestCommandByDcyml(t *testing.T) {
@@ -451,7 +508,7 @@ func TestCommandByDcyml(t *testing.T) {
 
 	runner.Run()
 
-	tle.LogfuncAndExitTestWascalledsAndArgs(t, 0, []any{}, 0, 0)
+	tle.LogfuncAndExitTestWascalledsAndArgs(t, 0, []string{}, 0, 0)
 
 	stdout, stderr := stdHandles.Stdout, stdHandles.Stderr
 	if stdout.Len() == 0 {

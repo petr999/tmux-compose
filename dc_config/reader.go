@@ -31,12 +31,12 @@ func (dcConfig DcConfig) Read() (DcConfigValueType, error) {
 	fqfn := dcConfig.Fqfn
 	buf, err = dcConfig.OsStruct.ReadFile(fqfn)
 	if err != nil {
-		return nil, fmt.Errorf(`reading config file: '%s' error: '%w'`, fqfn, err)
+		return nil, fmt.Errorf("reading config file: '%s' error:\n\t%w", fqfn, err)
 	}
 
 	err = yaml.Unmarshal(buf, &value)
 	if err != nil {
-		return nil, fmt.Errorf(`parsing config file: '%s' error: '%w'`, fqfn, err)
+		return nil, fmt.Errorf("parsing config file: '%s' error:\n\t%w", fqfn, err)
 	}
 	return value, nil
 }

@@ -28,6 +28,7 @@ func (runner *Runner) Run() {
 	if err != nil {
 		LogFunc(fmt.Sprintf("%v,\n", err))
 		OsStruct.Exit(1)
+		return // XXX test
 	}
 
 	ExecStruct.MakeCommand(&exec.MakeCommandDryRunType{DryRun: OsStruct.Getenv(DryRunEnvVarName), OsStruct: OsStruct},
@@ -40,6 +41,7 @@ func (runner *Runner) Run() {
 	if err != nil {
 		LogFunc(fmt.Sprintf("%v,\n", err))
 		OsStruct.Exit(1)
+		return // XXX test
 	}
 
 }

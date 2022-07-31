@@ -9,7 +9,7 @@ import (
 func CmdNameArgs(dcConfigReader dc_config.ReaderInterface) (types.CmdNameArgsType, error) {
 	_, err := dcConfigReader.Read()
 	if err != nil {
-		return types.CmdNameArgsType{Workdir: ``, Name: ``, Args: nil}, fmt.Errorf(`error reading config: '%w'`, err)
+		return types.CmdNameArgsType{Workdir: ``, Name: ``, Args: nil}, fmt.Errorf("error reading config:\n\t%w", err)
 	}
 
 	// ID=0; try_next=1; trap 'echo "trap pid: ${PID}"; kill -INT $PID; try_next="";' SIGINT; while [ 'x1' == "x${try_next}" ]; do sleep 1 & PID=$!; echo "pid: ${PID}" ; wait $PID; done
