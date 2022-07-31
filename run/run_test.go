@@ -22,23 +22,38 @@ import (
 
 const loremString = `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin facilisis mi sapien, vitae accumsan libero malesuada in. Suspendisse sodales finibus sagittis. Proin et augue vitae dui scelerisque imperdiet. Suspendisse et pulvinar libero. Vestibulum id porttitor augue. Vivamus lobortis lacus et libero ultricies accumsan. Donec non feugiat enim, nec tempus nunc. Mauris rutrum, diam euismod elementum ultricies, purus tellus faucibus augue, sit amet tristique diam purus eu arcu. Integer elementum urna non justo fringilla fermentum. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Quisque sollicitudin elit in metus imperdiet, et gravida tortor hendrerit. In volutpat tellus quis sapien rutrum, sit amet cursus augue ultricies. Morbi tincidunt arcu id commodo mollis. Aliquam laoreet purus sed justo pulvinar, quis porta risus lobortis. In commodo leo id porta mattis.`
 
-const dcConfigSample = "version: \"3.9\"\n\n" +
-	"services:\n" +
-	"  nginx:\n" +
-	"    image: nginx:latest\n" +
-	"  h2o:\n" +
-	"    image: lkwg82/h2o-http2-server:latest\n" +
-	"  dumbclicker:\n" +
-	"    image: busybox:latest\n" +
-	"    command: sh -c 'while :; do echo -ne  GET / HTTP/1.0\"\\n\\n\" | nc h2o 8080 | head -5 | tail -1; echo -ne  GET / HTTP/1.0\"\\n\\n\" | nc nginx 80 | head -2 | tail -1; sleep 1; done'\n"
-
 type stdHandlesType struct {
 	Stdout *bytes.Buffer
 	Stderr *bytes.Buffer
 	Stdin  *bytes.Buffer
 }
 
-var projDir string = getProjDir()
+var projDir = getProjDir()
+var dcConfigSample = getDcConfigSample()
+
+func getProjDir() string {
+	_, testFilename, _, _ := runtime.Caller(0)
+	projDir, err := filepath.Abs(filepath.Join(filepath.Dir(testFilename), `..`))
+	if err != nil {
+		panic(fmt.Sprintf("Empty project directory: '%v'", projDir))
+	}
+	return projDir
+}
+
+func readTestdataFile(fname string) string {
+	fqfn := filepath.Join(projDir, `testdata`, fname)
+	outputBytes, _ := ioutil.ReadFile(fqfn)
+	if len(outputBytes) == 0 {
+		panic(fmt.Sprintf("Empty test data file: '%v'", fqfn))
+	}
+
+	return string(outputBytes)
+}
+
+func getDcConfigSample() string {
+	fname := filepath.Join(`dumbclicker`, `docker-compose.yml`)
+	return readTestdataFile(fname)
+}
 
 func makeRunnerCommon() (*stdHandlesType, *Runner) {
 	var stdoutBuf, stderrBuf, stdinBuf bytes.Buffer
@@ -422,22 +437,8 @@ func getDcConfigReader(osStruct dc_config.DcConfigOsInterface) dc_config.DcConfi
 	return dc_config.DcConfig{OsStruct: osStruct, Fqfn: fqfn}
 }
 
-func getProjDir() string {
-	_, testFilename, _, _ := runtime.Caller(0)
-	projDir, err := filepath.Abs(filepath.Join(filepath.Dir(testFilename), `..`))
-	if err != nil {
-		panic(fmt.Sprintf("Empty project directory: '%v'", projDir))
-	}
-	return projDir
-}
-
 func TestCommandByDcyml(t *testing.T) {
-	fname := filepath.Join(projDir, `testdata`, `sample.sh`)
-	dryRunOutputBytes, _ := ioutil.ReadFile(fname)
-	if len(dryRunOutputBytes) == 0 {
-		panic(fmt.Sprintf("Empty shell template: '%v'", fname))
-	}
-	dryRunSample := string(dryRunOutputBytes)
+	dryRunSample := readTestdataFile(`sample.sh`)
 
 	tle := getTestLogfuncExitType()
 
