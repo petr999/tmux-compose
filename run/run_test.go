@@ -423,7 +423,11 @@ type DcConfigOsStructDouble struct {
 }
 
 func (osStruct DcConfigOsStructDouble) Chdir(dir string) error {
-	return nil
+	if _, ok := osStruct.MethodsToFail["ReadFile"]; !ok {
+		return nil
+	} else { // ok to fail
+		return fmt.Errorf("failed to change to dir: '%v'. error is: 'not found'", dir)
+	}
 }
 
 func (osStruct DcConfigOsStructDouble) Getwd() (dir string, err error) {
@@ -450,6 +454,10 @@ func TestFailReadDcConfig(t *testing.T) {
 			{`ReadFile`},
 			{"error reading config:\n\treading config file: '/path/to/dumbclicker/docker-compose.yml' error:\n\tfailed to read file: '/path/to/dumbclicker/docker-compose.yml'. error is: 'not found',\n"},
 		},
+		{
+			{`Chdir`},
+			{"error reading config:\n\treading config file: '/path/to/dumbclicker/docker-compose.yml' error:\n\tfailed to change to dir: '/path/to/dumbclicker'. error is: 'not found',\n"},
+		},
 	}
 	for _, methodsNamesAndErrors := range methodsToFailAndErrors {
 		methodsNames := methodsNamesAndErrors[0]
@@ -460,7 +468,7 @@ func TestFailReadDcConfig(t *testing.T) {
 		}
 
 		dcConfigReader := getDcConfigReader(DcConfigOsStructDouble{
-			MethodsToFail: map[string]bool{`ReadFile`: true},
+			MethodsToFail: methodsToFail,
 		})
 
 		tle := getTestLogfuncExitType()
