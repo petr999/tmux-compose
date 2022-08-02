@@ -432,7 +432,7 @@ func (osStruct DcConfigOsStructDouble) Chdir(dir string) error {
 
 func (osStruct DcConfigOsStructDouble) Getwd() (dir string, err error) {
 	if _, ok := osStruct.MethodsToFail["Getwd"]; ok {
-		return ``, fmt.Errorf("getting current directory name: '%v'. error is: 'not found'", dir)
+		return ``, fmt.Errorf("getting current directory name. error is: 'not found'")
 	} else { // ok to fail
 		return `/path/to/dumbclicker`, nil
 	}
@@ -461,6 +461,10 @@ func TestFailReadDcConfig(t *testing.T) {
 		{
 			{`Chdir`},
 			{"error reading config:\n\tfailed to change to dir: '/path/to/dumbclicker' error:\n\tchanging to config file directory: '/path/to/dumbclicker'. error is: 'not found',\n"},
+		},
+		{
+			{`Getwd`},
+			{"error reading config:\n\tfailed to get current directory:\n\tgetting current directory name. error is: 'not found',\n"},
 		},
 	}
 	for _, methodsNamesAndErrors := range methodsToFailAndErrors {
