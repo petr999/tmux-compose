@@ -48,6 +48,10 @@ func (dcConfig DcConfig) Read() (DcConfigValueType, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to change to dir: '%s' error:\n\t%w", dir, err)
 	}
+	_, err = dcConfig.OsStruct.Getwd()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get current directory:\n\t%w", err)
+	}
 
 	return dcConfig.readConfigFile()
 }
