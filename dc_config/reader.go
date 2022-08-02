@@ -3,6 +3,7 @@ package dc_config
 import (
 	"fmt"
 	"path/filepath"
+	"regexp"
 
 	"github.com/ghodss/yaml"
 )
@@ -23,7 +24,14 @@ type DcConfig struct {
 	Fqfn     string
 }
 
-type DcConfigValueType = map[string]interface{}
+type DcConfigValueType = struct {
+	WorkDir         string
+	DcServicesNames []interface{} `json:"services"`
+} // map[string]interface{}
+
+type DcConfigFileType = struct {
+	Services map[string]map[string]interface{}
+}
 
 func (dcConfig DcConfig) readConfigFile() (value DcConfigValueType, err error) {
 	var buf []byte
@@ -31,12 +39,12 @@ func (dcConfig DcConfig) readConfigFile() (value DcConfigValueType, err error) {
 
 	buf, err = dcConfig.OsStruct.ReadFile(fqfn)
 	if err != nil {
-		return nil, fmt.Errorf("reading config file: '%s' error:\n\t%w", fqfn, err)
+		return DcConfigValueType{}, fmt.Errorf("reading config file: '%s' error:\n\t%w", fqfn, err)
 	}
 
 	err = yaml.Unmarshal(buf, &value)
 	if err != nil {
-		return nil, fmt.Errorf("parsing config file: '%s' error:\n\t%w", fqfn, err)
+		return DcConfigValueType{}, fmt.Errorf("parsing config file: '%s' error:\n\t%w", fqfn, err)
 	}
 
 	return
@@ -46,14 +54,34 @@ func (dcConfig DcConfig) Read() (DcConfigValueType, error) {
 	dir := filepath.Dir(dcConfig.Fqfn)
 	err := dcConfig.OsStruct.Chdir(dir)
 	if err != nil {
-		return nil, fmt.Errorf("failed to change to dir: '%s' error:\n\t%w", dir, err)
+		return DcConfigValueType{}, fmt.Errorf("failed to change to dir: '%v' error:\n\t%w", dir, err)
 	}
-	_, err = dcConfig.OsStruct.Getwd()
+	workDir, err := dcConfig.OsStruct.Getwd()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get current directory:\n\t%w", err)
+		return DcConfigValueType{}, fmt.Errorf("failed to get current directory:\n\t%w", err)
+	}
+	if len(workDir) == 0 {
+		return DcConfigValueType{}, fmt.Errorf("work directory is empty")
 	}
 
-	return dcConfig.readConfigFile()
+	value, err := dcConfig.readConfigFile()
+	if err != nil {
+		return value, err
+	}
+
+	if len(value.DcServicesNames) == 0 {
+		return DcConfigValueType{}, fmt.Errorf("no service names in config: '%v'", dcConfig.Fqfn)
+	} else {
+		for i, serviceName := range value.DcServicesNames {
+			if len(serviceName) == 0 || regexp.MustCompile(`^\w[\w\d]*$`).MatchString(serviceName) {
+				return DcConfigValueType{}, fmt.Errorf("empty or inappropriate service name #%v '%v' in config: '%v'", i, serviceName, dcConfig.Fqfn)
+			}
+		}
+	}
+
+	value.WorkDir = workDir
+
+	return value, err
 }
 
 func (dcConfig DcConfig) SetFqfn(fqfn string) {}

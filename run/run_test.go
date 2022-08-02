@@ -495,6 +495,90 @@ func TestFailReadDcConfig(t *testing.T) {
 			t.Errorf("Not empty stdout: '%v'", stdout)
 		}
 
+		if stderr.String() != lfaExpected[0] {
+			t.Errorf("Wrong DcConfig read error on stderr: '%v'", stderr)
+		}
+
+	}
+}
+
+type DcConfigUnparseableOsStructDouble struct {
+	DcConfigOsStructDouble
+}
+
+func (osStruct DcConfigUnparseableOsStructDouble) ReadFile(name string) ([]byte, error) {
+	return []byte(`v: [A,`), nil
+}
+
+type DcConfigEmptyOsStructDouble struct {
+	DcConfigOsStructDouble
+}
+
+func (osStruct DcConfigEmptyOsStructDouble) ReadFile(name string) ([]byte, error) {
+	return []byte{}, nil
+}
+
+type DcConfigEmptyServicesOsStructDouble struct {
+	DcConfigOsStructDouble
+}
+
+func (osStruct DcConfigEmptyServicesOsStructDouble) ReadFile(name string) ([]byte, error) {
+	return []byte("version: \"3.7\"\n\nservices:\n"), nil
+}
+
+type DcConfigEmptyServiceNameOsStructDouble struct {
+	DcConfigOsStructDouble
+}
+
+func (osStruct DcConfigEmptyServiceNameOsStructDouble) ReadFile(name string) ([]byte, error) {
+	return []byte("version: \"3.7\"\n\nservices:\n    nginx:\n      image: nginx:latest"), nil
+}
+
+func TestFailReadBadDcConfig(t *testing.T) {
+	failedDccOssDoubles := []struct {
+		dcConfigOsInterface dc_config.DcConfigOsInterface
+		lfaExpected         []string
+	}{
+		// {
+		// 	DcConfigUnparseableOsStructDouble{},
+		// 	[]string{"error reading config:\n\tparsing config file: '/path/to/dumbclicker/docker-compose.yml' error:\n\terror converting YAML to JSON: yaml: line 1: did not find expected node content,\n"},
+		// },
+		// {
+		// 	DcConfigEmptyOsStructDouble{},
+		// 	[]string{"error reading config:\n\tno service names in config: '/path/to/dumbclicker/docker-compose.yml',\n"},
+		// },
+		// {
+		// 	DcConfigEmptyServicesOsStructDouble{},
+		// 	[]string{"error reading config:\n\tno service names in config: '/path/to/dumbclicker/docker-compose.yml',\n"},
+		// },
+		{
+			DcConfigEmptyServiceNameOsStructDouble{},
+			[]string{"error reading config:\n\tno service names in config: '/path/to/dumbclicker/docker-compose.yml',\n"},
+		},
+	}
+	for _, failedDccOssDouble := range failedDccOssDoubles {
+		dcConfigReader := getDcConfigReader(failedDccOssDouble.dcConfigOsInterface)
+		lfaExpected := failedDccOssDouble.lfaExpected
+
+		// lfaExpected := []string{"error reading config:\n\tparsing config file: '/path/to/dumbclicker/docker-compose.yml' error:\n\terror converting YAML to JSON: yaml: line 1: did not find expected node content,\n"}
+		// lfaExpected := []string{"error reading config:\n\tno service names in config: '/path/to/dumbclicker/docker-compose.yml',\n"}
+
+		tle := getTestLogfuncExitType()
+
+		stdHandles, runner := makeRunnerDry(dryGetenv, &tle)
+
+		cmdNameArgs := cmd_name_args.CmdNameArgs
+		runner.CmdNameArgs, runner.DcConfigReader = cmdNameArgs, dcConfigReader
+
+		runner.Run()
+
+		tle.LogfuncAndExitTestWascalledsAndArgs(t, 1, lfaExpected, 1, 1)
+
+		stdout, stderr := stdHandles.Stdout, stdHandles.Stderr
+		if stdout.Len() != 0 {
+			t.Errorf("Not empty stdout: '%v'", stdout)
+		}
+
 		// emptyCmd := `["",[]]` + "\n"
 		// if stdout.String() == emptyCmd {
 		// 	t.Errorf("Match of stdout '%v' to empty command: '%v'", stdout, emptyCmd)
@@ -507,8 +591,8 @@ func TestFailReadDcConfig(t *testing.T) {
 		if stderr.String() != lfaExpected[0] {
 			t.Errorf("Wrong DcConfig read error on stderr: '%v'", stderr)
 		}
-
 	}
+
 }
 
 func TestCommandByDcyml(t *testing.T) {
