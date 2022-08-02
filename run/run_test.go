@@ -423,22 +423,26 @@ type DcConfigOsStructDouble struct {
 }
 
 func (osStruct DcConfigOsStructDouble) Chdir(dir string) error {
-	if _, ok := osStruct.MethodsToFail["ReadFile"]; !ok {
-		return nil
+	if _, ok := osStruct.MethodsToFail["Chdir"]; ok {
+		return fmt.Errorf("changing to config file directory: '%v'. error is: 'not found'", dir)
 	} else { // ok to fail
-		return fmt.Errorf("failed to change to dir: '%v'. error is: 'not found'", dir)
+		return nil
 	}
 }
 
 func (osStruct DcConfigOsStructDouble) Getwd() (dir string, err error) {
-	return `/path/to/dumbclicker`, nil
+	if _, ok := osStruct.MethodsToFail["Getwd"]; ok {
+		return ``, fmt.Errorf("getting current directory name: '%v'. error is: 'not found'", dir)
+	} else { // ok to fail
+		return `/path/to/dumbclicker`, nil
+	}
 }
 
 func (osStruct DcConfigOsStructDouble) ReadFile(name string) ([]byte, error) {
-	if _, ok := osStruct.MethodsToFail["ReadFile"]; !ok {
-		return []byte(dcConfigSample), nil
-	} else { // ok to fail
+	if _, ok := osStruct.MethodsToFail["ReadFile"]; ok {
 		return []byte{}, fmt.Errorf("failed to read file: '%v'. error is: 'not found'", name)
+	} else { // ok to fail
+		return []byte(dcConfigSample), nil
 	}
 }
 
@@ -456,7 +460,7 @@ func TestFailReadDcConfig(t *testing.T) {
 		},
 		{
 			{`Chdir`},
-			{"error reading config:\n\treading config file: '/path/to/dumbclicker/docker-compose.yml' error:\n\tfailed to change to dir: '/path/to/dumbclicker'. error is: 'not found',\n"},
+			{"error reading config:\n\tfailed to change to dir: '/path/to/dumbclicker' error:\n\tchanging to config file directory: '/path/to/dumbclicker'. error is: 'not found',\n"},
 		},
 	}
 	for _, methodsNamesAndErrors := range methodsToFailAndErrors {

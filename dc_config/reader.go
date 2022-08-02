@@ -2,6 +2,7 @@ package dc_config
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/ghodss/yaml"
 )
@@ -24,11 +25,10 @@ type DcConfig struct {
 
 type DcConfigValueType = map[string]interface{}
 
-func (dcConfig DcConfig) Read() (DcConfigValueType, error) {
-	var err error
+func (dcConfig DcConfig) readConfigFile() (value DcConfigValueType, err error) {
 	var buf []byte
-	var value DcConfigValueType
 	fqfn := dcConfig.Fqfn
+
 	buf, err = dcConfig.OsStruct.ReadFile(fqfn)
 	if err != nil {
 		return nil, fmt.Errorf("reading config file: '%s' error:\n\t%w", fqfn, err)
@@ -38,7 +38,18 @@ func (dcConfig DcConfig) Read() (DcConfigValueType, error) {
 	if err != nil {
 		return nil, fmt.Errorf("parsing config file: '%s' error:\n\t%w", fqfn, err)
 	}
-	return value, nil
+
+	return
+}
+
+func (dcConfig DcConfig) Read() (DcConfigValueType, error) {
+	dir := filepath.Dir(dcConfig.Fqfn)
+	err := dcConfig.OsStruct.Chdir(dir)
+	if err != nil {
+		return nil, fmt.Errorf("failed to change to dir: '%s' error:\n\t%w", dir, err)
+	}
+
+	return dcConfig.readConfigFile()
 }
 
 func (dcConfig DcConfig) SetFqfn(fqfn string) {}
