@@ -18,6 +18,8 @@ import (
 	"tmux_compose/dc_config"
 	"tmux_compose/run/exec"
 	"tmux_compose/types"
+
+	"github.com/gkampitakis/go-snaps/snaps"
 )
 
 const loremString = `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin facilisis mi sapien, vitae accumsan libero malesuada in. Suspendisse sodales finibus sagittis. Proin et augue vitae dui scelerisque imperdiet. Suspendisse et pulvinar libero. Vestibulum id porttitor augue. Vivamus lobortis lacus et libero ultricies accumsan. Donec non feugiat enim, nec tempus nunc. Mauris rutrum, diam euismod elementum ultricies, purus tellus faucibus augue, sit amet tristique diam purus eu arcu. Integer elementum urna non justo fringilla fermentum. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Quisque sollicitudin elit in metus imperdiet, et gravida tortor hendrerit. In volutpat tellus quis sapien rutrum, sit amet cursus augue ultricies. Morbi tincidunt arcu id commodo mollis. Aliquam laoreet purus sed justo pulvinar, quis porta risus lobortis. In commodo leo id porta mattis.`
@@ -72,7 +74,7 @@ func makeRunnerCommon() (*stdHandlesType, *Runner) {
 			Getenv: func(string) string { return `` },
 			Chdir:  func(string) error { return nil },
 		},
-		CmdNameArgs: func(dcConfigReader dc_config.ReaderInterface) (types.CmdNameArgsType, error) {
+		CmdNameArgs: func(dcConfigReader dc_config.ReaderInterface, getTmplFuncs []func() string) (types.CmdNameArgsType, error) {
 			return cmdNameArgsEmpty, nil
 		},
 	}
@@ -91,7 +93,7 @@ func makeRunner(tle *testLogfuncExitType) (stdHandles *stdHandlesType, runner *R
 func makeRunnerForFatal(cmdName string, tle *testLogfuncExitType) (*stdHandlesType, *Runner) {
 	stdHandles, runner := makeRunner(tle)
 
-	runner.CmdNameArgs = func(dcConfigReader dc_config.ReaderInterface) (types.CmdNameArgsType, error) {
+	runner.CmdNameArgs = func(dcConfigReader dc_config.ReaderInterface, getTmplFuncs []func() string) (types.CmdNameArgsType, error) {
 		return cmdNameArgsEmpty, nil
 	}
 
@@ -308,7 +310,7 @@ func TestCmdRunWasCalledWithArgs(t *testing.T) {
 			osExecCmdRunDouble := &OsExecCmdRunDouble{}
 			tle := getTestLogfuncExitType()
 			runner := makeRunnerForCmdRun(osExecCmdRunDouble, &tle)
-			runner.CmdNameArgs = func(dcConfigReader dc_config.ReaderInterface) (types.CmdNameArgsType, error) {
+			runner.CmdNameArgs = func(dcConfigReader dc_config.ReaderInterface, getTmplFuncs []func() string) (types.CmdNameArgsType, error) {
 				return types.CmdNameArgsType{Workdir: ``, Name: name, Args: args}, nil
 			}
 
@@ -388,7 +390,7 @@ func TestStdoutByCommand(t *testing.T) {
 		{{`docker-compose`}, {`up`, `-d`}}}
 	for _, nameArgs := range namesArgs {
 		name, args := nameArgs[0][0], nameArgs[1]
-		cmdNameArgs := func(dcConfigReader dc_config.ReaderInterface) (types.CmdNameArgsType, error) {
+		cmdNameArgs := func(dcConfigReader dc_config.ReaderInterface, getTmplFuncs []func() string) (types.CmdNameArgsType, error) {
 			return types.CmdNameArgsType{Workdir: ``, Name: name, Args: args}, nil
 		}
 
@@ -607,6 +609,57 @@ func TestFailReadBadDcConfig(t *testing.T) {
 
 }
 
+type DcConfigOsStructToFailCnaDouble struct {
+}
+
+func (osStruct DcConfigOsStructToFailCnaDouble) Chdir(dir string) error {
+	return nil
+}
+
+func (osStruct DcConfigOsStructToFailCnaDouble) Getwd() (string, error) {
+	return `/`, nil
+}
+
+func (osStruct DcConfigOsStructToFailCnaDouble) ReadFile(name string) ([]byte, error) {
+	return []byte(dcConfigSample), nil
+}
+
+func addTmplFailure(cmdNameArgs CmdNameArgsFunc) CmdNameArgsFunc {
+	return func(dcConfigReader dc_config.ReaderInterface, getTmplFuncs []func() string) (types.CmdNameArgsType, error) {
+		return cmd_name_args.CmdNameArgs(dcConfigReader, []func() string{
+			func() string { return `{{.Nonexistent}}` },
+		})
+	}
+}
+
+func TestCmdNameArgsFails(t *testing.T) {
+	lfaExpected := []string{"error reading config:\n\tempty or inappropriate service name '-' in config: '/path/to/dumbclicker/docker-compose.yml',\n"}
+
+	tle := getTestLogfuncExitType()
+
+	stdHandles, runner := makeRunnerDry(dryGetenv, &tle)
+
+	cmdNameArgs := addTmplFailure(cmd_name_args.CmdNameArgs)
+	dcConfigReader := getDcConfigReader(DcConfigOsStructToFailCnaDouble{})
+	runner.CmdNameArgs, runner.DcConfigReader = cmdNameArgs, dcConfigReader
+
+	runner.Run()
+
+	tle.LogfuncAndExitTestWascalledsAndArgs(t, 1, lfaExpected, 1, 1)
+
+	stdout, stderr := stdHandles.Stdout, stdHandles.Stderr
+
+	if len(stdout.String()) != 0 {
+		t.Errorf("Not empty stdout: '%v'", stdout)
+	}
+
+	if stderr.Len() == 0 {
+		t.Errorf("Empty stderr: '%v'", stderr)
+	}
+
+	snaps.MatchSnapshot(t, stderr.String())
+}
+
 func TestCommandByDcyml(t *testing.T) {
 	dryRunSample := readTestdataFile(`sample.sh`)
 
@@ -639,5 +692,10 @@ func TestCommandByDcyml(t *testing.T) {
 	if stderr.Len() != 0 {
 		t.Errorf("Non-empty stderr: '%v'", stderr)
 	}
+}
 
+func TestMain(m *testing.M) {
+	errCode := m.Run()
+	snaps.Clean()
+	os.Exit(errCode)
 }

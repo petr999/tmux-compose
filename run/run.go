@@ -11,7 +11,7 @@ const DryRunEnvVarName = `TMUX_COMPOSE_DRY_RUN`
 
 type LogFuncType func(s string)
 
-type CmdNameArgsFunc func(dcConfigReader dc_config.ReaderInterface) (types.CmdNameArgsType, error)
+type CmdNameArgsFunc func(dcConfigReader dc_config.ReaderInterface, getTmplFuncs []func() string) (types.CmdNameArgsType, error)
 
 type Runner struct {
 	CmdNameArgs    CmdNameArgsFunc
@@ -24,7 +24,7 @@ type Runner struct {
 func (runner *Runner) Run() {
 	DcConfigReader, ExecStruct, OsStruct, LogFunc := runner.DcConfigReader, runner.ExecStruct, runner.OsStruct, runner.LogFunc
 	CmdNameArgs := runner.CmdNameArgs
-	cmdNameArgs, err := CmdNameArgs(DcConfigReader)
+	cmdNameArgs, err := CmdNameArgs(DcConfigReader, []func() string{})
 	if err != nil {
 		LogFunc(fmt.Sprintf("%v,\n", err))
 		OsStruct.Exit(1)

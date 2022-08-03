@@ -25,7 +25,7 @@ type DcConfig struct {
 }
 
 type DcConfigValueType = struct {
-	WorkDir         string
+	Workdir         string
 	DcServicesNames map[string]interface{} `json:"services"`
 } // map[string]interface{}
 
@@ -79,7 +79,7 @@ func (dcConfig DcConfig) Read() (DcConfigValueType, error) {
 		}
 	}
 
-	value.WorkDir = workDir
+	value.Workdir = workDir
 
 	return value, err
 }
