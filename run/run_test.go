@@ -531,7 +531,15 @@ type DcConfigEmptyServiceNameOsStructDouble struct {
 }
 
 func (osStruct DcConfigEmptyServiceNameOsStructDouble) ReadFile(name string) ([]byte, error) {
-	return []byte("version: \"3.7\"\n\nservices:\n    nginx:\n      image: nginx:latest"), nil
+	return []byte("version: \"3.7\"\n\nservices:\n    \"\":\n      image: nginx:latest"), nil
+}
+
+type DcConfigBadServiceNameOsStructDouble struct {
+	DcConfigOsStructDouble
+}
+
+func (osStruct DcConfigBadServiceNameOsStructDouble) ReadFile(name string) ([]byte, error) {
+	return []byte("version: \"3.7\"\n\nservices:\n    \"-\":\n      image: nginx:latest"), nil
 }
 
 func TestFailReadBadDcConfig(t *testing.T) {
@@ -539,21 +547,25 @@ func TestFailReadBadDcConfig(t *testing.T) {
 		dcConfigOsInterface dc_config.DcConfigOsInterface
 		lfaExpected         []string
 	}{
-		// {
-		// 	DcConfigUnparseableOsStructDouble{},
-		// 	[]string{"error reading config:\n\tparsing config file: '/path/to/dumbclicker/docker-compose.yml' error:\n\terror converting YAML to JSON: yaml: line 1: did not find expected node content,\n"},
-		// },
-		// {
-		// 	DcConfigEmptyOsStructDouble{},
-		// 	[]string{"error reading config:\n\tno service names in config: '/path/to/dumbclicker/docker-compose.yml',\n"},
-		// },
-		// {
-		// 	DcConfigEmptyServicesOsStructDouble{},
-		// 	[]string{"error reading config:\n\tno service names in config: '/path/to/dumbclicker/docker-compose.yml',\n"},
-		// },
+		{
+			DcConfigUnparseableOsStructDouble{},
+			[]string{"error reading config:\n\tparsing config file: '/path/to/dumbclicker/docker-compose.yml' error:\n\terror converting YAML to JSON: yaml: line 1: did not find expected node content,\n"},
+		},
+		{
+			DcConfigEmptyOsStructDouble{},
+			[]string{"error reading config:\n\tno service names in config: '/path/to/dumbclicker/docker-compose.yml',\n"},
+		},
+		{
+			DcConfigEmptyServicesOsStructDouble{},
+			[]string{"error reading config:\n\tno service names in config: '/path/to/dumbclicker/docker-compose.yml',\n"},
+		},
 		{
 			DcConfigEmptyServiceNameOsStructDouble{},
-			[]string{"error reading config:\n\tno service names in config: '/path/to/dumbclicker/docker-compose.yml',\n"},
+			[]string{"error reading config:\n\tempty or inappropriate service name '' in config: '/path/to/dumbclicker/docker-compose.yml',\n"},
+		},
+		{
+			DcConfigBadServiceNameOsStructDouble{},
+			[]string{"error reading config:\n\tempty or inappropriate service name '-' in config: '/path/to/dumbclicker/docker-compose.yml',\n"},
 		},
 	}
 	for _, failedDccOssDouble := range failedDccOssDoubles {

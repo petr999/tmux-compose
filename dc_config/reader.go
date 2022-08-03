@@ -26,7 +26,7 @@ type DcConfig struct {
 
 type DcConfigValueType = struct {
 	WorkDir         string
-	DcServicesNames []interface{} `json:"services"`
+	DcServicesNames map[string]interface{} `json:"services"`
 } // map[string]interface{}
 
 type DcConfigFileType = struct {
@@ -72,9 +72,9 @@ func (dcConfig DcConfig) Read() (DcConfigValueType, error) {
 	if len(value.DcServicesNames) == 0 {
 		return DcConfigValueType{}, fmt.Errorf("no service names in config: '%v'", dcConfig.Fqfn)
 	} else {
-		for i, serviceName := range value.DcServicesNames {
-			if len(serviceName) == 0 || regexp.MustCompile(`^\w[\w\d]*$`).MatchString(serviceName) {
-				return DcConfigValueType{}, fmt.Errorf("empty or inappropriate service name #%v '%v' in config: '%v'", i, serviceName, dcConfig.Fqfn)
+		for serviceName := range value.DcServicesNames {
+			if len(serviceName) == 0 || !regexp.MustCompile(`^\w[\w\d]*$`).MatchString(serviceName) {
+				return DcConfigValueType{}, fmt.Errorf("empty or inappropriate service name '%v' in config: '%v'", serviceName, dcConfig.Fqfn)
 			}
 		}
 	}
