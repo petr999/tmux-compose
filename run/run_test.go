@@ -622,15 +622,7 @@ func (osStruct DcConfigOsStructToFailCnaDouble) ReadFile(name string) ([]byte, e
 	return []byte(dcConfigSample), nil
 }
 
-func addTmplFailure(cmdNameArgs CmdNameArgsFunc) CmdNameArgsFunc {
-	return func(dcConfigReader dc_config.ReaderInterface, getTmplFuncs []func() string) (types.CmdNameArgsType, error) {
-		return cmd_name_args.CmdNameArgs(dcConfigReader, []func() string{
-			func() string { return `{{.Nonexistent}}` },
-		})
-	}
-}
-
-func TestCmdNameArgsFails(t *testing.T) {
+func TestCmdNameDcArgFails(t *testing.T) {
 	lfaExpected := []string{"error finding base dir name '/' same length for work dir: '/',\n"}
 
 	tle := getTestLogfuncExitType()
@@ -658,7 +650,44 @@ func TestCmdNameArgsFails(t *testing.T) {
 	if stderr.String() != lfaExpected[0] {
 		t.Errorf("Wrong DcConfig read error on stderr: '%v'", stderr)
 	}
+}
 
+func addTmplFailure(cmdNameArgs CmdNameArgsFunc) CmdNameArgsFunc {
+	return func(dcConfigReader dc_config.ReaderInterface, getTmplFuncs []func() string) (types.CmdNameArgsType, error) {
+		return cmd_name_args.CmdNameArgs(dcConfigReader, []func() string{
+			func() string { return `{{.Nonexistent}}` },
+		})
+	}
+}
+
+func TestCmdNameArgsFails(t *testing.T) {
+	lfaExpected := []string{"error finding base dir name '/' same length for work dir: '/',\n"}
+
+	tle := getTestLogfuncExitType()
+
+	stdHandles, runner := makeRunnerDry(dryGetenv, &tle)
+
+	cmdNameArgs := addTmplFailure(cmd_name_args.CmdNameArgs)
+	dcConfigReader := getDcConfigReader(DcConfigOsStructDouble{})
+	runner.CmdNameArgs, runner.DcConfigReader = cmdNameArgs, dcConfigReader
+
+	runner.Run()
+
+	tle.LogfuncAndExitTestWascalledsAndArgs(t, 1, lfaExpected, 1, 1)
+
+	stdout, stderr := stdHandles.Stdout, stdHandles.Stderr
+
+	if len(stdout.String()) != 0 {
+		t.Errorf("Not empty stdout: '%v'", stdout)
+	}
+
+	if stderr.Len() == 0 {
+		t.Errorf("Empty stderr: '%v'", stderr)
+	}
+
+	if stderr.String() != lfaExpected[0] {
+		t.Errorf("Wrong DcConfig read error on stderr: '%v'", stderr)
+	}
 }
 
 func TestCommandByDcyml(t *testing.T) {

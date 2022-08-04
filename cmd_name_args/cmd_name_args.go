@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"path/filepath"
+	"strings"
 	"text/template"
 	"tmux_compose/dc_config"
 	"tmux_compose/types"
@@ -19,11 +20,11 @@ type tmplType []struct {
 
 type dcvBasedirType struct {
 	Workdir         string
-	DcServicesNames map[string]interface{} `json:"services"`
+	DcServicesNames []string
 	Basedir         string
 }
 
-//go:embed templates/bash-new-window.json
+//go:embed templates/bash-new-window.gson
 var tmplJson []byte
 
 var nilValue = types.CmdNameArgsType{Workdir: ``, Name: ``, Args: nil}
@@ -33,7 +34,16 @@ var nilValue = types.CmdNameArgsType{Workdir: ``, Name: ``, Args: nil}
 // }
 
 func tmplExecute(tmplJson string, dcvBasedir dcvBasedirType) (tmplJsonNew string, err error) {
-	tmplObj := template.New(`tmux_compose`)
+	tmplObj := template.New(`tmux_compose`).Funcs(template.FuncMap{
+		"joinKeys": func(servicesNames map[string]string, implode string) string {
+			keys := make([]string, 0, len(servicesNames))
+			for k := range servicesNames {
+				keys = append(keys, k)
+			}
+
+			return strings.Join(keys, implode)
+		},
+	})
 	nameTmplObj, err := tmplObj.Parse(tmplJson)
 	if err != nil {
 		return ``, fmt.Errorf("error reading name template: '%v'\n\t%w", tmplJson, err)

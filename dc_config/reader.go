@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"regexp"
 
-	"github.com/ghodss/yaml"
+	"gopkg.in/yaml.v2"
 )
 
 type ReaderInterface interface {
@@ -26,11 +26,40 @@ type DcConfig struct {
 
 type DcConfigValueType = struct {
 	Workdir         string
-	DcServicesNames map[string]interface{} `json:"services"`
+	DcServicesNames []string
 } // map[string]interface{}
 
 type DcConfigFileType = struct {
 	Services map[string]map[string]interface{}
+}
+
+func getServices(mapSlices yaml.MapSlice) ([]string, error) {
+	services := []string{}
+
+	for _, slice := range mapSlices {
+		if slice.Key == `services` {
+			servicesFound, ok := slice.Value.([]yaml.MapItem)
+			if !ok {
+				return []string{}, fmt.Errorf("services are not a list: '%v'", mapSlices)
+			}
+
+			for _, servicesItem := range servicesFound {
+				serviceName, ok := servicesItem.Key.(string)
+				if !ok {
+					return []string{}, fmt.Errorf("service name is not a string: '%v'", serviceName)
+				}
+				services = append(services, serviceName)
+			}
+
+			continue
+		}
+	}
+
+	// for _, mapSlice := range mapSlices {
+	// 	dcKeyValue, ok := mapSlice.Key.(string)
+	// }
+
+	return services, nil
 }
 
 func (dcConfig DcConfig) readConfigFile() (value DcConfigValueType, err error) {
@@ -42,11 +71,19 @@ func (dcConfig DcConfig) readConfigFile() (value DcConfigValueType, err error) {
 		return DcConfigValueType{}, fmt.Errorf("reading config file: '%s' error:\n\t%w", fqfn, err)
 	}
 
-	err = yaml.Unmarshal(buf, &value)
+	mapSlices := yaml.MapSlice{}
+
+	err = yaml.Unmarshal(buf, &mapSlices)
 	if err != nil {
 		return DcConfigValueType{}, fmt.Errorf("parsing config file: '%s' error:\n\t%w", fqfn, err)
 	}
 
+	services, err := getServices(mapSlices)
+	if err != nil {
+		return
+	}
+
+	value.DcServicesNames = services
 	return
 }
 
@@ -72,7 +109,7 @@ func (dcConfig DcConfig) Read() (DcConfigValueType, error) {
 	if len(value.DcServicesNames) == 0 {
 		return DcConfigValueType{}, fmt.Errorf("no service names in config: '%v'", dcConfig.Fqfn)
 	} else {
-		for serviceName := range value.DcServicesNames {
+		for _, serviceName := range value.DcServicesNames {
 			if len(serviceName) == 0 || !regexp.MustCompile(`^\w[\w\d]*$`).MatchString(serviceName) {
 				return DcConfigValueType{}, fmt.Errorf("empty or inappropriate service name '%v' in config: '%v'", serviceName, dcConfig.Fqfn)
 			}
