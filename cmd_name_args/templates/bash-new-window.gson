@@ -7,14 +7,12 @@
 			"{{.Basedir}}-compose",
 			"\n\tdocker-compose up\n\tbash -l\n",
 			"\\;",
-			{{block "services" .}}
-			{{$baseDir := .Basedir}}{{range $serviceName, $serviceMap := .DcServicesNames}}
+			{{$baseDir := .Basedir}}{{range $i, $serviceName := .DcServicesNames}}
 			"neww",
 			"-n",
 			"{{$baseDir}}_{{$serviceName}}_1",
 			"\n\tPID=0\n\ttry_next=1\n\ttrap '\n\t\techo \"trap pid: ${PID}\"\n\t\tkill -INT $PID\n\t\ttry_next=\"\"\n\t' SIGINT\n\twhile [ 'x1' == \"x${try_next}\" ]; do\n\t\tbash -lc '\n\t\t\tdocker attach {{$baseDir}}_{{$serviceName}}_1\n\t\t\tsleep 1\n\t\t' &\n\t\tPID=$!\n\t\techo \"pid: ${PID}\"\n\t\twait $PID\n\tdone\n\ttrap - SIGINT\n\tbash -l",
-			"\\;",
-			{{end}}
+			"\\;"{{if IsNotLast $i (len $.DcServicesNames)}},{{end}}
 			{{end}}
 		]
 	}

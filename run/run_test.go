@@ -531,7 +531,15 @@ type DcConfigEmptyServiceNameOsStructDouble struct {
 }
 
 func (osStruct DcConfigEmptyServiceNameOsStructDouble) ReadFile(name string) ([]byte, error) {
-	return []byte("version: \"3.7\"\n\nservices:\n    \"\":\n      image: nginx:latest"), nil
+	return []byte("version: \"3.7\"\n\nservices:\n  \"\":\n      image: nginx:latest"), nil
+}
+
+type DcConfigIntServiceNameOsStructDouble struct {
+	DcConfigOsStructDouble
+}
+
+func (osStruct DcConfigIntServiceNameOsStructDouble) ReadFile(name string) ([]byte, error) {
+	return []byte("version: \"3.7\"\n\nservices:\n    1:\n      image: nginx:latest"), nil
 }
 
 type DcConfigBadServiceNameOsStructDouble struct {
@@ -549,7 +557,7 @@ func TestFailReadBadDcConfig(t *testing.T) {
 	}{
 		{
 			DcConfigUnparseableOsStructDouble{},
-			[]string{"error reading config:\n\tparsing config file: '/path/to/dumbclicker/docker-compose.yml' error:\n\terror converting YAML to JSON: yaml: line 1: did not find expected node content,\n"},
+			[]string{"error reading config:\n\tparsing config file: '/path/to/dumbclicker/docker-compose.yml' error:\n\tyaml: line 1: did not find expected node content,\n"},
 		},
 		{
 			DcConfigEmptyOsStructDouble{},
@@ -557,11 +565,15 @@ func TestFailReadBadDcConfig(t *testing.T) {
 		},
 		{
 			DcConfigEmptyServicesOsStructDouble{},
-			[]string{"error reading config:\n\tno service names in config: '/path/to/dumbclicker/docker-compose.yml',\n"},
+			[]string{"error reading config:\n\tparsing config file: '/path/to/dumbclicker/docker-compose.yml' error:\n\tservices are not a list of strings: '[{version 3.7} {services <nil>}]',\n"},
 		},
 		{
 			DcConfigEmptyServiceNameOsStructDouble{},
 			[]string{"error reading config:\n\tempty or inappropriate service name '' in config: '/path/to/dumbclicker/docker-compose.yml',\n"},
+		},
+		{
+			DcConfigIntServiceNameOsStructDouble{},
+			[]string{"error reading config:\n\tparsing config file: '/path/to/dumbclicker/docker-compose.yml' error:\n\tservice name is not a string: '1',\n"},
 		},
 		{
 			DcConfigBadServiceNameOsStructDouble{},
@@ -590,15 +602,6 @@ func TestFailReadBadDcConfig(t *testing.T) {
 		if stdout.Len() != 0 {
 			t.Errorf("Not empty stdout: '%v'", stdout)
 		}
-
-		// emptyCmd := `["",[]]` + "\n"
-		// if stdout.String() == emptyCmd {
-		// 	t.Errorf("Match of stdout '%v' to empty command: '%v'", stdout, emptyCmd)
-		// }
-
-		// if stdout.String() != dryRunSample+"\n" {
-		// 	t.Errorf("No match of stdout '%v' to expected command: '%v'", stdout, dryRunSample)
-		// }
 
 		if stderr.String() != lfaExpected[0] {
 			t.Errorf("Wrong DcConfig read error on stderr: '%v'", stderr)

@@ -38,15 +38,15 @@ func getServices(mapSlices yaml.MapSlice) ([]string, error) {
 
 	for _, slice := range mapSlices {
 		if slice.Key == `services` {
-			servicesFound, ok := slice.Value.([]yaml.MapItem)
+			servicesFound, ok := slice.Value.(yaml.MapSlice)
 			if !ok {
-				return []string{}, fmt.Errorf("services are not a list: '%v'", mapSlices)
+				return []string{}, fmt.Errorf("services are not a list of strings: '%v'", mapSlices)
 			}
 
 			for _, servicesItem := range servicesFound {
 				serviceName, ok := servicesItem.Key.(string)
 				if !ok {
-					return []string{}, fmt.Errorf("service name is not a string: '%v'", serviceName)
+					return []string{}, fmt.Errorf("service name is not a string: '%v'", servicesItem.Key)
 				}
 				services = append(services, serviceName)
 			}
@@ -80,6 +80,7 @@ func (dcConfig DcConfig) readConfigFile() (value DcConfigValueType, err error) {
 
 	services, err := getServices(mapSlices)
 	if err != nil {
+		err = fmt.Errorf("parsing config file: '%s' error:\n\t%w", fqfn, err)
 		return
 	}
 

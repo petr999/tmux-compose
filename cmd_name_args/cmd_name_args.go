@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"path/filepath"
-	"strings"
 	"text/template"
 	"tmux_compose/dc_config"
 	"tmux_compose/types"
@@ -35,15 +34,9 @@ var nilValue = types.CmdNameArgsType{Workdir: ``, Name: ``, Args: nil}
 
 func tmplExecute(tmplJson string, dcvBasedir dcvBasedirType) (tmplJsonNew string, err error) {
 	tmplObj := template.New(`tmux_compose`).Funcs(template.FuncMap{
-		"joinKeys": func(servicesNames map[string]string, implode string) string {
-			keys := make([]string, 0, len(servicesNames))
-			for k := range servicesNames {
-				keys = append(keys, k)
-			}
-
-			return strings.Join(keys, implode)
-		},
-	})
+		"IsNotLast": func(i int, length int) bool {
+			return i < length-1
+		}})
 	nameTmplObj, err := tmplObj.Parse(tmplJson)
 	if err != nil {
 		return ``, fmt.Errorf("error reading name template: '%v'\n\t%w", tmplJson, err)
