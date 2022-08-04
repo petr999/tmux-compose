@@ -18,8 +18,6 @@ import (
 	"tmux_compose/dc_config"
 	"tmux_compose/run/exec"
 	"tmux_compose/types"
-
-	"github.com/gkampitakis/go-snaps/snaps"
 )
 
 const loremString = `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin facilisis mi sapien, vitae accumsan libero malesuada in. Suspendisse sodales finibus sagittis. Proin et augue vitae dui scelerisque imperdiet. Suspendisse et pulvinar libero. Vestibulum id porttitor augue. Vivamus lobortis lacus et libero ultricies accumsan. Donec non feugiat enim, nec tempus nunc. Mauris rutrum, diam euismod elementum ultricies, purus tellus faucibus augue, sit amet tristique diam purus eu arcu. Integer elementum urna non justo fringilla fermentum. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Quisque sollicitudin elit in metus imperdiet, et gravida tortor hendrerit. In volutpat tellus quis sapien rutrum, sit amet cursus augue ultricies. Morbi tincidunt arcu id commodo mollis. Aliquam laoreet purus sed justo pulvinar, quis porta risus lobortis. In commodo leo id porta mattis.`
@@ -617,7 +615,7 @@ func (osStruct DcConfigOsStructToFailCnaDouble) Chdir(dir string) error {
 }
 
 func (osStruct DcConfigOsStructToFailCnaDouble) Getwd() (string, error) {
-	return `/`, nil
+	return `/`, nil // Fqdn
 }
 
 func (osStruct DcConfigOsStructToFailCnaDouble) ReadFile(name string) ([]byte, error) {
@@ -633,7 +631,7 @@ func addTmplFailure(cmdNameArgs CmdNameArgsFunc) CmdNameArgsFunc {
 }
 
 func TestCmdNameArgsFails(t *testing.T) {
-	lfaExpected := []string{"error reading config:\n\tempty or inappropriate service name '-' in config: '/path/to/dumbclicker/docker-compose.yml',\n"}
+	lfaExpected := []string{"error finding base dir name '/' same length for work dir: '/',\n"}
 
 	tle := getTestLogfuncExitType()
 
@@ -657,7 +655,10 @@ func TestCmdNameArgsFails(t *testing.T) {
 		t.Errorf("Empty stderr: '%v'", stderr)
 	}
 
-	snaps.MatchSnapshot(t, stderr.String())
+	if stderr.String() != lfaExpected[0] {
+		t.Errorf("Wrong DcConfig read error on stderr: '%v'", stderr)
+	}
+
 }
 
 func TestCommandByDcyml(t *testing.T) {
@@ -692,10 +693,4 @@ func TestCommandByDcyml(t *testing.T) {
 	if stderr.Len() != 0 {
 		t.Errorf("Non-empty stderr: '%v'", stderr)
 	}
-}
-
-func TestMain(m *testing.M) {
-	errCode := m.Run()
-	snaps.Clean()
-	os.Exit(errCode)
 }

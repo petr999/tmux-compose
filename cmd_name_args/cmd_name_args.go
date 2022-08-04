@@ -61,7 +61,7 @@ func CmdNameArgs(dcConfigReader dc_config.ReaderInterface, getTmplFuncs []func()
 	// if len(baseDir) == 0 {
 	// 	return nilValue, fmt.Errorf("error finding base dir name '%v' for work dir: '%v'", baseDir, dcConfig.Workdir)
 	// }
-	if len(baseDir) == len(dcConfig.Workdir) {
+	if len(baseDir) >= len(dcConfig.Workdir) {
 		return nilValue, fmt.Errorf("error finding base dir name '%v' same length for work dir: '%v'", baseDir, dcConfig.Workdir)
 	}
 
