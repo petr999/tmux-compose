@@ -28,9 +28,9 @@ var tmplJson []byte
 
 var nilValue = types.CmdNameArgsType{Workdir: ``, Name: ``, Args: nil}
 
-// func getNilValue() types.CmdNameArgsType {
-// 	return types.CmdNameArgsType{Workdir: ``, Name: ``, Args: nil}
-// }
+func getTmplJson() []byte {
+	return tmplJson
+}
 
 func tmplExecute(tmplJson string, dcvBasedir dcvBasedirType) (tmplJsonNew string, err error) {
 	tmplObj := template.New(`tmux_compose`).Funcs(template.FuncMap{
@@ -70,9 +70,11 @@ func CmdNameArgs(dcConfigReader dc_config.ReaderInterface, getTmplFuncs []func()
 
 	dcvBasedir := dcvBasedirType{dcConfig.Workdir, dcConfig.DcServicesNames, baseDir}
 
-	tmplJsonNew, err := tmplExecute(string(tmplJson), dcvBasedir)
+	tmplJsonStr := string(getTmplJson())
+
+	tmplJsonNew, err := tmplExecute(tmplJsonStr, dcvBasedir)
 	if err != nil {
-		return nilValue, fmt.Errorf("error applying template '%s':\n\t%w", tmplJson, err)
+		return nilValue, fmt.Errorf("error applying template '%s':\n\t%w", tmplJsonStr, err)
 	}
 
 	var tmpl tmplType
