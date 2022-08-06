@@ -304,7 +304,7 @@ func TestRunFatal(t *testing.T) { // AndStdHandles {
 	runner.Run()
 
 	if dcYmlOsStruct.GetwdData.WascalledTimes != 1 {
-		t.Errorf(`Failing DcOsStruct.Getwd() was called not '1' time but: '%v'`, os.ExitData.code)
+		t.Errorf(`Failing DcOsStruct.Getwd() was called not '1' time but: '%v'`, dcYmlOsStruct.GetwdData.WascalledTimes)
 	}
 	if os.ExitData.code != 1 {
 		t.Errorf(`Failing DcOsStruct.Getwd() was provided not '1' to Runner.Os.Exit exit code but: '%v'`, os.ExitData.code)
@@ -315,8 +315,9 @@ func TestRunFatal(t *testing.T) { // AndStdHandles {
 	if stdout.Len() != 0 {
 		t.Errorf(`Failing DcOsStruct.Getwd() made stdout not empty: '%s'`, stdout)
 	}
-	if stderr.String() != "current working directory not found\n" {
-		t.Errorf(`Failing DcOsStruct.Getwd() made stdout not empty: '%s'`, stderr)
+	stderrExpected := "current working directory not found\n"
+	if stderr.String() != stderrExpected {
+		t.Errorf(`Failing DcOsStruct.Getwd() made stderr '%s' not equal to: '%s'`, stderr, stderrExpected)
 	}
 
 	// tle.LogfuncAndExitTestWascalledsAndArgs(t, 1, []string{`some error`}, 1, 1)
