@@ -11,16 +11,16 @@ type DcYmlValue = struct {
 
 type DcYml struct{}
 
-func (dcYml DcYml) New(types.DcYmlOsInterface) {
+func (dcYml *DcYml) New(types.DcYmlOsInterface) {
 }
 
-func Construct(osStruct types.DcYmlOsInterface) DcYml {
-	dcYml := DcYml{}
+func Construct(osStruct types.DcYmlOsInterface) *DcYml {
+	dcYml := &DcYml{}
 	dcYml.New(osStruct)
 	return dcYml
 }
 
-func (dcYml DcYml) Get() (types.DcYmlValue, error) {
+func (dcYml *DcYml) Get() (types.DcYmlValue, error) {
 	return types.DcYmlValue{}, nil
 }
 

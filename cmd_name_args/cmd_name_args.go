@@ -5,8 +5,8 @@ import (
 	"tmux_compose/types"
 )
 
-func Construct(os_struct types.CnaOsInterface) CmdNameArgs {
-	cna := CmdNameArgs{}
+func Construct(os_struct types.CnaOsInterface) *CmdNameArgs {
+	cna := &CmdNameArgs{}
 	cna.New(os_struct)
 	return cna
 }
@@ -14,8 +14,8 @@ func Construct(os_struct types.CnaOsInterface) CmdNameArgs {
 type CmdNameArgs struct {
 }
 
-func (cna CmdNameArgs) New(os_struct types.CnaOsInterface) {}
-func (cna CmdNameArgs) Get(types.DcYmlValue) (types.CmdNameArgsValueType, error) {
+func (cna *CmdNameArgs) New(os_struct types.CnaOsInterface) {}
+func (cna *CmdNameArgs) Get(types.DcYmlValue) (types.CmdNameArgsValueType, error) {
 	return types.CmdNameArgsValueType{}, nil
 }
 

@@ -1,12 +1,16 @@
-package run
+package run_fail_test
 
 import (
+	"bytes"
+	"io"
 	"testing"
 	"tmux_compose/cmd_name_args"
 	"tmux_compose/dc_yml"
 	"tmux_compose/exec"
 	"tmux_compose/logger"
 	"tmux_compose/types"
+
+	"tmux_compose/run"
 )
 
 // const loremString = `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin facilisis mi sapien, vitae accumsan libero malesuada in. Suspendisse sodales finibus sagittis. Proin et augue vitae dui scelerisque imperdiet. Suspendisse et pulvinar libero. Vestibulum id porttitor augue. Vivamus lobortis lacus et libero ultricies accumsan. Donec non feugiat enim, nec tempus nunc. Mauris rutrum, diam euismod elementum ultricies, purus tellus faucibus augue, sit amet tristique diam purus eu arcu. Integer elementum urna non justo fringilla fermentum. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Quisque sollicitudin elit in metus imperdiet, et gravida tortor hendrerit. In volutpat tellus quis sapien rutrum, sit amet cursus augue ultricies. Morbi tincidunt arcu id commodo mollis. Aliquam laoreet purus sed justo pulvinar, quis porta risus lobortis. In commodo leo id porta mattis.`
@@ -220,7 +224,11 @@ func (dcYmlOsDouble) ReadFile(name string) ([]byte, error) {
 	panic("unimplemented")
 }
 
-type execOsDouble struct{}
+type execOsDouble struct {
+	Stdout io.Writer
+	Stderr io.Writer
+	Stdin  io.Reader
+}
 
 // Chdir implements types.ExecOsInterface
 func (execOsDouble) Chdir(dir string) error {
@@ -229,7 +237,12 @@ func (execOsDouble) Chdir(dir string) error {
 
 // GetStdHandles implements types.ExecOsInterface
 func (execOsDouble) GetStdHandles() types.StdHandlesType {
-	panic("unimplemented")
+	stdout, stderr, stdin := &bytes.Buffer{}, &bytes.Buffer{}, &bytes.Buffer{}
+	return &types.StdHandlesStruct{
+		Stdout: stdout,
+		Stderr: stderr,
+		Stdin:  stdin,
+	}
 }
 
 // Getenv implements types.ExecOsInterface
@@ -250,24 +263,26 @@ func (execOsDouble) ReadFile(name string) ([]byte, error) {
 type osDouble struct{}
 
 func (os osDouble) Exit(code int) {
-	panic("unimplemented")
+	// panic("unimplemented")
 }
 
 func TestRunFatal(t *testing.T) { // AndStdHandles {
 	// tle := getTestLogfuncExitType()
 	// stdHandles, runner := makeRunnerForFatal(`/\\nonexistent`, &tle)
 
+	stdout, stderr, stdin := &bytes.Buffer{}, &bytes.Buffer{}, &bytes.Buffer{}
+
 	dcYml := dc_yml.Construct(dcYmlOsDouble{})
 	cna := cmd_name_args.Construct(cnaOsDouble{})
 	exec := exec.Construct(execOsDouble{})
 	os := osDouble{}
 	logger := logger.Construct(&types.StdHandlesStruct{
-		Stdout: nil,
-		Stderr: nil,
-		Stdin:  nil,
+		Stdout: stdout,
+		Stderr: stderr,
+		Stdin:  stdin,
 	})
 
-	runner := Runner{
+	runner := run.Runner{
 		CmdNameArgs: cna,
 		DcYml:       dcYml,
 		Exec:        exec,

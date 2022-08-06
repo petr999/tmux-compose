@@ -17,7 +17,7 @@ func init() {
 		CmdNameArgs: cmd_name_args.Construct(os_struct.CnaOsStruct{}),
 		DcYml:       dc_yml.Construct(os_struct.DcYmlOsStruct{}),
 		Exec:        exec.Construct(os_struct.ExecOsStruct{}),
-		Os:          os_struct.RunnerOsStruct{},
+		Os:          &os_struct.RunnerOsStruct{},
 		Logger:      logger.Construct(logger.GetStdHandles()),
 	}
 }

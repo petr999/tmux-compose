@@ -33,7 +33,9 @@ func (runner *Runner) runWithExitcode() int {
 		return 1
 	}
 
-	err = runner.Exec.GetCommand(cna).Obj.Run()
+	cmd := runner.Exec.GetCommand(cna)
+
+	err = cmd.Obj.Run()
 	if err != nil {
 		log(fmt.Sprintf("%v,\n", err))
 		return 1

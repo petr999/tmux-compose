@@ -5,16 +5,16 @@ type ExecInterface interface {
 	// 	nameArgsType,
 	// )
 	New(ExecOsInterface, StdHandlesType)
-	GetCommand(CmdNameArgsValueType) *CmdType
+	GetCommand(cna CmdNameArgsValueType) *CmdType
+	// execCommand(cna CmdNameArgsValueType) CmdInterface
+	// dryRun(cna CmdNameArgsValueType) CmdInterface
 }
 
-type CmdInterface struct {
-	Run func() error
+type CmdInterface interface {
+	Run() error
 }
 
 type CmdType struct {
-	Obj interface {
-		Run() error
-	}
+	Obj        CmdInterface
 	Stdhandles StdHandlesType
 }

@@ -32,3 +32,9 @@ func (execOsStruct ExecOsStruct) GetStdHandles() (stdHandles types.StdHandlesTyp
 
 	return execOsStruct.stdHandles
 }
+
+// func (execOsStruct ExecOsStruct) Command(name string, arg ...string) interface {
+// 	Run() error
+// } {
+// 	return exec.Command(name, arg...)
+// }

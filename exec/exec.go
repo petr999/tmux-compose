@@ -1,20 +1,66 @@
 package exec
 
-import "tmux_compose/types"
+import (
+	osExec "os/exec"
+	"tmux_compose/types"
+)
 
-func Construct(osStruct types.ExecOsInterface) Exec {
-	exec := Exec{}
-	exec.New(osStruct, osStruct.GetStdHandles())
+func Construct(osStruct types.ExecOsInterface) *Exec {
+	exec := &Exec{}
+	stdHandles := osStruct.GetStdHandles()
+	exec.New(osStruct, stdHandles)
 	return exec
 }
 
+type dryRunCmd struct{}
+
+func (obj dryRunCmd) Run() error { return nil }
+
 type Exec struct {
-	cmd *types.CmdType
+	Cmd        *types.CmdType
+	Selector   any
+	osStruct   *types.ExecOsInterface
+	stdHandles types.StdHandlesType
 }
 
-func (exec Exec) New(osStruct types.ExecOsInterface, stdHandles types.StdHandlesType) {}
-func (exec Exec) GetCommand(types.CmdNameArgsValueType) *types.CmdType {
-	return exec.cmd
+func (exec *Exec) New(osStruct types.ExecOsInterface, stdHandles types.StdHandlesType) {
+	exec.Selector, exec.osStruct, exec.stdHandles = false, &osStruct, stdHandles
+}
+
+func (exec *Exec) execCommand(cna types.CmdNameArgsValueType) *osExec.Cmd {
+	obj := osExec.Command(cna.Name, cna.Args...)
+	obj.Stdout = exec.stdHandles.Stdout
+	obj.Stderr = exec.stdHandles.Stderr
+	obj.Stdin = exec.stdHandles.Stdin
+
+	return obj
+}
+
+func (exec *Exec) dryRun(cna types.CmdNameArgsValueType) types.CmdInterface {
+	return dryRunCmd{}
+}
+
+func (exec *Exec) getSelector() any {
+	return false
+}
+
+func (exec *Exec) GetCommand(cna types.CmdNameArgsValueType) *types.CmdType {
+
+	var obj interface{ Run() error }
+	selector := exec.getSelector()
+	if dryRun, ok := selector.(bool); ok {
+		if dryRun {
+			obj = exec.dryRun(cna)
+		} else {
+			obj = exec.execCommand(cna)
+		}
+	} else {
+		if objWithRun, ok := selector.(interface{ Run() error }); ok {
+			obj = objWithRun
+		}
+	}
+	exec.Cmd = &types.CmdType{Obj: obj, Stdhandles: exec.stdHandles}
+	return exec.Cmd
 }
 
 // type ExecInterface interface {
