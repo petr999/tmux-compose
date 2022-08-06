@@ -2,6 +2,7 @@ package run_fail_test
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"testing"
 	"tmux_compose/cmd_name_args"
@@ -207,20 +208,23 @@ func (cnaOsDouble) ReadFile(name string) ([]byte, error) {
 	panic("unimplemented")
 }
 
-type dcYmlOsDouble struct{}
+type dcYmlOsDouble struct {
+	GetwdData struct{ WascalledTimes int }
+}
 
 // Chdir implements types.DcYmlOsInterface
-func (dcYmlOsDouble) Chdir(dir string) error {
+func (*dcYmlOsDouble) Chdir(dir string) error {
 	panic("unimplemented")
 }
 
 // Getwd implements types.DcYmlOsInterface
-func (dcYmlOsDouble) Getwd() (dir string, err error) {
-	panic("unimplemented")
+func (osStruct *dcYmlOsDouble) Getwd() (dir string, err error) {
+	osStruct.GetwdData.WascalledTimes++
+	return ``, fmt.Errorf(`current working directory not found`)
 }
 
 // ReadFile implements types.DcYmlOsInterface
-func (dcYmlOsDouble) ReadFile(name string) ([]byte, error) {
+func (*dcYmlOsDouble) ReadFile(name string) ([]byte, error) {
 	panic("unimplemented")
 }
 
@@ -260,10 +264,16 @@ func (execOsDouble) ReadFile(name string) ([]byte, error) {
 	panic("unimplemented")
 }
 
-type osDouble struct{}
+type osDouble struct {
+	ExitData struct {
+		wasCalledTimes int
+		code           int
+	}
+}
 
-func (os osDouble) Exit(code int) {
-	// panic("unimplemented")
+func (os *osDouble) Exit(code int) {
+	os.ExitData.wasCalledTimes++
+	os.ExitData.code = code
 }
 
 func TestRunFatal(t *testing.T) { // AndStdHandles {
@@ -272,10 +282,11 @@ func TestRunFatal(t *testing.T) { // AndStdHandles {
 
 	stdout, stderr, stdin := &bytes.Buffer{}, &bytes.Buffer{}, &bytes.Buffer{}
 
-	dcYml := dc_yml.Construct(dcYmlOsDouble{})
-	cna := cmd_name_args.Construct(cnaOsDouble{})
-	exec := exec.Construct(execOsDouble{})
-	os := osDouble{}
+	dcYmlOsStruct := &dcYmlOsDouble{}
+	dcYml := dc_yml.Construct(dcYmlOsStruct)
+	cna := cmd_name_args.Construct(&cnaOsDouble{})
+	exec := exec.Construct(&execOsDouble{})
+	os := &osDouble{}
 	logger := logger.Construct(&types.StdHandlesStruct{
 		Stdout: stdout,
 		Stderr: stderr,
@@ -291,6 +302,22 @@ func TestRunFatal(t *testing.T) { // AndStdHandles {
 	}
 
 	runner.Run()
+
+	if dcYmlOsStruct.GetwdData.WascalledTimes != 1 {
+		t.Errorf(`Failing DcOsStruct.Getwd() was called not '1' time but: '%v'`, os.ExitData.code)
+	}
+	if os.ExitData.code != 1 {
+		t.Errorf(`Failing DcOsStruct.Getwd() was provided not '1' to Runner.Os.Exit exit code but: '%v'`, os.ExitData.code)
+	}
+	if os.ExitData.wasCalledTimes != 1 {
+		t.Errorf(`Failing DcOsStruct.Getwd() was called Runner.Os.Exit not '1' time: '%v'`, os.ExitData.code)
+	}
+	if stdout.Len() != 0 {
+		t.Errorf(`Failing DcOsStruct.Getwd() made stdout not empty: '%s'`, stdout)
+	}
+	if stderr.String() != "current working directory not found\n" {
+		t.Errorf(`Failing DcOsStruct.Getwd() made stdout not empty: '%s'`, stderr)
+	}
 
 	// tle.LogfuncAndExitTestWascalledsAndArgs(t, 1, []string{`some error`}, 1, 1)
 
