@@ -2,26 +2,24 @@ package types
 
 import (
 	"io"
-	"os"
 )
 
-type OsStructExit func(code int)
-type OsStructGetEnv func(key string) string
-type OsStructChdir func(dir string) error
-type OsStructGetwd func() (dir string, err error)
-type OsStructReadFile func(name string) ([]byte, error)
-
-type OsStruct struct {
-	Stdout   io.Writer
-	Stderr   io.Writer
-	Stdin    io.Reader
-	Exit     OsStructExit
-	Getenv   OsStructGetEnv
-	Chdir    OsStructChdir
-	Getwd    OsStructGetwd
-	ReadFile OsStructReadFile
+type StdHandlesStruct struct {
+	Stdout io.Writer
+	Stderr io.Writer
+	Stdin  io.Reader
 }
 
-func MakeOsStruct() *OsStruct {
-	return &OsStruct{Stdout: os.Stdout, Stderr: os.Stderr, Stdin: os.Stdin, Exit: os.Exit, Getenv: os.Getenv, Chdir: os.Chdir, Getwd: os.Getwd, ReadFile: os.ReadFile}
+type StdHandlesType *StdHandlesStruct
+
+type ExecOsInterface interface {
+	Getenv(key string) string
+	Chdir(dir string) error
+	Getwd() (dir string, err error)
+	ReadFile(name string) ([]byte, error)
+	GetStdHandles() StdHandlesType
+}
+
+type RunnerOsInterface interface {
+	Exit(code int)
 }

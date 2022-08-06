@@ -2,25 +2,23 @@ package main
 
 import (
 	"tmux_compose/cmd_name_args"
-	"tmux_compose/dc_config"
+	"tmux_compose/dc_yml"
+	"tmux_compose/exec"
+	"tmux_compose/logger"
+	"tmux_compose/os_struct"
 	"tmux_compose/run"
-	"tmux_compose/run/exec"
-	"tmux_compose/types"
 )
 
 var runner run.Runner
 
 func init() {
 
-	execOsStruct := types.MakeOsStruct()
-	dcOsStruct := types.MakeOsStruct()
-
 	runner = run.Runner{
-		CmdNameArgs:    cmd_name_args.CmdNameArgs,
-		DcConfigReader: dc_config.DcConfig{},
-		ExecStruct:     &exec.ExecStruct{},
-		OsStruct:       execOsStruct,
-		LogFunc:        exec.GetLogFunc(dcOsStruct.Stderr),
+		CmdNameArgs: cmd_name_args.Construct(os_struct.CnaOsStruct{}),
+		DcYml:       dc_yml.Construct(os_struct.DcYmlOsStruct{}),
+		Exec:        exec.Construct(os_struct.ExecOsStruct{}),
+		Os:          os_struct.RunnerOsStruct{},
+		Logger:      logger.Construct(logger.GetStdHandles()),
 	}
 }
 
