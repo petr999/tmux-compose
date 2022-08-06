@@ -1,6 +1,7 @@
 package dc_yml
 
 import (
+	"fmt"
 	"tmux_compose/types"
 )
 
@@ -9,9 +10,12 @@ type DcYmlValue = struct {
 	DcServicesNames []string
 }
 
-type DcYml struct{}
+type DcYml struct {
+	osStruct types.DcYmlOsInterface
+}
 
-func (dcYml *DcYml) New(types.DcYmlOsInterface) {
+func (dcYml *DcYml) New(osStruct types.DcYmlOsInterface) {
+	dcYml.osStruct = osStruct
 }
 
 func Construct(osStruct types.DcYmlOsInterface) *DcYml {
@@ -20,8 +24,15 @@ func Construct(osStruct types.DcYmlOsInterface) *DcYml {
 	return dcYml
 }
 
-func (dcYml *DcYml) Get() (types.DcYmlValue, error) {
-	return types.DcYmlValue{}, nil
+func (dcYml *DcYml) Get() (dcYmlValue types.DcYmlValue, err error) {
+	workDir, err := dcYml.osStruct.Getwd()
+	if err != nil {
+		err = fmt.Errorf(`current working directory not found`)
+		return
+	}
+	dcYmlValue.Workdir = workDir
+
+	return
 }
 
 // type DcConfig struct {

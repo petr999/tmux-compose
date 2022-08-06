@@ -24,7 +24,7 @@ func (runner *Runner) runWithExitcode() int {
 
 	dcYmlValue, err := runner.DcYml.Get()
 	if err != nil {
-		log(fmt.Sprintf("%v,\n", err))
+		log(fmt.Sprintf("%v\n", err))
 		return 1
 	}
 	cna, err := runner.CmdNameArgs.Get(dcYmlValue)
