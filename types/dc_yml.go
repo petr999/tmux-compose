@@ -9,6 +9,7 @@ type DcYmlOsInterface interface {
 	Chdir(dir string) error
 	Getwd() (dir string, err error)
 	ReadFile(name string) ([]byte, error)
+	Getenv(string) string
 }
 
 type DcYmlValue = struct {

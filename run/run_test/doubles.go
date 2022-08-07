@@ -33,6 +33,10 @@ func (*dcYmlOsFailingDouble) ReadFile(name string) ([]byte, error) {
 	return []byte{}, fmt.Errorf("unimplemented")
 }
 
+func (*dcYmlOsFailingDouble) Getenv(name string) string {
+	return ``
+}
+
 type execOsDouble struct {
 	Stdout io.Writer
 	Stderr io.Writer
