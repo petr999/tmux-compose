@@ -14,7 +14,7 @@ func Construct(osStruct types.ExecOsInterface) *Exec {
 
 type dryRunCmd struct{}
 
-func (obj dryRunCmd) Run() error { return nil }
+func (obj *dryRunCmd) Run() error { return nil }
 
 type Exec struct {
 	Cmd        *types.CmdType
@@ -37,11 +37,11 @@ func (exec *Exec) execCommand(cna types.CmdNameArgsValueType) *osExec.Cmd {
 }
 
 func (exec *Exec) dryRun(cna types.CmdNameArgsValueType) types.CmdInterface {
-	return dryRunCmd{}
+	return &dryRunCmd{}
 }
 
 func (exec *Exec) getSelector() any {
-	return false
+	return true // dry run
 }
 
 func (exec *Exec) GetCommand(cna types.CmdNameArgsValueType) *types.CmdType {

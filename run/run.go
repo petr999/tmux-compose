@@ -24,12 +24,12 @@ func (runner *Runner) runWithExitcode() int {
 
 	dcYmlValue, err := runner.DcYml.Get()
 	if err != nil {
-		log(fmt.Sprintf("%v\n", err))
+		log(fmt.Sprintf("get docker-compose config: '%v'\n", err))
 		return 1
 	}
 	cna, err := runner.CmdNameArgs.Get(dcYmlValue)
 	if err != nil {
-		log(fmt.Sprintf("%v\n", err))
+		log(fmt.Sprintf("get command name and args: '%v'\n", err))
 		return 1
 	}
 
@@ -37,7 +37,7 @@ func (runner *Runner) runWithExitcode() int {
 
 	err = cmd.Obj.Run()
 	if err != nil {
-		log(fmt.Sprintf("%v\n", err))
+		log(fmt.Sprintf("Run command: '%v'\n", err))
 		return 1
 	}
 
