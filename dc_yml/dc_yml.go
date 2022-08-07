@@ -2,6 +2,7 @@ package dc_yml
 
 import (
 	"fmt"
+	"path/filepath"
 	"tmux_compose/types"
 )
 
@@ -26,15 +27,48 @@ func Construct(osStruct types.DcYmlOsInterface) *DcYml {
 	return dcYml
 }
 
+func (dcYml *DcYml) getByFname(fName string) (dcYmlValue types.DcYmlValue, err error) {
+	_, err = dcYml.osStruct.ReadFile(fName)
+	return
+}
+
 // if len(dcYml.osStruct.Getenv(dcEnvVar)) > 0 {
-func (dcYml *DcYml) getByEnv() (dcYmlValue types.DcYmlValue, err error) {
-	err = fmt.Errorf(`not implemented`)
+func (dcYml *DcYml) getByEnv(dcEnvVar string) (dcYmlValue types.DcYmlValue, err error) {
+	fPath, err := filepath.Abs(dcEnvVar)
+	if err != nil {
+		return dcYmlValue, fmt.Errorf(`normalizing path: '%v' error: '%w'`, fPath, err)
+	}
+
+	fileInfo, err := dcYml.osStruct.Stat(fPath)
+	if err != nil {
+		return dcYmlValue, err
+	}
+
+	if fileInfo.IsDir() {
+		fPath = filepath.Join(fPath, `docker-compose.yml`)
+		fPath, err = filepath.Abs(fPath)
+		if err != nil {
+			return dcYmlValue, err
+		}
+		fileInfo, err = dcYml.osStruct.Stat(fPath)
+		if err != nil {
+			return dcYmlValue, err
+		}
+	}
+
+	if fileInfo.IsFile() {
+		dcYmlValue, err = dcYml.getByFname(fPath)
+	} else {
+		return dcYmlValue, fmt.Errorf(`not a file: '%v'`, fPath)
+	}
+
 	return
 }
 
 func (dcYml *DcYml) Get() (dcYmlValue types.DcYmlValue, err error) {
-	if len(dcYml.osStruct.Getenv(dcEnvVar)) > 0 {
-		return dcYml.getByEnv()
+	dcEnvVar := dcYml.osStruct.Getenv(dcEnvVar)
+	if len(dcEnvVar) > 0 {
+		return dcYml.getByEnv(dcEnvVar)
 	}
 	workDir, err := dcYml.osStruct.Getwd()
 	if err != nil {

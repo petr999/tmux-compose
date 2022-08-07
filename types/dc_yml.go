@@ -6,10 +6,10 @@ type DcYmlInterface interface {
 }
 
 type DcFileInfoStruct struct {
-	IsDir func() bool
+	IsDir  func() bool
+	IsFile func() bool
 }
 type DcYmlOsInterface interface {
-	Chdir(dir string) error
 	Getwd() (dir string, err error)
 	ReadFile(name string) ([]byte, error)
 	Getenv(string) string

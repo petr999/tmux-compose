@@ -17,11 +17,6 @@ func (cnaOsFailingDouble) ReadFile(name string) ([]byte, error) {
 type dcYmlOsFailingDouble struct {
 }
 
-// Chdir implements types.DcYmlOsInterface
-func (*dcYmlOsFailingDouble) Chdir(dir string) error {
-	return fmt.Errorf("unimplemented")
-}
-
 // Getwd implements types.DcYmlOsInterface
 func (osStruct *dcYmlOsFailingDouble) Getwd() (dir string, err error) {
 	err = fmt.Errorf("unimplemented")
