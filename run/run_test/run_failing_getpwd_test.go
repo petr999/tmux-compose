@@ -1,15 +1,12 @@
-package run_fail_test
+package run
 
 import (
-	"bytes"
 	"fmt"
-	"io"
 	"testing"
 	"tmux_compose/cmd_name_args"
 	"tmux_compose/dc_yml"
 	"tmux_compose/exec"
 	"tmux_compose/logger"
-	"tmux_compose/types"
 
 	"tmux_compose/run"
 )
@@ -201,32 +198,6 @@ import (
 // 	}
 // }
 
-type cnaOsFailingDouble struct{}
-
-// ReadFile implements types.CnaOsInterface
-func (cnaOsFailingDouble) ReadFile(name string) ([]byte, error) {
-	return []byte{}, fmt.Errorf("unimplemented")
-}
-
-type dcYmlOsFailingDouble struct {
-}
-
-// Chdir implements types.DcYmlOsInterface
-func (*dcYmlOsFailingDouble) Chdir(dir string) error {
-	return fmt.Errorf("unimplemented")
-}
-
-// Getwd implements types.DcYmlOsInterface
-func (osStruct *dcYmlOsFailingDouble) Getwd() (dir string, err error) {
-	err = fmt.Errorf("unimplemented")
-	return
-}
-
-// ReadFile implements types.DcYmlOsInterface
-func (*dcYmlOsFailingDouble) ReadFile(name string) ([]byte, error) {
-	return []byte{}, fmt.Errorf("unimplemented")
-}
-
 type dcYmlOsFailingGetwdDouble struct {
 	dcYmlOsFailingDouble
 	GetwdData struct{ WascalledTimes int }
@@ -236,75 +207,6 @@ type dcYmlOsFailingGetwdDouble struct {
 func (osStruct *dcYmlOsFailingGetwdDouble) Getwd() (dir string, err error) {
 	osStruct.GetwdData.WascalledTimes++
 	return ``, fmt.Errorf(`current working directory not found`)
-}
-
-type execOsDouble struct {
-	Stdout io.Writer
-	Stderr io.Writer
-	Stdin  io.Reader
-}
-
-// Chdir implements types.ExecOsInterface
-func (execOsDouble) Chdir(dir string) error {
-	return fmt.Errorf("unimplemented")
-}
-
-// GetStdHandles implements types.ExecOsInterface
-// func (execOsDouble) GetStdHandles() types.StdHandlesType {
-// 	panic("unimplemented")
-// }
-
-// Getenv implements types.ExecOsInterface
-func (execOsDouble) Getenv(key string) string {
-	return ``
-}
-
-// Getwd implements types.ExecOsInterface
-func (execOsDouble) Getwd() (dir string, err error) {
-	return ``, fmt.Errorf("unimplemented")
-}
-
-// ReadFile implements types.ExecOsInterface
-func (execOsDouble) ReadFile(name string) ([]byte, error) {
-	return []byte{}, fmt.Errorf("unimplemented")
-}
-
-type stdHandlesDoubleStruct struct {
-	Stdout *bytes.Buffer
-	Stderr *bytes.Buffer
-	Stdin  *bytes.Buffer
-}
-
-type stdHandlesDoubleType *stdHandlesDoubleStruct
-
-type execOsFailingDouble struct {
-	StdHandlesDouble stdHandlesDoubleType
-	execOsDouble
-}
-
-// GetStdHandles implements types.ExecOsInterface
-func (osStruct *execOsFailingDouble) GetStdHandles() types.StdHandlesType {
-	if osStruct.StdHandlesDouble == nil {
-		stdout, stderr, stdin := &bytes.Buffer{}, &bytes.Buffer{}, &bytes.Buffer{}
-		osStruct.StdHandlesDouble = &stdHandlesDoubleStruct{stdout, stderr, stdin}
-	}
-	return &types.StdHandlesStruct{
-		Stdout: osStruct.StdHandlesDouble.Stdout,
-		Stderr: osStruct.StdHandlesDouble.Stderr,
-		Stdin:  osStruct.StdHandlesDouble.Stdin,
-	}
-}
-
-type osDouble struct {
-	ExitData struct {
-		wasCalledTimes int
-		code           int
-	}
-}
-
-func (os *osDouble) Exit(code int) {
-	os.ExitData.wasCalledTimes++
-	os.ExitData.code = code
 }
 
 func TestRunDcOsGetwdFail(t *testing.T) { // AndStdHandles {
@@ -346,27 +248,28 @@ func TestRunDcOsGetwdFail(t *testing.T) { // AndStdHandles {
 	if execOsStruct.StdHandlesDouble.Stderr.String() != stderrExpected {
 		t.Errorf(`Failing DcOsStruct.Getwd() made stderr '%s' not equal to: '%s'`, execOsStruct.StdHandlesDouble.Stderr, stderrExpected)
 	}
-
-	// tle.LogfuncAndExitTestWascalledsAndArgs(t, 1, []string{`some error`}, 1, 1)
-
-	// cmd := runner.ExecStruct.GetCommand()
-	// if cmd == nil {
-	// 	t.Error(`Command is nil`)
-	// } else {
-	// 	stdoutActual, stdoutExpected := *cmd.Stdout, stdHandles.Stdout
-	// 	if stdoutActual != stdoutExpected {
-	// 		t.Errorf(`Stdout in 'cmd' '%p' was not replaced from 'os': '%p', cmp: '%v'`, stdoutActual, stdoutExpected, stdoutActual == stdoutExpected)
-	// 	}
-	// 	stderrActual, stderrExpected := *cmd.Stderr, stdHandles.Stderr
-	// 	if stderrActual != stderrExpected {
-	// 		t.Errorf(`Stderr in 'cmd' '%p' was not replaced from 'os': '%p', cmp: '%v'`, stderrActual, stderrExpected, stderrActual == stderrExpected)
-	// 	}
-	// 	stdinActual, stdinExpected := *cmd.Stdin, stdHandles.Stdin
-	// 	if stdinActual != stdinExpected {
-	// 		t.Errorf(`Stdin in 'cmd' '%p' was not replaced from 'os': '%p', cmp: '%v'`, stdinActual, stdinExpected, stdinActual == stdinExpected)
-	// 	}
-	// }
 }
+
+// tle.LogfuncAndExitTestWascalledsAndArgs(t, 1, []string{`some error`}, 1, 1)
+
+// cmd := runner.ExecStruct.GetCommand()
+// if cmd == nil {
+// 	t.Error(`Command is nil`)
+// } else {
+// 	stdoutActual, stdoutExpected := *cmd.Stdout, stdHandles.Stdout
+// 	if stdoutActual != stdoutExpected {
+// 		t.Errorf(`Stdout in 'cmd' '%p' was not replaced from 'os': '%p', cmp: '%v'`, stdoutActual, stdoutExpected, stdoutActual == stdoutExpected)
+// 	}
+// 	stderrActual, stderrExpected := *cmd.Stderr, stdHandles.Stderr
+// 	if stderrActual != stderrExpected {
+// 		t.Errorf(`Stderr in 'cmd' '%p' was not replaced from 'os': '%p', cmp: '%v'`, stderrActual, stderrExpected, stderrActual == stderrExpected)
+// 	}
+// 	stdinActual, stdinExpected := *cmd.Stdin, stdHandles.Stdin
+// 	if stdinActual != stdinExpected {
+// 		t.Errorf(`Stdin in 'cmd' '%p' was not replaced from 'os': '%p', cmp: '%v'`, stdinActual, stdinExpected, stdinActual == stdinExpected)
+// 	}
+// }
+// }
 
 // func TestCmdRunWasCalled(t *testing.T) {
 // 	tle := getTestLogfuncExitType()

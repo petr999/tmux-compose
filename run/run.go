@@ -29,7 +29,7 @@ func (runner *Runner) runWithExitcode() int {
 	}
 	cna, err := runner.CmdNameArgs.Get(dcYmlValue)
 	if err != nil {
-		log(fmt.Sprintf("%v,\n", err))
+		log(fmt.Sprintf("%v\n", err))
 		return 1
 	}
 
@@ -37,7 +37,7 @@ func (runner *Runner) runWithExitcode() int {
 
 	err = cmd.Obj.Run()
 	if err != nil {
-		log(fmt.Sprintf("%v,\n", err))
+		log(fmt.Sprintf("%v\n", err))
 		return 1
 	}
 
