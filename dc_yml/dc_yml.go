@@ -27,7 +27,7 @@ func Construct(osStruct types.DcYmlOsInterface) *DcYml {
 func (dcYml *DcYml) Get() (dcYmlValue types.DcYmlValue, err error) {
 	workDir, err := dcYml.osStruct.Getwd()
 	if err != nil {
-		err = fmt.Errorf(`current working directory not found`)
+		err = fmt.Errorf(`Getting current working directory: '%w'`, err)
 		return
 	}
 	dcYmlValue.Workdir = workDir

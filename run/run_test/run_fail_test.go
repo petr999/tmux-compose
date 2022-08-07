@@ -201,31 +201,40 @@ import (
 // 	}
 // }
 
-type cnaOsDouble struct{}
+type cnaOsFailingDouble struct{}
 
 // ReadFile implements types.CnaOsInterface
-func (cnaOsDouble) ReadFile(name string) ([]byte, error) {
+func (cnaOsFailingDouble) ReadFile(name string) ([]byte, error) {
 	panic("unimplemented")
 }
 
-type dcYmlOsDouble struct {
+type dcYmlOsFailingDouble struct {
 	GetwdData struct{ WascalledTimes int }
 }
 
 // Chdir implements types.DcYmlOsInterface
-func (*dcYmlOsDouble) Chdir(dir string) error {
+func (*dcYmlOsFailingDouble) Chdir(dir string) error {
 	panic("unimplemented")
 }
 
 // Getwd implements types.DcYmlOsInterface
-func (osStruct *dcYmlOsDouble) Getwd() (dir string, err error) {
-	osStruct.GetwdData.WascalledTimes++
-	return ``, fmt.Errorf(`current working directory not found`)
+func (osStruct *dcYmlOsFailingDouble) Getwd() (dir string, err error) {
+	panic("unimplemented")
 }
 
 // ReadFile implements types.DcYmlOsInterface
-func (*dcYmlOsDouble) ReadFile(name string) ([]byte, error) {
+func (*dcYmlOsFailingDouble) ReadFile(name string) ([]byte, error) {
 	panic("unimplemented")
+}
+
+type dcYmlOsFailingGetwdDouble struct {
+	dcYmlOsFailingDouble
+}
+
+// Getwd implements types.DcYmlOsInterface
+func (osStruct *dcYmlOsFailingGetwdDouble) Getwd() (dir string, err error) {
+	osStruct.GetwdData.WascalledTimes++
+	return ``, fmt.Errorf(`current working directory not found`)
 }
 
 type execOsDouble struct {
@@ -241,12 +250,7 @@ func (execOsDouble) Chdir(dir string) error {
 
 // GetStdHandles implements types.ExecOsInterface
 func (execOsDouble) GetStdHandles() types.StdHandlesType {
-	stdout, stderr, stdin := &bytes.Buffer{}, &bytes.Buffer{}, &bytes.Buffer{}
-	return &types.StdHandlesStruct{
-		Stdout: stdout,
-		Stderr: stderr,
-		Stdin:  stdin,
-	}
+	panic("unimplemented")
 }
 
 // Getenv implements types.ExecOsInterface
@@ -264,6 +268,32 @@ func (execOsDouble) ReadFile(name string) ([]byte, error) {
 	panic("unimplemented")
 }
 
+type stdHandlesDoubleStruct struct {
+	Stdout *bytes.Buffer
+	Stderr *bytes.Buffer
+	Stdin  *bytes.Buffer
+}
+
+type stdHandlesDoubleType *stdHandlesDoubleStruct
+
+type execOsFailingDouble struct {
+	StdHandlesDouble stdHandlesDoubleType
+	execOsDouble
+}
+
+// GetStdHandles implements types.ExecOsInterface
+func (osStruct *execOsFailingDouble) GetStdHandles() types.StdHandlesType {
+	if osStruct.StdHandlesDouble == nil {
+		stdout, stderr, stdin := &bytes.Buffer{}, &bytes.Buffer{}, &bytes.Buffer{}
+		osStruct.StdHandlesDouble = &stdHandlesDoubleStruct{stdout, stderr, stdin}
+	}
+	return &types.StdHandlesStruct{
+		Stdout: osStruct.StdHandlesDouble.Stdout,
+		Stderr: osStruct.StdHandlesDouble.Stderr,
+		Stdin:  osStruct.StdHandlesDouble.Stdin,
+	}
+}
+
 type osDouble struct {
 	ExitData struct {
 		wasCalledTimes int
@@ -276,22 +306,25 @@ func (os *osDouble) Exit(code int) {
 	os.ExitData.code = code
 }
 
-func TestRunFatal(t *testing.T) { // AndStdHandles {
+func TestRunDcOsGetwdFail(t *testing.T) { // AndStdHandles {
 	// tle := getTestLogfuncExitType()
 	// stdHandles, runner := makeRunnerForFatal(`/\\nonexistent`, &tle)
 
-	stdout, stderr, stdin := &bytes.Buffer{}, &bytes.Buffer{}, &bytes.Buffer{}
+	// stdout, stderr, stdin := &bytes.Buffer{}, &bytes.Buffer{}, &bytes.Buffer{}
+	// stdHandles := &types.StdHandlesStruct{
+	// 	Stdout: stdout,
+	// 	Stderr: stderr,
+	// 	Stdin:  stdin,
+	// }
 
-	dcYmlOsStruct := &dcYmlOsDouble{}
+	dcYmlOsStruct := &dcYmlOsFailingGetwdDouble{}
 	dcYml := dc_yml.Construct(dcYmlOsStruct)
-	cna := cmd_name_args.Construct(&cnaOsDouble{})
-	exec := exec.Construct(&execOsDouble{})
+	cna := cmd_name_args.Construct(&cnaOsFailingDouble{})
+	execOsStruct := &execOsFailingDouble{}
+	exec := exec.Construct(execOsStruct)
+
 	os := &osDouble{}
-	logger := logger.Construct(&types.StdHandlesStruct{
-		Stdout: stdout,
-		Stderr: stderr,
-		Stdin:  stdin,
-	})
+	logger := logger.Construct(execOsStruct.GetStdHandles())
 
 	runner := run.Runner{
 		CmdNameArgs: cna,
@@ -312,12 +345,12 @@ func TestRunFatal(t *testing.T) { // AndStdHandles {
 	if os.ExitData.wasCalledTimes != 1 {
 		t.Errorf(`Failing DcOsStruct.Getwd() was called Runner.Os.Exit not '1' time: '%v'`, os.ExitData.code)
 	}
-	if stdout.Len() != 0 {
-		t.Errorf(`Failing DcOsStruct.Getwd() made stdout not empty: '%s'`, stdout)
+	if execOsStruct.StdHandlesDouble.Stdout.Len() != 0 {
+		t.Errorf(`Failing DcOsStruct.Getwd() made stdout not empty: '%s'`, execOsStruct.StdHandlesDouble.Stdout)
 	}
-	stderrExpected := "current working directory not found\n"
-	if stderr.String() != stderrExpected {
-		t.Errorf(`Failing DcOsStruct.Getwd() made stderr '%s' not equal to: '%s'`, stderr, stderrExpected)
+	stderrExpected := "Getting current working directory: 'current working directory not found'\n"
+	if execOsStruct.StdHandlesDouble.Stderr.String() != stderrExpected {
+		t.Errorf(`Failing DcOsStruct.Getwd() made stderr '%s' not equal to: '%s'`, execOsStruct.StdHandlesDouble.Stderr, stderrExpected)
 	}
 
 	// tle.LogfuncAndExitTestWascalledsAndArgs(t, 1, []string{`some error`}, 1, 1)
