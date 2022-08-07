@@ -205,30 +205,31 @@ type cnaOsFailingDouble struct{}
 
 // ReadFile implements types.CnaOsInterface
 func (cnaOsFailingDouble) ReadFile(name string) ([]byte, error) {
-	panic("unimplemented")
+	return []byte{}, fmt.Errorf("unimplemented")
 }
 
 type dcYmlOsFailingDouble struct {
-	GetwdData struct{ WascalledTimes int }
 }
 
 // Chdir implements types.DcYmlOsInterface
 func (*dcYmlOsFailingDouble) Chdir(dir string) error {
-	panic("unimplemented")
+	return fmt.Errorf("unimplemented")
 }
 
 // Getwd implements types.DcYmlOsInterface
 func (osStruct *dcYmlOsFailingDouble) Getwd() (dir string, err error) {
-	panic("unimplemented")
+	err = fmt.Errorf("unimplemented")
+	return
 }
 
 // ReadFile implements types.DcYmlOsInterface
 func (*dcYmlOsFailingDouble) ReadFile(name string) ([]byte, error) {
-	panic("unimplemented")
+	return []byte{}, fmt.Errorf("unimplemented")
 }
 
 type dcYmlOsFailingGetwdDouble struct {
 	dcYmlOsFailingDouble
+	GetwdData struct{ WascalledTimes int }
 }
 
 // Getwd implements types.DcYmlOsInterface
@@ -245,27 +246,27 @@ type execOsDouble struct {
 
 // Chdir implements types.ExecOsInterface
 func (execOsDouble) Chdir(dir string) error {
-	panic("unimplemented")
+	return fmt.Errorf("unimplemented")
 }
 
 // GetStdHandles implements types.ExecOsInterface
-func (execOsDouble) GetStdHandles() types.StdHandlesType {
-	panic("unimplemented")
-}
+// func (execOsDouble) GetStdHandles() types.StdHandlesType {
+// 	panic("unimplemented")
+// }
 
 // Getenv implements types.ExecOsInterface
 func (execOsDouble) Getenv(key string) string {
-	panic("unimplemented")
+	return ``
 }
 
 // Getwd implements types.ExecOsInterface
 func (execOsDouble) Getwd() (dir string, err error) {
-	panic("unimplemented")
+	return ``, fmt.Errorf("unimplemented")
 }
 
 // ReadFile implements types.ExecOsInterface
 func (execOsDouble) ReadFile(name string) ([]byte, error) {
-	panic("unimplemented")
+	return []byte{}, fmt.Errorf("unimplemented")
 }
 
 type stdHandlesDoubleStruct struct {
