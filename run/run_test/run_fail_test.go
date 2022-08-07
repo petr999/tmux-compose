@@ -310,13 +310,6 @@ func TestRunDcOsGetwdFail(t *testing.T) { // AndStdHandles {
 	// tle := getTestLogfuncExitType()
 	// stdHandles, runner := makeRunnerForFatal(`/\\nonexistent`, &tle)
 
-	// stdout, stderr, stdin := &bytes.Buffer{}, &bytes.Buffer{}, &bytes.Buffer{}
-	// stdHandles := &types.StdHandlesStruct{
-	// 	Stdout: stdout,
-	// 	Stderr: stderr,
-	// 	Stdin:  stdin,
-	// }
-
 	dcYmlOsStruct := &dcYmlOsFailingGetwdDouble{}
 	dcYml := dc_yml.Construct(dcYmlOsStruct)
 	cna := cmd_name_args.Construct(&cnaOsFailingDouble{})
