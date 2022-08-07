@@ -37,6 +37,10 @@ func (*dcYmlOsFailingDouble) Getenv(name string) string {
 	return ``
 }
 
+func (*dcYmlOsFailingDouble) Stat(name string) (dfi types.DcFileInfoStruct, err error) {
+	return dfi, fmt.Errorf("unimplemented")
+}
+
 type execOsDouble struct {
 	Stdout io.Writer
 	Stderr io.Writer

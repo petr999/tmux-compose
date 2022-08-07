@@ -1,12 +1,14 @@
 package run_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"testing"
 	"tmux_compose/cmd_name_args"
 	"tmux_compose/dc_yml"
 	"tmux_compose/exec"
 	"tmux_compose/logger"
+	"tmux_compose/types"
 
 	"tmux_compose/run"
 
@@ -56,13 +58,12 @@ type dcYmlOsGetenvToFileDouble struct {
 }
 
 // Getwd implements types.DcYmlOsInterface
-func (osStruct *dcYmlOsGetenvToFileDouble) Getenv(key string) (val string) {
+func (osStruct *dcYmlOsGetenvToFileDouble) Getenv(key string) string {
 	osStruct.GetenvData.WascalledTimes++
-	val = ``
 	if key == `TMUX_COMPOSE_DC_YML` {
-		val = `/path/to/dumbclicker/docker-compose.yml`
+		return `/path/to/dumbclicker/docker-compose.yml`
 	}
-	return
+	return ``
 }
 
 type dcYmlOsGetenvToDirDouble struct {
@@ -289,7 +290,150 @@ func TestRunDcFailingReadFile(t *testing.T) { // AndStdHandles {
 		t.Errorf(`Failing DcOsStruct.ReadFile() was called not '1' time but: '%v'`, dcYmlOsStruct.wasCalled.ReadFile)
 	}
 	if dcYmlOsStruct.wasCalled.Getwd != 0 {
+		t.Errorf(`Failing DcOsStruct.Getwd() was called not '0' time but: '%v'`, dcYmlOsStruct.wasCalled.Getwd)
+	}
+
+	// if os.ExitData.code != 1 {
+	// 	t.Errorf(`Failing DcOsStruct.Getwd() was provided not '1' to Runner.Os.Exit exit code but: '%v'`, os.ExitData.code)
+	// }
+	// if os.ExitData.wasCalledTimes != 1 {
+	// 	t.Errorf(`Failing DcOsStruct.Getwd() was called Runner.Os.Exit not '1' time: '%v'`, os.ExitData.code)
+	// }
+	// if execOsStruct.StdHandlesDouble.Stdout.Len() != 0 {
+	// 	t.Errorf(`Failing DcOsStruct.Getwd() made stdout not empty: '%s'`, execOsStruct.StdHandlesDouble.Stdout)
+	// }
+	// stderrExpected := "exec: no command\n"
+	// if execOsStruct.StdHandlesDouble.Stderr.String() != stderrExpected {
+	// 	t.Errorf(`Failing DcOsStruct.Getwd() made stderr '%s' not equal to: '%s'`, execOsStruct.StdHandlesDouble.Stderr, stderrExpected)
+	// }
+}
+
+type dcYmlOsFailingStatInputDouble struct {
+	StatData struct {
+		Names     []string
+		wasCalled int
+	}
+}
+
+// Chdir implements types.DcYmlOsInterface
+func (osStruct *dcYmlOsFailingStatInputDouble) Stat(name string) (dfi types.DcFileInfoStruct, err error) {
+	osStruct.StatData.wasCalled++
+	osStruct.StatData.Names = append(osStruct.StatData.Names, name)
+	if name == `/path/to/dumbclicker` {
+		return types.DcFileInfoStruct{
+			IsDir: func() bool {
+				return true
+			},
+		}, nil
+	}
+	return dfi, fmt.Errorf("Failed to Stat() path: '%v'", name)
+}
+
+type dcYmlOsFailingStatInputDirDouble struct {
+	dcYmlOsGetenvToDirDouble
+	dcYmlOsFailingStatInputDouble
+}
+
+func TestRunDcFailingStatInputDir(t *testing.T) { // AndStdHandles {
+	// tle := getTestLogfuncExitType()
+	// stdHandles, runner := makeRunnerForFatal(`/\\nonexistent`, &tle)
+
+	dcYmlOsStruct := &dcYmlOsFailingStatInputFileDouble{}
+	dcYml := dc_yml.Construct(dcYmlOsStruct)
+	cna := cmd_name_args.Construct(&cnaOsFailingDouble{})
+	execOsStruct := &execOsFailingDouble{}
+	exec := exec.Construct(execOsStruct)
+
+	os := &osDouble{}
+	logger := logger.Construct(execOsStruct.GetStdHandles())
+
+	runner := run.Runner{
+		CmdNameArgs: cna,
+		DcYml:       dcYml,
+		Exec:        exec,
+		Os:          os,
+		Logger:      logger,
+	}
+
+	runner.Run()
+
+	if dcYmlOsStruct.StatData.wasCalled != 1 {
+		t.Errorf(`Failing DcOsStruct.Stat() was called not '1' time but: '%v'`, dcYmlOsStruct.StatData.wasCalled)
+	}
+	if dcYmlOsStruct.wasCalled.Chdir != 0 {
+		t.Errorf(`Failing DcOsStruct.Chdir() was called not '0' time but: '%v'`, dcYmlOsStruct.wasCalled.Chdir)
+	}
+	if dcYmlOsStruct.wasCalled.ReadFile != 0 {
+		t.Errorf(`Failing DcOsStruct.ReadFile() was called not '0' time but: '%v'`, dcYmlOsStruct.wasCalled.ReadFile)
+	}
+	if dcYmlOsStruct.wasCalled.Getwd != 0 {
 		t.Errorf(`Failing DcOsStruct.ReadFile() was called not '0' time but: '%v'`, dcYmlOsStruct.wasCalled.Getwd)
+	}
+	names, _ := json.Marshal(dcYmlOsStruct.StatData.Names)
+	namesExpected, _ := json.Marshal([]string{`/path/to/dumbclicker`})
+	if string(names) != string(namesExpected) {
+		t.Errorf(`Failing DcOsStruct.Stat() was called not '%s' time but: '%s'`, namesExpected, names)
+	}
+
+	// if os.ExitData.code != 1 {
+	// 	t.Errorf(`Failing DcOsStruct.Getwd() was provided not '1' to Runner.Os.Exit exit code but: '%v'`, os.ExitData.code)
+	// }
+	// if os.ExitData.wasCalledTimes != 1 {
+	// 	t.Errorf(`Failing DcOsStruct.Getwd() was called Runner.Os.Exit not '1' time: '%v'`, os.ExitData.code)
+	// }
+	// if execOsStruct.StdHandlesDouble.Stdout.Len() != 0 {
+	// 	t.Errorf(`Failing DcOsStruct.Getwd() made stdout not empty: '%s'`, execOsStruct.StdHandlesDouble.Stdout)
+	// }
+	// stderrExpected := "exec: no command\n"
+	// if execOsStruct.StdHandlesDouble.Stderr.String() != stderrExpected {
+	// 	t.Errorf(`Failing DcOsStruct.Getwd() made stderr '%s' not equal to: '%s'`, execOsStruct.StdHandlesDouble.Stderr, stderrExpected)
+	// }
+}
+
+type dcYmlOsFailingStatInputFileDouble struct {
+	dcYmlOsGetenvToFileDouble
+	dcYmlOsFailingStatInputDouble
+}
+
+// func (*dcYmlOsFailingStatInputFileDouble) Chdir(dir string) (err error) { return }
+
+func TestRunDcFailingStatInputFile(t *testing.T) { // AndStdHandles {
+	// tle := getTestLogfuncExitType()
+	// stdHandles, runner := makeRunnerForFatal(`/\\nonexistent`, &tle)
+
+	dcYmlOsStruct := &dcYmlOsFailingStatInputDirDouble{}
+	dcYml := dc_yml.Construct(dcYmlOsStruct)
+	cna := cmd_name_args.Construct(&cnaOsFailingDouble{})
+	execOsStruct := &execOsFailingDouble{}
+	exec := exec.Construct(execOsStruct)
+
+	os := &osDouble{}
+	logger := logger.Construct(execOsStruct.GetStdHandles())
+
+	runner := run.Runner{
+		CmdNameArgs: cna,
+		DcYml:       dcYml,
+		Exec:        exec,
+		Os:          os,
+		Logger:      logger,
+	}
+
+	runner.Run()
+
+	if dcYmlOsStruct.GetenvData.WascalledTimes != 1 {
+		t.Errorf(`Failing DcOsStruct.Getenv() was called not '1' time but: '%v'`, dcYmlOsStruct.GetenvData.WascalledTimes)
+	}
+	if dcYmlOsStruct.wasCalled.Chdir != 0 {
+		t.Errorf(`Failing DcOsStruct.Chdir() was called not '0' time but: '%v'`, dcYmlOsStruct.wasCalled.Chdir)
+	}
+	if dcYmlOsStruct.wasCalled.ReadFile != 0 {
+		t.Errorf(`Failing DcOsStruct.ReadFile() was called not '0' time but: '%v'`, dcYmlOsStruct.wasCalled.ReadFile)
+	}
+	if dcYmlOsStruct.wasCalled.Getwd != 0 {
+		t.Errorf(`Failing DcOsStruct.ReadFile() was called not '0' time but: '%v'`, dcYmlOsStruct.wasCalled.Getwd)
+	}
+	if dcYmlOsStruct.StatData.wasCalled != 2 {
+		t.Errorf(`Failing DcOsStruct.Stat() was called not '2' times but: '%v'`, dcYmlOsStruct.StatData.wasCalled)
 	}
 
 	// if os.ExitData.code != 1 {

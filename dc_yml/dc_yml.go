@@ -5,6 +5,8 @@ import (
 	"tmux_compose/types"
 )
 
+const dcEnvVar = `TMUX_COMPOSE_DC_YML`
+
 type DcYmlValue = struct {
 	Workdir         string
 	DcServicesNames []string
@@ -24,10 +26,19 @@ func Construct(osStruct types.DcYmlOsInterface) *DcYml {
 	return dcYml
 }
 
+// if len(dcYml.osStruct.Getenv(dcEnvVar)) > 0 {
+func (dcYml *DcYml) getByEnv() (dcYmlValue types.DcYmlValue, err error) {
+	err = fmt.Errorf(`not implemented`)
+	return
+}
+
 func (dcYml *DcYml) Get() (dcYmlValue types.DcYmlValue, err error) {
+	if len(dcYml.osStruct.Getenv(dcEnvVar)) > 0 {
+		return dcYml.getByEnv()
+	}
 	workDir, err := dcYml.osStruct.Getwd()
 	if err != nil {
-		err = fmt.Errorf(`Getting current working directory: '%w'`, err)
+		err = fmt.Errorf(`getting current working directory: '%w'`, err)
 		return
 	}
 	dcYmlValue.Workdir = workDir
