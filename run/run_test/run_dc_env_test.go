@@ -111,19 +111,19 @@ func TestRunDcOsGetenvFile(t *testing.T) { // AndStdHandles {
 		t.Errorf(`Failing DcOsStruct.Getwd() was called not '0' time but: '%v'`, dcYmlOsStruct.wasCalled.Getwd)
 	}
 
-	// if os.ExitData.code != 1 {
-	// 	t.Errorf(`Failing DcOsStruct.Getwd() was provided not '1' to Runner.Os.Exit exit code but: '%v'`, os.ExitData.code)
-	// }
-	// if os.ExitData.wasCalledTimes != 1 {
-	// 	t.Errorf(`Failing DcOsStruct.Getwd() was called Runner.Os.Exit not '1' time: '%v'`, os.ExitData.code)
-	// }
-	// if execOsStruct.StdHandlesDouble.Stdout.Len() != 0 {
-	// 	t.Errorf(`Failing DcOsStruct.Getwd() made stdout not empty: '%s'`, execOsStruct.StdHandlesDouble.Stdout)
-	// }
-	// stderrExpected := "exec: no command\n"
-	// if execOsStruct.StdHandlesDouble.Stderr.String() != stderrExpected {
-	// 	t.Errorf(`Failing DcOsStruct.Getwd() made stderr '%s' not equal to: '%s'`, execOsStruct.StdHandlesDouble.Stderr, stderrExpected)
-	// }
+	if os.ExitData.code != 1 {
+		t.Errorf(`Failing DcOsStruct.Getwd() was provided not '1' to Runner.Os.Exit exit code but: '%v'`, os.ExitData.code)
+	}
+	if os.ExitData.wasCalledTimes != 1 {
+		t.Errorf(`Failing DcOsStruct.Getwd() was called Runner.Os.Exit not '1' time: '%v'`, os.ExitData.code)
+	}
+	if execOsStruct.StdHandlesDouble.Stdout.Len() != 0 {
+		t.Errorf(`Failing DcOsStruct.Getwd() made stdout not empty: '%s'`, execOsStruct.StdHandlesDouble.Stdout)
+	}
+	stderrExpected := "get docker-compose config: 'unimplemented'\n"
+	if execOsStruct.StdHandlesDouble.Stderr.String() != stderrExpected {
+		t.Errorf(`Failing DcOsStruct.Getwd() made stderr '%s' not equal to: '%s'`, execOsStruct.StdHandlesDouble.Stderr, stderrExpected)
+	}
 
 }
 
@@ -163,19 +163,19 @@ func TestRunDcOsGetenvDir(t *testing.T) { // AndStdHandles {
 		t.Errorf(`Failing DcOsStruct.ReadFile() was called not '0' time but: '%v'`, dcYmlOsStruct.wasCalled.Getwd)
 	}
 
-	// if os.ExitData.code != 1 {
-	// 	t.Errorf(`Failing DcOsStruct.Getwd() was provided not '1' to Runner.Os.Exit exit code but: '%v'`, os.ExitData.code)
-	// }
-	// if os.ExitData.wasCalledTimes != 1 {
-	// 	t.Errorf(`Failing DcOsStruct.Getwd() was called Runner.Os.Exit not '1' time: '%v'`, os.ExitData.code)
-	// }
-	// if execOsStruct.StdHandlesDouble.Stdout.Len() != 0 {
-	// 	t.Errorf(`Failing DcOsStruct.Getwd() made stdout not empty: '%s'`, execOsStruct.StdHandlesDouble.Stdout)
-	// }
-	// stderrExpected := "exec: no command\n"
-	// if execOsStruct.StdHandlesDouble.Stderr.String() != stderrExpected {
-	// 	t.Errorf(`Failing DcOsStruct.Getwd() made stderr '%s' not equal to: '%s'`, execOsStruct.StdHandlesDouble.Stderr, stderrExpected)
-	// }
+	if os.ExitData.code != 1 {
+		t.Errorf(`Failing DcOsStruct.Getwd() was provided not '1' to Runner.Os.Exit exit code but: '%v'`, os.ExitData.code)
+	}
+	if os.ExitData.wasCalledTimes != 1 {
+		t.Errorf(`Failing DcOsStruct.Getwd() was called Runner.Os.Exit not '1' time: '%v'`, os.ExitData.code)
+	}
+	if execOsStruct.StdHandlesDouble.Stdout.Len() != 0 {
+		t.Errorf(`Failing DcOsStruct.Getwd() made stdout not empty: '%s'`, execOsStruct.StdHandlesDouble.Stdout)
+	}
+	stderrExpected := "get docker-compose config: 'unimplemented'\n"
+	if execOsStruct.StdHandlesDouble.Stderr.String() != stderrExpected {
+		t.Errorf(`Failing DcOsStruct.Getwd() made stderr '%s' not equal to: '%s'`, execOsStruct.StdHandlesDouble.Stderr, stderrExpected)
+	}
 }
 
 // type dcYmlOsFailingChdirDouble struct {
@@ -318,19 +318,19 @@ func TestRunDcFailingReadFile(t *testing.T) { // AndStdHandles {
 		t.Errorf(`Failing DcOsStruct.Getwd() was called not '0' time but: '%v'`, dcYmlOsStruct.wasCalled.Getwd)
 	}
 
-	// if os.ExitData.code != 1 {
-	// 	t.Errorf(`Failing DcOsStruct.Getwd() was provided not '1' to Runner.Os.Exit exit code but: '%v'`, os.ExitData.code)
-	// }
-	// if os.ExitData.wasCalledTimes != 1 {
-	// 	t.Errorf(`Failing DcOsStruct.Getwd() was called Runner.Os.Exit not '1' time: '%v'`, os.ExitData.code)
-	// }
-	// if execOsStruct.StdHandlesDouble.Stdout.Len() != 0 {
-	// 	t.Errorf(`Failing DcOsStruct.Getwd() made stdout not empty: '%s'`, execOsStruct.StdHandlesDouble.Stdout)
-	// }
-	// stderrExpected := "exec: no command\n"
-	// if execOsStruct.StdHandlesDouble.Stderr.String() != stderrExpected {
-	// 	t.Errorf(`Failing DcOsStruct.Getwd() made stderr '%s' not equal to: '%s'`, execOsStruct.StdHandlesDouble.Stderr, stderrExpected)
-	// }
+	if os.ExitData.code != 1 {
+		t.Errorf(`Failing DcOsStruct.Getwd() was provided not '1' to Runner.Os.Exit exit code but: '%v'`, os.ExitData.code)
+	}
+	if os.ExitData.wasCalledTimes != 1 {
+		t.Errorf(`Failing DcOsStruct.Getwd() was called Runner.Os.Exit not '1' time: '%v'`, os.ExitData.code)
+	}
+	if execOsStruct.StdHandlesDouble.Stdout.Len() != 0 {
+		t.Errorf(`Failing DcOsStruct.Getwd() made stdout not empty: '%s'`, execOsStruct.StdHandlesDouble.Stdout)
+	}
+	stderrExpected := "get docker-compose config: 'Failed to ReadFile() from: '/path/to/dumbclicker/docker-compose.yml''\n"
+	if execOsStruct.StdHandlesDouble.Stderr.String() != stderrExpected {
+		t.Errorf(`Failing DcOsStruct.Getwd() made stderr '%s' not equal to: '%s'`, execOsStruct.StdHandlesDouble.Stderr, stderrExpected)
+	}
 }
 
 type dcYmlOsFailingStatInputDouble struct {
@@ -344,7 +344,7 @@ type dcYmlOsFailingStatInputDouble struct {
 func (osStruct *dcYmlOsFailingStatInputDouble) Stat(name string) (dfi types.DcFileInfoStruct, err error) {
 	osStruct.StatData.wasCalled++
 	osStruct.StatData.Names = append(osStruct.StatData.Names, name)
-	return dfi, fmt.Errorf("Failed to Stat() path: '%v':", name)
+	return dfi, fmt.Errorf("Failed to Stat() path: '%v'", name)
 }
 
 type dcYmlOsFailingStatInputDirDouble struct {
@@ -390,19 +390,19 @@ func TestRunDcFailingStatInputDir(t *testing.T) { // AndStdHandles {
 		t.Errorf(`Failing DcOsStruct.Stat() was called not with '%s'  but with: '%s'`, namesExpected, names)
 	}
 
-	// if os.ExitData.code != 1 {
-	// 	t.Errorf(`Failing DcOsStruct.Getwd() was provided not '1' to Runner.Os.Exit exit code but: '%v'`, os.ExitData.code)
-	// }
-	// if os.ExitData.wasCalledTimes != 1 {
-	// 	t.Errorf(`Failing DcOsStruct.Getwd() was called Runner.Os.Exit not '1' time: '%v'`, os.ExitData.code)
-	// }
-	// if execOsStruct.StdHandlesDouble.Stdout.Len() != 0 {
-	// 	t.Errorf(`Failing DcOsStruct.Getwd() made stdout not empty: '%s'`, execOsStruct.StdHandlesDouble.Stdout)
-	// }
-	// stderrExpected := "exec: no command\n"
-	// if execOsStruct.StdHandlesDouble.Stderr.String() != stderrExpected {
-	// 	t.Errorf(`Failing DcOsStruct.Getwd() made stderr '%s' not equal to: '%s'`, execOsStruct.StdHandlesDouble.Stderr, stderrExpected)
-	// }
+	if os.ExitData.code != 1 {
+		t.Errorf(`Failing DcOsStruct.Getwd() was provided not '1' to Runner.Os.Exit exit code but: '%v'`, os.ExitData.code)
+	}
+	if os.ExitData.wasCalledTimes != 1 {
+		t.Errorf(`Failing DcOsStruct.Getwd() was called Runner.Os.Exit not '1' time: '%v'`, os.ExitData.code)
+	}
+	if execOsStruct.StdHandlesDouble.Stdout.Len() != 0 {
+		t.Errorf(`Failing DcOsStruct.Getwd() made stdout not empty: '%s'`, execOsStruct.StdHandlesDouble.Stdout)
+	}
+	stderrExpected := "get docker-compose config: 'Failed to Stat() path: '/path/to/dumbclicker''\n"
+	if execOsStruct.StdHandlesDouble.Stderr.String() != stderrExpected {
+		t.Errorf(`Failing DcOsStruct.Stat() made stderr '%s' not equal to: '%s'`, execOsStruct.StdHandlesDouble.Stderr, stderrExpected)
+	}
 }
 
 type dcYmlOsFailingStatInputFileDouble struct {
@@ -446,19 +446,19 @@ func TestRunDcFailingStatInputFile(t *testing.T) { // AndStdHandles {
 		t.Errorf(`Failing DcOsStruct.Stat() was called not '1' times but: '%v'`, dcYmlOsStruct.StatData.wasCalled)
 	}
 
-	// if os.ExitData.code != 1 {
-	// 	t.Errorf(`Failing DcOsStruct.Getwd() was provided not '1' to Runner.Os.Exit exit code but: '%v'`, os.ExitData.code)
-	// }
-	// if os.ExitData.wasCalledTimes != 1 {
-	// 	t.Errorf(`Failing DcOsStruct.Getwd() was called Runner.Os.Exit not '1' time: '%v'`, os.ExitData.code)
-	// }
-	// if execOsStruct.StdHandlesDouble.Stdout.Len() != 0 {
-	// 	t.Errorf(`Failing DcOsStruct.Getwd() made stdout not empty: '%s'`, execOsStruct.StdHandlesDouble.Stdout)
-	// }
-	// stderrExpected := "exec: no command\n"
-	// if execOsStruct.StdHandlesDouble.Stderr.String() != stderrExpected {
-	// 	t.Errorf(`Failing DcOsStruct.Getwd() made stderr '%s' not equal to: '%s'`, execOsStruct.StdHandlesDouble.Stderr, stderrExpected)
-	// }
+	if os.ExitData.code != 1 {
+		t.Errorf(`Failing DcOsStruct.Getwd() was provided not '1' to Runner.Os.Exit exit code but: '%v'`, os.ExitData.code)
+	}
+	if os.ExitData.wasCalledTimes != 1 {
+		t.Errorf(`Failing DcOsStruct.Getwd() was called Runner.Os.Exit not '1' time: '%v'`, os.ExitData.code)
+	}
+	if execOsStruct.StdHandlesDouble.Stdout.Len() != 0 {
+		t.Errorf(`Failing DcOsStruct.Getwd() made stdout not empty: '%s'`, execOsStruct.StdHandlesDouble.Stdout)
+	}
+	stderrExpected := "get docker-compose config: 'Failed to Stat() path: '/path/to/dumbclicker/docker-compose.yml''\n"
+	if execOsStruct.StdHandlesDouble.Stderr.String() != stderrExpected {
+		t.Errorf(`Failing DcOsStruct.Getwd() made stderr '%s' not equal to: '%s'`, execOsStruct.StdHandlesDouble.Stderr, stderrExpected)
+	}
 }
 
 // DcYml supplied is neither dir nor file
@@ -520,19 +520,19 @@ func TestRunDcStatIsOtherInputFile(t *testing.T) { // AndStdHandles {
 		t.Errorf(`Failing DcOsStruct.Stat() was called not '1' times but: '%v'`, dcYmlOsStruct.wasCalled.Stat)
 	}
 
-	// if os.ExitData.code != 1 {
-	// 	t.Errorf(`Failing DcOsStruct.Getwd() was provided not '1' to Runner.Os.Exit exit code but: '%v'`, os.ExitData.code)
-	// }
-	// if os.ExitData.wasCalledTimes != 1 {
-	// 	t.Errorf(`Failing DcOsStruct.Getwd() was called Runner.Os.Exit not '1' time: '%v'`, os.ExitData.code)
-	// }
-	// if execOsStruct.StdHandlesDouble.Stdout.Len() != 0 {
-	// 	t.Errorf(`Failing DcOsStruct.Getwd() made stdout not empty: '%s'`, execOsStruct.StdHandlesDouble.Stdout)
-	// }
-	// stderrExpected := "exec: no command\n"
-	// if execOsStruct.StdHandlesDouble.Stderr.String() != stderrExpected {
-	// 	t.Errorf(`Failing DcOsStruct.Getwd() made stderr '%s' not equal to: '%s'`, execOsStruct.StdHandlesDouble.Stderr, stderrExpected)
-	// }
+	if os.ExitData.code != 1 {
+		t.Errorf(`Failing DcOsStruct.Getwd() was provided not '1' to Runner.Os.Exit exit code but: '%v'`, os.ExitData.code)
+	}
+	if os.ExitData.wasCalledTimes != 1 {
+		t.Errorf(`Failing DcOsStruct.Getwd() was called Runner.Os.Exit not '1' time: '%v'`, os.ExitData.code)
+	}
+	if execOsStruct.StdHandlesDouble.Stdout.Len() != 0 {
+		t.Errorf(`Failing DcOsStruct.Getwd() made stdout not empty: '%s'`, execOsStruct.StdHandlesDouble.Stdout)
+	}
+	stderrExpected := "get docker-compose config: 'not a dir or file: '/path/to/dumbclicker''\n"
+	if execOsStruct.StdHandlesDouble.Stderr.String() != stderrExpected {
+		t.Errorf(`Failing DcOsStruct.Getwd() made stderr '%s' not equal to: '%s'`, execOsStruct.StdHandlesDouble.Stderr, stderrExpected)
+	}
 }
 
 // Both dir and file are directories
@@ -592,17 +592,17 @@ func TestRunDcStatIsDirBothInputFile(t *testing.T) { // AndStdHandles {
 		t.Errorf(`Failing DcOsStruct.Stat() was called not '2' times but: '%v'`, dcYmlOsStruct.wasCalled.Stat)
 	}
 
-	// if os.ExitData.code != 1 {
-	// 	t.Errorf(`Failing DcOsStruct.Getwd() was provided not '1' to Runner.Os.Exit exit code but: '%v'`, os.ExitData.code)
-	// }
-	// if os.ExitData.wasCalledTimes != 1 {
-	// 	t.Errorf(`Failing DcOsStruct.Getwd() was called Runner.Os.Exit not '1' time: '%v'`, os.ExitData.code)
-	// }
-	// if execOsStruct.StdHandlesDouble.Stdout.Len() != 0 {
-	// 	t.Errorf(`Failing DcOsStruct.Getwd() made stdout not empty: '%s'`, execOsStruct.StdHandlesDouble.Stdout)
-	// }
-	// stderrExpected := "exec: no command\n"
-	// if execOsStruct.StdHandlesDouble.Stderr.String() != stderrExpected {
-	// 	t.Errorf(`Failing DcOsStruct.Getwd() made stderr '%s' not equal to: '%s'`, execOsStruct.StdHandlesDouble.Stderr, stderrExpected)
-	// }
+	if os.ExitData.code != 1 {
+		t.Errorf(`Failing DcOsStruct.Getwd() was provided not '1' to Runner.Os.Exit exit code but: '%v'`, os.ExitData.code)
+	}
+	if os.ExitData.wasCalledTimes != 1 {
+		t.Errorf(`Failing DcOsStruct.Getwd() was called Runner.Os.Exit not '1' time: '%v'`, os.ExitData.code)
+	}
+	if execOsStruct.StdHandlesDouble.Stdout.Len() != 0 {
+		t.Errorf(`Failing DcOsStruct.Getwd() made stdout not empty: '%s'`, execOsStruct.StdHandlesDouble.Stdout)
+	}
+	stderrExpected := "get docker-compose config: 'not a file: '/path/to/dumbclicker/docker-compose.yml''\n"
+	if execOsStruct.StdHandlesDouble.Stderr.String() != stderrExpected {
+		t.Errorf(`Failing DcOsStruct.Getwd() made stderr '%s' not equal to: '%s'`, execOsStruct.StdHandlesDouble.Stderr, stderrExpected)
+	}
 }

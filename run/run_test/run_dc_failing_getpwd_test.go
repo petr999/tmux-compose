@@ -244,7 +244,7 @@ func TestRunDcOsGetwdFail(t *testing.T) { // AndStdHandles {
 	if execOsStruct.StdHandlesDouble.Stdout.Len() != 0 {
 		t.Errorf(`Failing DcOsStruct.Getwd() made stdout not empty: '%s'`, execOsStruct.StdHandlesDouble.Stdout)
 	}
-	stderrExpected := "getting current working directory: 'current working directory not found'\n"
+	stderrExpected := "get docker-compose config: 'getting current working directory: 'current working directory not found''\n"
 	if execOsStruct.StdHandlesDouble.Stderr.String() != stderrExpected {
 		t.Errorf(`Failing DcOsStruct.Getwd() made stderr '%s' not equal to: '%s'`, execOsStruct.StdHandlesDouble.Stderr, stderrExpected)
 	}

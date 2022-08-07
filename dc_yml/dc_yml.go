@@ -44,7 +44,9 @@ func (dcYml *DcYml) getByEnv(dcEnvVar string) (dcYmlValue types.DcYmlValue, err 
 		return dcYmlValue, err
 	}
 
+	isDir := false
 	if fileInfo.IsDir() {
+		isDir = true
 		fPath = filepath.Join(fPath, `docker-compose.yml`)
 		fPath, err = filepath.Abs(fPath)
 		if err != nil {
@@ -59,7 +61,12 @@ func (dcYml *DcYml) getByEnv(dcEnvVar string) (dcYmlValue types.DcYmlValue, err 
 	if fileInfo.IsFile() {
 		dcYmlValue, err = dcYml.getByFname(fPath)
 	} else {
-		return dcYmlValue, fmt.Errorf(`not a file: '%v'`, fPath)
+		if isDir {
+			err = fmt.Errorf(`not a file: '%v'`, fPath)
+		} else {
+			err = fmt.Errorf(`not a dir or file: '%v'`, fPath)
+		}
+		return
 	}
 
 	return
