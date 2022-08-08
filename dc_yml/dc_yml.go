@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"path/filepath"
 	"tmux_compose/types"
+
+	"gopkg.in/yaml.v2"
 )
 
 const dcEnvVar = `TMUX_COMPOSE_DC_YML`
@@ -29,7 +31,17 @@ func Construct(osStruct types.DcYmlOsInterface) *DcYml {
 
 func (dcYml *DcYml) getServiceNames(fName string) (dcYmlValue types.DcYmlValue, err error) {
 	dcYmlValue.Workdir = filepath.Dir(fName)
-	_, err = dcYml.osStruct.ReadFile(fName)
+	buf, err := dcYml.osStruct.ReadFile(fName)
+	if err != nil {
+		return
+	}
+
+	mapSlices := yaml.MapSlice{}
+
+	err = yaml.Unmarshal(buf, &mapSlices)
+	if err != nil {
+		return // DcConfigValueType{}, fmt.Errorf("parsing config file: '%s' error:\n\t%w", fqfn, err)
+	}
 
 	return
 }

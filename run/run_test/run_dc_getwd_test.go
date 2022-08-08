@@ -105,7 +105,7 @@ func TestGetwd(t *testing.T) {
 	runner.Run()
 
 	if dcYmlOsStruct.wasCalled.Getwd != 1 {
-		t.Errorf(`cYmlOsStruct.wasCalled.Getwd was called '%v' times instead of '1'`, dcYmlOsStruct.wasCalled.Getwd)
+		t.Errorf(`dcYmlOsStruct.Getwd was called '%v' times instead of '1'`, dcYmlOsStruct.wasCalled.Getwd)
 	}
 	if osStruct.ExitData.code != 1 {
 		t.Errorf(`Failing DcOsStruct.Stat() was provided not '1' to Runner.Os.Exit exit code but: '%v'`, osStruct.ExitData.code)
