@@ -60,6 +60,10 @@ func TestRunDcParse(t *testing.T) {
 	for _, dcStderrs := range []map[string]string{
 		{``: `Get docker-compose config error: no service names in config: '/path/to/dumbclicker/docker-compose.yml'`},
 		{`v: [A,`: `Get docker-compose config error: get services from '/path/to/dumbclicker/docker-compose.yml': yaml: line 1: did not find expected node content`},
+		{"version: \"3.7\"\n\nservices:\n": `Get docker-compose config error: get services from '/path/to/dumbclicker/docker-compose.yml': services are not a list of strings: '[{version 3.7} {services <nil>}]'`},
+		{"version: \"3.7\"\n\nservices:\n  \"\":\n      image: nginx:latest": `Get docker-compose config error: empty or inappropriate service name '' in config: '/path/to/dumbclicker/docker-compose.yml'`},
+		{"version: \"3.7\"\n\nservices:\n    1:\n      image: nginx:latest": `Get docker-compose config error: get services from '/path/to/dumbclicker/docker-compose.yml': service name is not a string: '1'`},
+		{"version: \"3.7\"\n\nservices:\n    \"-\":\n      image: nginx:latest": `Get docker-compose config error: empty or inappropriate service name '-' in config: '/path/to/dumbclicker/docker-compose.yml'`},
 	} {
 		for dcContents, stderrExpected := range dcStderrs {
 
@@ -80,19 +84,19 @@ func TestRunDcParse(t *testing.T) {
 			runner.Run()
 
 			if dcYmlOsStruct.wasCalled.ReadFile != 1 {
-				t.Errorf(`dcYmlOsStruct.ReadFile was called '%v' times instead of '1'`, dcYmlOsStruct.wasCalled.ReadFile)
+				t.Errorf(`dcYml.Get was called '%v' times instead of '1'`, dcYmlOsStruct.wasCalled.ReadFile)
 			}
 			if osStruct.ExitData.code != 1 {
-				t.Errorf(`Failing DcOsStruct.ReadFile() was provided not '1' to Runner.Os.Exit exit code but: '%v'`, osStruct.ExitData.code)
+				t.Errorf(`Failing dcYml.Get was provided not '1' to Runner.Os.Exit exit code but: '%v'`, osStruct.ExitData.code)
 			}
 			if osStruct.ExitData.wasCalledTimes != 1 {
-				t.Errorf(`Failing DcOsStruct.ReadFile() was called Runner.Os.Exit not '1' time: '%v'`, osStruct.ExitData.code)
+				t.Errorf(`Failing dcYml.Get was called Runner.Os.Exit not '1' time: '%v'`, osStruct.ExitData.code)
 			}
 			if execOsStruct.StdHandlesDouble.Stdout.Len() != 0 {
-				t.Errorf(`Failing DcOsStruct.Stat() made stdout not empty: '%s'`, execOsStruct.StdHandlesDouble.Stdout)
+				t.Errorf(`Failing dcYml.Get made stdout not empty: '%s'`, execOsStruct.StdHandlesDouble.Stdout)
 			}
 			if execOsStruct.StdHandlesDouble.Stderr.String() != stderrExpected {
-				t.Errorf(`Failing dcYmlOsStruct parse '%v' made stderr '%s' not equal to: '%s'`, dcContents, execOsStruct.StdHandlesDouble.Stderr, stderrExpected)
+				t.Errorf(`Failing dcYml.Get parse '%v' made stderr '%s' not equal to: '%s'`, dcContents, execOsStruct.StdHandlesDouble.Stderr, stderrExpected)
 			}
 		}
 	}
