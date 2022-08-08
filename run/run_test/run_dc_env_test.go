@@ -127,7 +127,7 @@ func TestRunDcOsGetenvFile(t *testing.T) { // AndStdHandles {
 	if execOsStruct.StdHandlesDouble.Stdout.Len() != 0 {
 		t.Errorf(`Failing DcOsStruct.Stat() made stdout not empty: '%s'`, execOsStruct.StdHandlesDouble.Stdout)
 	}
-	stderrExpected := "Get docker-compose config error: 'unimplemented'\n"
+	stderrExpected := "Get docker-compose config error: unimplemented\n"
 	if execOsStruct.StdHandlesDouble.Stderr.String() != stderrExpected {
 		t.Errorf(`Failing DcOsStruct.Stat() made stderr '%s' not equal to: '%s'`, execOsStruct.StdHandlesDouble.Stderr, stderrExpected)
 	}
@@ -179,7 +179,7 @@ func TestRunDcOsGetenvDir(t *testing.T) { // AndStdHandles {
 	if execOsStruct.StdHandlesDouble.Stdout.Len() != 0 {
 		t.Errorf(`Failing DcOsStruct.Getwd() made stdout not empty: '%s'`, execOsStruct.StdHandlesDouble.Stdout)
 	}
-	stderrExpected := "Get docker-compose config error: 'unimplemented'\n"
+	stderrExpected := "Get docker-compose config error: unimplemented\n"
 	if execOsStruct.StdHandlesDouble.Stderr.String() != stderrExpected {
 		t.Errorf(`Failing DcOsStruct.Getwd() made stderr '%s' not equal to: '%s'`, execOsStruct.StdHandlesDouble.Stderr, stderrExpected)
 	}
@@ -334,7 +334,7 @@ func TestRunDcFailingReadFile(t *testing.T) { // AndStdHandles {
 	if execOsStruct.StdHandlesDouble.Stdout.Len() != 0 {
 		t.Errorf(`Failing DcOsStruct.Getwd() made stdout not empty: '%s'`, execOsStruct.StdHandlesDouble.Stdout)
 	}
-	stderrExpected := "Get docker-compose config error: 'Failed to ReadFile() from: '/path/to/dumbclicker/docker-compose.yml''\n"
+	stderrExpected := "Get docker-compose config error: get services from '/path/to/dumbclicker/docker-compose.yml': Failed to ReadFile() from: '/path/to/dumbclicker/docker-compose.yml'\n"
 	if execOsStruct.StdHandlesDouble.Stderr.String() != stderrExpected {
 		t.Errorf(`Failing DcOsStruct.Getwd() made stderr '%s' not equal to: '%s'`, execOsStruct.StdHandlesDouble.Stderr, stderrExpected)
 	}
@@ -409,7 +409,7 @@ func TestRunDcFailingStatInputDir(t *testing.T) { // AndStdHandles {
 	if execOsStruct.StdHandlesDouble.Stdout.Len() != 0 {
 		t.Errorf(`Failing DcOsStruct.Stat() made stdout not empty: '%s'`, execOsStruct.StdHandlesDouble.Stdout)
 	}
-	stderrExpected := "Get docker-compose config error: 'Failed to Stat() path: '/path/to/dumbclicker''\n"
+	stderrExpected := "Get docker-compose config error: Failed to Stat() path: '/path/to/dumbclicker'\n"
 	if execOsStruct.StdHandlesDouble.Stderr.String() != stderrExpected {
 		t.Errorf(`Failing DcOsStruct.Stat() made stderr '%s' not equal to: '%s'`, execOsStruct.StdHandlesDouble.Stderr, stderrExpected)
 	}
@@ -465,7 +465,7 @@ func TestRunDcFailingStatInputFile(t *testing.T) { // AndStdHandles {
 	if execOsStruct.StdHandlesDouble.Stdout.Len() != 0 {
 		t.Errorf(`Failing DcOsStruct.Stat() made stdout not empty: '%s'`, execOsStruct.StdHandlesDouble.Stdout)
 	}
-	stderrExpected := "Get docker-compose config error: 'Failed to Stat() path: '/path/to/dumbclicker/docker-compose.yml''\n"
+	stderrExpected := "Get docker-compose config error: Failed to Stat() path: '/path/to/dumbclicker/docker-compose.yml'\n"
 	if execOsStruct.StdHandlesDouble.Stderr.String() != stderrExpected {
 		t.Errorf(`Failing DcOsStruct.Stat() made stderr '%s' not equal to: '%s'`, execOsStruct.StdHandlesDouble.Stderr, stderrExpected)
 	}
@@ -539,7 +539,7 @@ func TestRunDcStatIsOtherInputFile(t *testing.T) { // AndStdHandles {
 	if execOsStruct.StdHandlesDouble.Stdout.Len() != 0 {
 		t.Errorf(`Failing DcOsStruct.Stat() made stdout not empty: '%s'`, execOsStruct.StdHandlesDouble.Stdout)
 	}
-	stderrExpected := "Get docker-compose config error: 'not a dir or file: '/path/to/dumbclicker''\n"
+	stderrExpected := "Get docker-compose config error: not a dir or file: '/path/to/dumbclicker'\n"
 	if execOsStruct.StdHandlesDouble.Stderr.String() != stderrExpected {
 		t.Errorf(`Failing DcOsStruct.Stat() made stderr '%s' not equal to: '%s'`, execOsStruct.StdHandlesDouble.Stderr, stderrExpected)
 	}
@@ -611,7 +611,7 @@ func TestRunDcStatIsDirBothInputFile(t *testing.T) { // AndStdHandles {
 	if execOsStruct.StdHandlesDouble.Stdout.Len() != 0 {
 		t.Errorf(`Failing DcOsStruct.Stat() made stdout not empty: '%s'`, execOsStruct.StdHandlesDouble.Stdout)
 	}
-	stderrExpected := "Get docker-compose config error: 'not a file: '/path/to/dumbclicker/docker-compose.yml''\n"
+	stderrExpected := "Get docker-compose config error: not a file: '/path/to/dumbclicker/docker-compose.yml'\n"
 	if execOsStruct.StdHandlesDouble.Stderr.String() != stderrExpected {
 		t.Errorf(`Failing DcOsStruct.Stat() made stderr '%s' not equal to: '%s'`, execOsStruct.StdHandlesDouble.Stderr, stderrExpected)
 	}

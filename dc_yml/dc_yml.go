@@ -3,6 +3,7 @@ package dc_yml
 import (
 	"fmt"
 	"path/filepath"
+	"regexp"
 	"tmux_compose/types"
 
 	"gopkg.in/yaml.v2"
@@ -43,6 +44,13 @@ func (dcYml *DcYml) getServiceNames(fName string) (dcYmlValue types.DcYmlValue, 
 		return // DcConfigValueType{}, fmt.Errorf("parsing config file: '%s' error:\n\t%w", fqfn, err)
 	}
 
+	services, err := getServices(mapSlices)
+	if err != nil { // err = fmt.Errorf("parsing config file: '%s' error:\n\t%w", fqfn, err)
+		return
+	}
+
+	dcYmlValue.DcServicesNames = services
+
 	return
 }
 
@@ -74,7 +82,10 @@ func (dcYml *DcYml) getByFname(fName string) (dcYmlValue types.DcYmlValue, err e
 
 	if fileInfo.IsFile() {
 		dcYmlValue, err = dcYml.getServiceNames(fPath)
-		err = fmt.Errorf(`get services from '%v': %w`, fPath, err)
+		if err != nil {
+			err = fmt.Errorf(`get services from '%v': %w`, fPath, err)
+			return
+		}
 	} else {
 		if isDir {
 			err = fmt.Errorf(`not a file: '%v'`, fPath)
@@ -84,11 +95,22 @@ func (dcYml *DcYml) getByFname(fName string) (dcYmlValue types.DcYmlValue, err e
 		return
 	}
 
+	if len(dcYmlValue.DcServicesNames) == 0 {
+		return types.DcYmlValue{}, fmt.Errorf("no service names in config: '%v'", fPath)
+	} else {
+		for _, serviceName := range dcYmlValue.DcServicesNames {
+			if len(serviceName) == 0 || !regexp.MustCompile(`^\w[\w\d]*$`).MatchString(serviceName) {
+				return types.DcYmlValue{}, fmt.Errorf("empty or inappropriate service name '%v' in config: '%v'", serviceName, fPath)
+			}
+		}
+	}
+
 	return
 }
 
 func (dcYml *DcYml) Get() (dcYmlValue types.DcYmlValue, err error) {
 	dcEnvVar := dcYml.osStruct.Getenv(dcEnvVar)
+
 	if len(dcEnvVar) > 0 {
 		return dcYml.getByFname(dcEnvVar)
 	} else {
@@ -97,7 +119,7 @@ func (dcYml *DcYml) Get() (dcYmlValue types.DcYmlValue, err error) {
 			errGetwd = fmt.Errorf(`getting current working directory: '%w'`, errGetwd)
 			return dcYmlValue, errGetwd
 		}
-		return dcYml.getByFname(filepath.Join(workDir, `docker-compose.yml`))
+		return dcYml.getByFname(workDir)
 	}
 }
 
@@ -115,34 +137,34 @@ func (dcYml *DcYml) Get() (dcYmlValue types.DcYmlValue, err error) {
 // 	Services map[string]map[string]interface{}
 // }
 
-// func getServices(mapSlices yaml.MapSlice) ([]string, error) {
-// 	services := []string{}
+func getServices(mapSlices yaml.MapSlice) ([]string, error) {
+	services := []string{}
 
-// 	for _, slice := range mapSlices {
-// 		if slice.Key == `services` {
-// 			servicesFound, ok := slice.Value.(yaml.MapSlice)
-// 			if !ok {
-// 				return []string{}, fmt.Errorf("services are not a list of strings: '%v'", mapSlices)
-// 			}
+	for _, slice := range mapSlices {
+		if slice.Key == `services` {
+			servicesFound, ok := slice.Value.(yaml.MapSlice)
+			if !ok {
+				return []string{}, fmt.Errorf("services are not a list of strings: '%v'", mapSlices)
+			}
 
-// 			for _, servicesItem := range servicesFound {
-// 				serviceName, ok := servicesItem.Key.(string)
-// 				if !ok {
-// 					return []string{}, fmt.Errorf("service name is not a string: '%v'", servicesItem.Key)
-// 				}
-// 				services = append(services, serviceName)
-// 			}
+			for _, servicesItem := range servicesFound {
+				serviceName, ok := servicesItem.Key.(string)
+				if !ok {
+					return []string{}, fmt.Errorf("service name is not a string: '%v'", servicesItem.Key)
+				}
+				services = append(services, serviceName)
+			}
 
-// 			continue
-// 		}
-// 	}
+			continue
+		}
+	}
 
-// 	// for _, mapSlice := range mapSlices {
-// 	// 	dcKeyValue, ok := mapSlice.Key.(string)
-// 	// }
+	// for _, mapSlice := range mapSlices {
+	// 	dcKeyValue, ok := mapSlice.Key.(string)
+	// }
 
-// 	return services, nil
-// }
+	return services, nil
+}
 
 // func (dcConfig DcConfig) readConfigFile() (value DcConfigValueType, err error) {
 // 	var buf []byte

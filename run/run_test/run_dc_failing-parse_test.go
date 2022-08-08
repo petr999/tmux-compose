@@ -57,36 +57,44 @@ func (dcYml *dcYmlOsFailingParse) SetDcContents(dcContents string) {
 }
 
 func TestRunDcParse(t *testing.T) {
+	for _, dcStderrs := range []map[string]string{
+		{``: `Get docker-compose config error: no service names in config: '/path/to/dumbclicker/docker-compose.yml'`},
+		{`v: [A,`: `Get docker-compose config error: get services from '/path/to/dumbclicker/docker-compose.yml': yaml: line 1: did not find expected node content`},
+	} {
+		for dcContents, stderrExpected := range dcStderrs {
 
-	dcYmlOsStruct := &dcYmlOsFailingParse{}
-	dcYmlOsStruct.SetDcContents(`v: [A,`)
-	execOsStruct := &execOsFailingDouble{}
-	osStruct := &osDouble{}
+			dcYmlOsStruct := &dcYmlOsFailingParse{}
+			dcYmlOsStruct.SetDcContents(dcContents)
+			execOsStruct := &execOsFailingDouble{}
+			osStruct := &osDouble{}
+			stderrExpected = stderrExpected + "\n"
 
-	runner := run.Runner{
-		CmdNameArgs: cmd_name_args.Construct(&cnaOsFailingDouble{}),
-		DcYml:       dc_yml.Construct(dcYmlOsStruct),
-		Exec:        exec.Construct(execOsStruct),
-		Os:          osStruct,
-		Logger:      logger.Construct(execOsStruct.GetStdHandles()),
+			runner := run.Runner{
+				CmdNameArgs: cmd_name_args.Construct(&cnaOsFailingDouble{}),
+				DcYml:       dc_yml.Construct(dcYmlOsStruct),
+				Exec:        exec.Construct(execOsStruct),
+				Os:          osStruct,
+				Logger:      logger.Construct(execOsStruct.GetStdHandles()),
+			}
+
+			runner.Run()
+
+			if dcYmlOsStruct.wasCalled.ReadFile != 1 {
+				t.Errorf(`dcYmlOsStruct.ReadFile was called '%v' times instead of '1'`, dcYmlOsStruct.wasCalled.ReadFile)
+			}
+			if osStruct.ExitData.code != 1 {
+				t.Errorf(`Failing DcOsStruct.ReadFile() was provided not '1' to Runner.Os.Exit exit code but: '%v'`, osStruct.ExitData.code)
+			}
+			if osStruct.ExitData.wasCalledTimes != 1 {
+				t.Errorf(`Failing DcOsStruct.ReadFile() was called Runner.Os.Exit not '1' time: '%v'`, osStruct.ExitData.code)
+			}
+			if execOsStruct.StdHandlesDouble.Stdout.Len() != 0 {
+				t.Errorf(`Failing DcOsStruct.Stat() made stdout not empty: '%s'`, execOsStruct.StdHandlesDouble.Stdout)
+			}
+			if execOsStruct.StdHandlesDouble.Stderr.String() != stderrExpected {
+				t.Errorf(`Failing dcYmlOsStruct parse '%v' made stderr '%s' not equal to: '%s'`, dcContents, execOsStruct.StdHandlesDouble.Stderr, stderrExpected)
+			}
+		}
 	}
 
-	runner.Run()
-
-	if dcYmlOsStruct.wasCalled.ReadFile != 1 {
-		t.Errorf(`dcYmlOsStruct.ReadFile was called '%v' times instead of '1'`, dcYmlOsStruct.wasCalled.ReadFile)
-	}
-	if osStruct.ExitData.code != 1 {
-		t.Errorf(`Failing DcOsStruct.ReadFile() was provided not '1' to Runner.Os.Exit exit code but: '%v'`, osStruct.ExitData.code)
-	}
-	if osStruct.ExitData.wasCalledTimes != 1 {
-		t.Errorf(`Failing DcOsStruct.ReadFile() was called Runner.Os.Exit not '1' time: '%v'`, osStruct.ExitData.code)
-	}
-	if execOsStruct.StdHandlesDouble.Stdout.Len() != 0 {
-		t.Errorf(`Failing DcOsStruct.Stat() made stdout not empty: '%s'`, execOsStruct.StdHandlesDouble.Stdout)
-	}
-	stderrExpected := "Get docker-compose config error: get services from '/path/to/dumbclicker/docker-compose.yml': yaml: line 1: did not find expected node content\n"
-	if execOsStruct.StdHandlesDouble.Stderr.String() != stderrExpected {
-		t.Errorf(`Failing dcYmlOsStruct parse made stderr '%s' not equal to: '%s'`, execOsStruct.StdHandlesDouble.Stderr, stderrExpected)
-	}
 }
