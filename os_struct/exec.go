@@ -13,12 +13,6 @@ func (execOsStruct ExecOsStruct) Getenv(key string) string {
 	return os.Getenv(key)
 }
 
-func (execOsStruct ExecOsStruct) Chdir(dir string) error {
-	return os.Chdir(dir)
-}
-func (execOsStruct ExecOsStruct) Getwd() (dir string, err error) {
-	return os.Getwd()
-}
 func (execOsStruct ExecOsStruct) ReadFile(name string) ([]byte, error) {
 	return os.ReadFile(name)
 }
@@ -31,6 +25,10 @@ func (execOsStruct ExecOsStruct) GetStdHandles() (stdHandles types.StdHandlesTyp
 	}
 
 	return execOsStruct.stdHandles
+}
+
+func (execOsStruct ExecOsStruct) Chdir(dir string) error {
+	return os.Chdir(dir)
 }
 
 // func (execOsStruct ExecOsStruct) Command(name string, arg ...string) interface {

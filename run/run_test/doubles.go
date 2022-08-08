@@ -28,9 +28,7 @@ func (*dcYmlOsFailingDouble) ReadFile(name string) ([]byte, error) {
 	return []byte{}, fmt.Errorf("unimplemented")
 }
 
-func (*dcYmlOsFailingDouble) Getenv(name string) string {
-	return ``
-}
+func (*dcYmlOsFailingDouble) Getenv(string) string { return `` }
 
 func (*dcYmlOsFailingDouble) Stat(name string) (dfi types.DcFileInfoStruct, err error) {
 	return dfi, fmt.Errorf("unimplemented")
@@ -55,11 +53,6 @@ func (execOsDouble) Chdir(dir string) error {
 // Getenv implements types.ExecOsInterface
 func (execOsDouble) Getenv(key string) string {
 	return ``
-}
-
-// Getwd implements types.ExecOsInterface
-func (execOsDouble) Getwd() (dir string, err error) {
-	return ``, fmt.Errorf("unimplemented")
 }
 
 // ReadFile implements types.ExecOsInterface

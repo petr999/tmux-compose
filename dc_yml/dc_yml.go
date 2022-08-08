@@ -27,14 +27,16 @@ func Construct(osStruct types.DcYmlOsInterface) *DcYml {
 	return dcYml
 }
 
-func (dcYml *DcYml) getByFname(fName string) (dcYmlValue types.DcYmlValue, err error) {
+func (dcYml *DcYml) getServiceNames(fName string) (dcYmlValue types.DcYmlValue, err error) {
+	dcYmlValue.Workdir = filepath.Dir(fName)
 	_, err = dcYml.osStruct.ReadFile(fName)
+
 	return
 }
 
 // if len(dcYml.osStruct.Getenv(dcEnvVar)) > 0 {
-func (dcYml *DcYml) getByEnv(dcEnvVar string) (dcYmlValue types.DcYmlValue, err error) {
-	fPath, err := filepath.Abs(dcEnvVar)
+func (dcYml *DcYml) getByFname(fName string) (dcYmlValue types.DcYmlValue, err error) {
+	fPath, err := filepath.Abs(fName)
 	if err != nil {
 		return dcYmlValue, fmt.Errorf(`normalizing path: '%v' error: '%w'`, fPath, err)
 	}
@@ -59,7 +61,7 @@ func (dcYml *DcYml) getByEnv(dcEnvVar string) (dcYmlValue types.DcYmlValue, err 
 	}
 
 	if fileInfo.IsFile() {
-		dcYmlValue, err = dcYml.getByFname(fPath)
+		dcYmlValue, err = dcYml.getServiceNames(fPath)
 	} else {
 		if isDir {
 			err = fmt.Errorf(`not a file: '%v'`, fPath)
@@ -75,16 +77,15 @@ func (dcYml *DcYml) getByEnv(dcEnvVar string) (dcYmlValue types.DcYmlValue, err 
 func (dcYml *DcYml) Get() (dcYmlValue types.DcYmlValue, err error) {
 	dcEnvVar := dcYml.osStruct.Getenv(dcEnvVar)
 	if len(dcEnvVar) > 0 {
-		return dcYml.getByEnv(dcEnvVar)
+		return dcYml.getByFname(dcEnvVar)
+	} else {
+		workDir, errGetwd := dcYml.osStruct.Getwd()
+		if errGetwd != nil {
+			errGetwd = fmt.Errorf(`getting current working directory: '%w'`, errGetwd)
+			return dcYmlValue, errGetwd
+		}
+		return dcYml.getByFname(filepath.Join(workDir, `docker-compose.yml`))
 	}
-	workDir, err := dcYml.osStruct.Getwd()
-	if err != nil {
-		err = fmt.Errorf(`getting current working directory: '%w'`, err)
-		return
-	}
-	dcYmlValue.Workdir = workDir
-
-	return
 }
 
 // type DcConfig struct {

@@ -19,12 +19,12 @@ func (obj *dryRunCmd) Run() error { return nil }
 type Exec struct {
 	Cmd        *types.CmdType
 	Selector   any
-	osStruct   *types.ExecOsInterface
+	osStruct   types.ExecOsInterface
 	stdHandles types.StdHandlesType
 }
 
 func (exec *Exec) New(osStruct types.ExecOsInterface, stdHandles types.StdHandlesType) {
-	exec.Selector, exec.osStruct, exec.stdHandles = false, &osStruct, stdHandles
+	exec.Selector, exec.osStruct, exec.stdHandles = false, osStruct, stdHandles
 }
 
 func (exec *Exec) execCommand(cna types.CmdNameArgsValueType) *osExec.Cmd {
@@ -40,26 +40,37 @@ func (exec *Exec) dryRun(cna types.CmdNameArgsValueType) types.CmdInterface {
 	return &dryRunCmd{}
 }
 
-func (exec *Exec) getSelector() any {
-	return true // dry run
+func (exec *Exec) GetSelector() any {
+	// if len(exec.osStruct.Getenv(`TMUX_COMPOSE_DRY_RUN`)) > 0 {
+	return false
+	// } // dry run
 }
 
 func (exec *Exec) GetCommand(cna types.CmdNameArgsValueType) *types.CmdType {
-
 	var obj interface{ Run() error }
-	selector := exec.getSelector()
+	selector := exec.GetSelector()
 	if dryRun, ok := selector.(bool); ok {
 		if dryRun {
 			obj = exec.dryRun(cna)
 		} else {
 			obj = exec.execCommand(cna)
+			runFunc := func() error {
+				if err := exec.osStruct.Chdir(cna.Workdir); err != nil {
+					return err
+				}
+				return obj.Run()
+			}
+			exec.Cmd = &types.CmdType{Obj: obj, Run: runFunc}
 		}
 	} else {
 		if objWithRun, ok := selector.(interface{ Run() error }); ok {
 			obj = objWithRun
 		}
+		runFunc := func() error { return obj.Run() }
+		exec.Cmd = &types.CmdType{Obj: obj, Run: runFunc}
 	}
-	exec.Cmd = &types.CmdType{Obj: obj, Stdhandles: exec.stdHandles}
+
+	exec.Cmd.Stdhandles = exec.stdHandles
 	return exec.Cmd
 }
 

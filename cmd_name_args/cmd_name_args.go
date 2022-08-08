@@ -15,8 +15,8 @@ type CmdNameArgs struct {
 }
 
 func (cna *CmdNameArgs) New(os_struct types.CnaOsInterface) {}
-func (cna *CmdNameArgs) Get(types.DcYmlValue) (types.CmdNameArgsValueType, error) {
-	return types.CmdNameArgsValueType{}, nil
+func (cna *CmdNameArgs) Get(dcYmlValue types.DcYmlValue) (cnaValue types.CmdNameArgsValueType, err error) {
+	return types.CmdNameArgsValueType{Workdir: dcYmlValue.Workdir}, nil
 }
 
 // type tmplType []struct {
