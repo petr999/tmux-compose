@@ -85,7 +85,7 @@ func TestRunDcParse(t *testing.T) {
 	if execOsStruct.StdHandlesDouble.Stdout.Len() != 0 {
 		t.Errorf(`Failing DcOsStruct.Stat() made stdout not empty: '%s'`, execOsStruct.StdHandlesDouble.Stdout)
 	}
-	stderrExpected := "Get docker-compose config error: 'yaml: line 1: did not find expected node content'\n"
+	stderrExpected := "Get docker-compose config error: get services from '/path/to/dumbclicker/docker-compose.yml': yaml: line 1: did not find expected node content\n"
 	if execOsStruct.StdHandlesDouble.Stderr.String() != stderrExpected {
 		t.Errorf(`Failing dcYmlOsStruct parse made stderr '%s' not equal to: '%s'`, execOsStruct.StdHandlesDouble.Stderr, stderrExpected)
 	}

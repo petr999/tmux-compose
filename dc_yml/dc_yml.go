@@ -74,6 +74,7 @@ func (dcYml *DcYml) getByFname(fName string) (dcYmlValue types.DcYmlValue, err e
 
 	if fileInfo.IsFile() {
 		dcYmlValue, err = dcYml.getServiceNames(fPath)
+		err = fmt.Errorf(`get services from '%v': %w`, fPath, err)
 	} else {
 		if isDir {
 			err = fmt.Errorf(`not a file: '%v'`, fPath)
