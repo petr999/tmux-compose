@@ -2,6 +2,7 @@ package types
 
 import (
 	"io"
+	"os/exec"
 )
 
 type StdHandlesStruct struct {
@@ -17,6 +18,7 @@ type ExecOsInterface interface {
 	Chdir(dir string) error
 	ReadFile(name string) ([]byte, error)
 	GetStdHandles() StdHandlesType
+	Command(name string, arg ...string) *exec.Cmd
 }
 
 type RunnerOsInterface interface {

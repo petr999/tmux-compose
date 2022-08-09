@@ -250,27 +250,6 @@ func TestRunDcOsGetwdFail(t *testing.T) { // AndStdHandles {
 	}
 }
 
-// tle.LogfuncAndExitTestWascalledsAndArgs(t, 1, []string{`some error`}, 1, 1)
-
-// cmd := runner.ExecStruct.GetCommand()
-// if cmd == nil {
-// 	t.Error(`Command is nil`)
-// } else {
-// 	stdoutActual, stdoutExpected := *cmd.Stdout, stdHandles.Stdout
-// 	if stdoutActual != stdoutExpected {
-// 		t.Errorf(`Stdout in 'cmd' '%p' was not replaced from 'os': '%p', cmp: '%v'`, stdoutActual, stdoutExpected, stdoutActual == stdoutExpected)
-// 	}
-// 	stderrActual, stderrExpected := *cmd.Stderr, stdHandles.Stderr
-// 	if stderrActual != stderrExpected {
-// 		t.Errorf(`Stderr in 'cmd' '%p' was not replaced from 'os': '%p', cmp: '%v'`, stderrActual, stderrExpected, stderrActual == stderrExpected)
-// 	}
-// 	stdinActual, stdinExpected := *cmd.Stdin, stdHandles.Stdin
-// 	if stdinActual != stdinExpected {
-// 		t.Errorf(`Stdin in 'cmd' '%p' was not replaced from 'os': '%p', cmp: '%v'`, stdinActual, stdinExpected, stdinActual == stdinExpected)
-// 	}
-// }
-// }
-
 // func TestCmdRunWasCalled(t *testing.T) {
 // 	tle := getTestLogfuncExitType()
 
@@ -488,56 +467,6 @@ func TestRunDcOsGetwdFail(t *testing.T) { // AndStdHandles {
 // 	workDir, _ := osStruct.Getwd()
 // 	fqfn := filepath.Join(workDir, `docker-compose.yml`)
 // 	return dc_config.DcConfig{OsStruct: osStruct, Fqfn: fqfn}
-// }
-
-// func TestFailReadDcConfig(t *testing.T) {
-// 	methodsToFailAndErrors := [][][]string{
-// 		{
-// 			{`ReadFile`},
-// 			{"error reading config:\n\treading config file: '/path/to/dumbclicker/docker-compose.yml' error:\n\tfailed to read file: '/path/to/dumbclicker/docker-compose.yml'. error is: 'not found',\n"},
-// 		},
-// 		{
-// 			{`Chdir`},
-// 			{"error reading config:\n\tfailed to change to dir: '/path/to/dumbclicker' error:\n\tchanging to config file directory: '/path/to/dumbclicker'. error is: 'not found',\n"},
-// 		},
-// 		{
-// 			{`Getwd`},
-// 			{"error reading config:\n\tfailed to get current directory:\n\tgetting current directory name. error is: 'not found',\n"},
-// 		},
-// 	}
-// 	for _, methodsNamesAndErrors := range methodsToFailAndErrors {
-// 		methodsNames := methodsNamesAndErrors[0]
-// 		lfaExpected := methodsNamesAndErrors[1]
-// 		methodsToFail := make(map[string]bool, len(methodsNames))
-// 		for _, methodName := range methodsNames {
-// 			methodsToFail[methodName] = true
-// 		}
-
-// 		dcConfigReader := getDcConfigReader(DcConfigOsStructDouble{
-// 			MethodsToFail: methodsToFail,
-// 		})
-
-// 		tle := getTestLogfuncExitType()
-
-// 		stdHandles, runner := makeRunnerDry(dryGetenv, &tle)
-
-// 		cmdNameArgs := cmd_name_args.CmdNameArgs
-// 		runner.CmdNameArgs, runner.DcConfigReader = cmdNameArgs, dcConfigReader
-
-// 		runner.Run()
-
-// 		tle.LogfuncAndExitTestWascalledsAndArgs(t, 1, lfaExpected, 1, 1)
-
-// 		stdout, stderr := stdHandles.Stdout, stdHandles.Stderr
-// 		if stdout.Len() != 0 {
-// 			t.Errorf("Not empty stdout: '%v'", stdout)
-// 		}
-
-// 		if stderr.String() != lfaExpected[0] {
-// 			t.Errorf("Wrong DcConfig read error on stderr: '%v'", stderr)
-// 		}
-
-// 	}
 // }
 
 // type DcConfigOsStructToFailCnaDouble struct {

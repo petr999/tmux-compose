@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"os/exec"
 	"tmux_compose/types"
 )
 
@@ -58,6 +59,10 @@ func (execOsDouble) Getenv(key string) string {
 // ReadFile implements types.ExecOsInterface
 func (execOsDouble) ReadFile(name string) ([]byte, error) {
 	return []byte{}, fmt.Errorf("unimplemented")
+}
+
+func (execOsDouble) Command(name string, arg ...string) *exec.Cmd {
+	return &exec.Cmd{}
 }
 
 type stdHandlesDoubleStruct struct {

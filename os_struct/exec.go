@@ -2,6 +2,7 @@ package os_struct
 
 import (
 	"os"
+	"os/exec"
 	"tmux_compose/types"
 )
 
@@ -31,8 +32,6 @@ func (execOsStruct ExecOsStruct) Chdir(dir string) error {
 	return os.Chdir(dir)
 }
 
-// func (execOsStruct ExecOsStruct) Command(name string, arg ...string) interface {
-// 	Run() error
-// } {
-// 	return exec.Command(name, arg...)
-// }
+func (execOsStruct ExecOsStruct) Command(name string, arg ...string) *exec.Cmd {
+	return exec.Command(name, arg...)
+}
