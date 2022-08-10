@@ -102,3 +102,7 @@ func (os *osDouble) Exit(code int) {
 	os.ExitData.wasCalledTimes++
 	os.ExitData.code = code
 }
+
+type configFailingDouble struct{}
+
+func (*configFailingDouble) GetCnaTemplateFname() string { return `` }

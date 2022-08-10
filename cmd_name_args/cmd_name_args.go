@@ -7,16 +7,19 @@ import (
 	"tmux_compose/types"
 )
 
-func Construct(os_struct types.CnaOsInterface) *CmdNameArgs {
+func Construct(osStruct types.CnaOsInterface, config types.ConfigInterface) *CmdNameArgs {
 	cna := &CmdNameArgs{}
-	cna.New(os_struct)
+	cna.New(osStruct, config)
 	return cna
 }
 
 type CmdNameArgs struct {
+	GetCnaTemplateFname func() string
 }
 
-func (cna *CmdNameArgs) New(os_struct types.CnaOsInterface) {}
+func (cna *CmdNameArgs) New(osStruct types.CnaOsInterface, config types.ConfigInterface) {
+	cna.GetCnaTemplateFname = config.GetCnaTemplateFname
+}
 func (cna *CmdNameArgs) Get(dcYmlValue types.DcYmlValue) (cnaValue types.CmdNameArgsValueType, err error) {
 	_, err = cna.getDcvBasedir(dcYmlValue)
 	if err != nil {

@@ -95,7 +95,7 @@ func TestGetwd(t *testing.T) {
 	osStruct := &osDouble{}
 
 	runner := run.Runner{
-		CmdNameArgs: cmd_name_args.Construct(&cnaOsFailingDouble{}),
+		CmdNameArgs: cmd_name_args.Construct(&cnaOsFailingDouble{}, &configFailingDouble{}),
 		DcYml:       dc_yml.Construct(dcYmlOsStruct),
 		Exec:        exec.Construct(execOsStruct),
 		Os:          osStruct,

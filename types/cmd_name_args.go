@@ -1,7 +1,7 @@
 package types
 
 type CnaInterface interface {
-	New(CnaOsInterface)
+	New(CnaOsInterface, ConfigInterface)
 	Get(DcYmlValue) (CmdNameArgsValueType, error)
 }
 

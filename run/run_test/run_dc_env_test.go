@@ -88,7 +88,7 @@ func TestRunDcOsGetenvFile(t *testing.T) { // AndStdHandles {
 
 	dcYmlOsStruct := &dcYmlOsGetenvToFileDouble{}
 	dcYml := dc_yml.Construct(dcYmlOsStruct)
-	cna := cmd_name_args.Construct(&cnaOsFailingDouble{})
+	cna := cmd_name_args.Construct(&cnaOsFailingDouble{}, &configFailingDouble{})
 	execOsStruct := &execOsFailingDouble{}
 	exec := exec.Construct(execOsStruct)
 
@@ -140,7 +140,7 @@ func TestRunDcOsGetenvDir(t *testing.T) { // AndStdHandles {
 
 	dcYmlOsStruct := &dcYmlOsGetenvToDirDouble{}
 	dcYml := dc_yml.Construct(dcYmlOsStruct)
-	cna := cmd_name_args.Construct(&cnaOsFailingDouble{})
+	cna := cmd_name_args.Construct(&cnaOsFailingDouble{}, &configFailingDouble{})
 	execOsStruct := &execOsFailingDouble{}
 	exec := exec.Construct(execOsStruct)
 
@@ -295,7 +295,7 @@ func TestRunDcFailingReadFile(t *testing.T) { // AndStdHandles {
 
 	dcYmlOsStruct := &dcYmlOsFailingReadFileDouble{}
 	dcYml := dc_yml.Construct(dcYmlOsStruct)
-	cna := cmd_name_args.Construct(&cnaOsFailingDouble{})
+	cna := cmd_name_args.Construct(&cnaOsFailingDouble{}, &configFailingDouble{})
 	execOsStruct := &execOsFailingDouble{}
 	exec := exec.Construct(execOsStruct)
 
@@ -365,7 +365,7 @@ func TestRunDcFailingStatInputDir(t *testing.T) { // AndStdHandles {
 
 	dcYmlOsStruct := &dcYmlOsFailingStatInputDirDouble{}
 	dcYml := dc_yml.Construct(dcYmlOsStruct)
-	cna := cmd_name_args.Construct(&cnaOsFailingDouble{})
+	cna := cmd_name_args.Construct(&cnaOsFailingDouble{}, &configFailingDouble{})
 	execOsStruct := &execOsFailingDouble{}
 	exec := exec.Construct(execOsStruct)
 
@@ -426,7 +426,7 @@ func TestRunDcFailingStatInputFile(t *testing.T) { // AndStdHandles {
 
 	dcYmlOsStruct := &dcYmlOsFailingStatInputFileDouble{}
 	dcYml := dc_yml.Construct(dcYmlOsStruct)
-	cna := cmd_name_args.Construct(&cnaOsFailingDouble{})
+	cna := cmd_name_args.Construct(&cnaOsFailingDouble{}, &configFailingDouble{})
 	execOsStruct := &execOsFailingDouble{}
 	exec := exec.Construct(execOsStruct)
 
@@ -500,7 +500,7 @@ func TestRunDcStatIsOtherInputFile(t *testing.T) { // AndStdHandles {
 
 	dcYmlOsStruct := &dcYmlOsStatIsOtherInputDouble{}
 	dcYml := dc_yml.Construct(dcYmlOsStruct)
-	cna := cmd_name_args.Construct(&cnaOsFailingDouble{})
+	cna := cmd_name_args.Construct(&cnaOsFailingDouble{}, &configFailingDouble{})
 	execOsStruct := &execOsFailingDouble{}
 	exec := exec.Construct(execOsStruct)
 
@@ -572,7 +572,7 @@ func TestRunDcStatIsDirBothInputFile(t *testing.T) { // AndStdHandles {
 
 	dcYmlOsStruct := &dcYmlOsStatIsDirBothInputDouble{}
 	dcYml := dc_yml.Construct(dcYmlOsStruct)
-	cna := cmd_name_args.Construct(&cnaOsFailingDouble{})
+	cna := cmd_name_args.Construct(&cnaOsFailingDouble{}, &configFailingDouble{})
 	execOsStruct := &execOsFailingDouble{}
 	exec := exec.Construct(execOsStruct)
 

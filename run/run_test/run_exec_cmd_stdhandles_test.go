@@ -23,7 +23,7 @@ func TestExecCmdStdhandles(t *testing.T) {
 	exec := exec.Construct(execOsStruct)
 
 	runner := run.Runner{
-		CmdNameArgs: cmd_name_args.Construct(&cnaOsFailingDouble{}),
+		CmdNameArgs: cmd_name_args.Construct(&cnaOsFailingDouble{}, &configFailingDouble{}),
 		DcYml:       dc_yml.Construct(&dcYmlOsGetwdDouble{}),
 		Exec:        exec,
 		Os:          osStruct,

@@ -215,7 +215,7 @@ func TestRunDcOsGetwdFail(t *testing.T) { // AndStdHandles {
 
 	dcYmlOsStruct := &dcYmlOsFailingGetwdDouble{}
 	dcYml := dc_yml.Construct(dcYmlOsStruct)
-	cna := cmd_name_args.Construct(&cnaOsFailingDouble{})
+	cna := cmd_name_args.Construct(&cnaOsFailingDouble{}, &configFailingDouble{})
 	execOsStruct := &execOsFailingDouble{}
 	exec := exec.Construct(execOsStruct)
 
