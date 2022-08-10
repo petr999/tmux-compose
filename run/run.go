@@ -29,7 +29,7 @@ func (runner *Runner) runWithExitcode() int {
 	}
 	cna, err := runner.CmdNameArgs.Get(dcYmlValue)
 	if err != nil {
-		log(fmt.Sprintf("Get command name and args error: '%v'\n", err))
+		log(fmt.Sprintf("Get command name and args error: %v\n", err))
 		return 1
 	}
 

@@ -2,6 +2,8 @@ package cmd_name_args
 
 import (
 	_ "embed"
+	"fmt"
+	"path/filepath"
 	"tmux_compose/types"
 )
 
@@ -16,6 +18,10 @@ type CmdNameArgs struct {
 
 func (cna *CmdNameArgs) New(os_struct types.CnaOsInterface) {}
 func (cna *CmdNameArgs) Get(dcYmlValue types.DcYmlValue) (cnaValue types.CmdNameArgsValueType, err error) {
+	_, err = cna.getDcvBasedir(dcYmlValue)
+	if err != nil {
+		return
+	}
 	return types.CmdNameArgsValueType{Workdir: dcYmlValue.Workdir}, nil
 }
 
@@ -24,11 +30,25 @@ func (cna *CmdNameArgs) Get(dcYmlValue types.DcYmlValue) (cnaValue types.CmdName
 // 	Args []string
 // }
 
-// type dcvBasedirType struct {
-// 	Workdir         string
-// 	DcServicesNames []string
-// 	Basedir         string
-// }
+type dcvBasedirType struct {
+	Workdir         string
+	DcServicesNames []string
+	Basedir         string
+}
+
+func (cna *CmdNameArgs) getDcvBasedir(dcYmlValue types.DcYmlValue) (dcvBasedir dcvBasedirType, err error) {
+	baseDir := filepath.Base(dcYmlValue.Workdir)
+
+	if len(baseDir) == 0 { // XXX impossible?
+		return dcvBasedir, fmt.Errorf("error finding base dir name '%v' for work dir: '%v'", baseDir, dcYmlValue.Workdir)
+	}
+	if len(baseDir) >= len(dcYmlValue.Workdir) {
+		return dcvBasedir, fmt.Errorf("error finding base dir name '%v' same length for work dir: '%v'", baseDir, dcYmlValue.Workdir)
+	}
+
+	dcvBasedir.Basedir = baseDir
+	return
+}
 
 // //go:embed templates/bash-new-window.gson
 // var tmplJson []byte
@@ -64,15 +84,6 @@ func (cna *CmdNameArgs) Get(dcYmlValue types.DcYmlValue) (cnaValue types.CmdName
 // 	dcConfig, err := dcConfigReader.Read()
 // 	if err != nil {
 // 		return nilValue, fmt.Errorf("error reading config:\n\t%w", err)
-// 	}
-
-// 	baseDir := filepath.Base(dcConfig.Workdir)
-// 	// XXX impossible?
-// 	// if len(baseDir) == 0 {
-// 	// 	return nilValue, fmt.Errorf("error finding base dir name '%v' for work dir: '%v'", baseDir, dcConfig.Workdir)
-// 	// }
-// 	if len(baseDir) >= len(dcConfig.Workdir) {
-// 		return nilValue, fmt.Errorf("error finding base dir name '%v' same length for work dir: '%v'", baseDir, dcConfig.Workdir)
 // 	}
 
 // 	dcvBasedir := dcvBasedirType{dcConfig.Workdir, dcConfig.DcServicesNames, baseDir}
