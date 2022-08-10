@@ -9,11 +9,19 @@ import (
 	"tmux_compose/logger"
 	"tmux_compose/run"
 	"tmux_compose/types"
+
+	_ "embed"
 )
 
 type dcYmlOsGetwdRootDouble struct {
 	dcYmlOsFailingDouble
 }
+
+//go:embed testdata/bash-new-window.gson
+var cnaDefaultTemplateContents []byte
+
+//go:embed testdata/dumbclicker/docker-compose.yml
+var dcYmlDefault []byte
 
 // ReadFile implements types.DcYmlOsInterface
 func (osStruct *dcYmlOsGetwdRootDouble) ReadFile(name string) ([]byte, error) {
@@ -196,7 +204,7 @@ func TestRunCnaOsFailingReadFile(t *testing.T) {
 		}
 	} else {
 		if cnaOsStruct.ReadFileData.Args[0] != `/path/to/dumbclicker/tmux-compose.json` {
-			t.Errorf(`Failing CnaOsStruct.ReadFile() was called with '1' time(s)  but: '%v'`, cnaOsStruct.ReadFileData.Args[0])
+			t.Errorf(`Failing CnaOsStruct.ReadFile() was called with '%v' arg(s) not with: '%v'`, cnaOsStruct.ReadFileData.Args[0], `/path/to/dumbclicker/tmux-compose.json`)
 		}
 	}
 
@@ -212,5 +220,52 @@ func TestRunCnaOsFailingReadFile(t *testing.T) {
 	stderrExpected := "Get command name and args error: error reading file '/path/to/dumbclicker/tmux-compose.json': permission denied\n"
 	if execOsStruct.StdHandlesDouble.Stderr.String() != stderrExpected {
 		t.Errorf(`Failing CnaOsStruct.ReadFile() made stderr '%s' not equal to: '%s'`, execOsStruct.StdHandlesDouble.Stderr, stderrExpected)
+	}
+}
+
+func TestRunCnaOsFailingTmplExecute(t *testing.T) {
+
+	dcYml := dc_yml.Construct(&dcYmlOsGetwdDouble{})
+	cnaOsStruct := &cnaOsFailingReadFile{}
+	cna := cmd_name_args.Construct(cnaOsStruct, &configCnaTemplate{})
+	execOsStruct := &execOsFailingDouble{}
+	exec := exec.Construct(execOsStruct)
+
+	os := &osDouble{}
+	logger := logger.Construct(execOsStruct.GetStdHandles())
+
+	runner := run.Runner{
+		CmdNameArgs: cna,
+		DcYml:       dcYml,
+		Exec:        exec,
+		Os:          os,
+		Logger:      logger,
+	}
+
+	runner.Run()
+
+	if cnaOsStruct.ReadFileData.WasCalled != 1 {
+		if os.ExitData.code != 1 {
+			t.Errorf(`Failing CnaOsStruct.ReadFile() was called not '1' time(s)  but: '%v'`, os.ExitData.code)
+		}
+	} else {
+		if cnaOsStruct.ReadFileData.Args[0] != `/path/to/dumbclicker/tmux-compose.json` {
+			t.Errorf(`Failing CnaOsStruct.ReadFile() was called with '1' time(s)  but: '%v'`, cnaOsStruct.ReadFileData.Args[0])
+		}
+	}
+
+	if os.ExitData.code != 1 {
+		t.Errorf(`Failing exec template was provided not '1' to Runner.Os.Exit exit code but: '%v'`, os.ExitData.code)
+	}
+	if os.ExitData.wasCalledTimes != 1 {
+		t.Errorf(`Failing exec template was called Runner.Os.Exit not '1' time: '%v'`, os.ExitData.code)
+	}
+	if execOsStruct.StdHandlesDouble.Stdout.Len() != 0 {
+		t.Errorf(`Failing exec template made stdout not empty: '%s'`, execOsStruct.StdHandlesDouble.Stdout)
+	}
+
+	stderrExpected := fmt.Sprintf("Get command name and args error: error executing template '%s' on with vars from: '%s': %v\n", cnaDefaultTemplateContents, dcYmlDefault, ``)
+	if execOsStruct.StdHandlesDouble.Stderr.String() != stderrExpected {
+		t.Errorf(`Failing exec template made stderr '%s' not equal to: '%s'`, execOsStruct.StdHandlesDouble.Stderr, stderrExpected)
 	}
 }

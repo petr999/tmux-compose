@@ -4,7 +4,7 @@ type ExecInterface interface {
 	// MakeCommand(*MakeCommandDryRunType,
 	// 	nameArgsType,
 	// )
-	New(ExecOsInterface, StdHandlesType)
+	New(ExecOsInterface, StdHandlesType, ConfigInterface)
 	GetCommand(cna CmdNameArgsValueType) *CmdType
 	GetSelector() any
 	// execCommand(cna CmdNameArgsValueType) CmdInterface

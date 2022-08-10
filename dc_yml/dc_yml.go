@@ -9,24 +9,25 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-const dcEnvVar = `TMUX_COMPOSE_DC_YML`
-
 type DcYmlValue = struct {
 	Workdir         string
 	DcServicesNames []string
+	config          types.ConfigOsInterface
 }
 
 type DcYml struct {
 	osStruct types.DcYmlOsInterface
+	config   types.ConfigInterface
 }
 
-func (dcYml *DcYml) New(osStruct types.DcYmlOsInterface) {
+func (dcYml *DcYml) New(osStruct types.DcYmlOsInterface, config types.ConfigInterface) {
+	dcYml.config = config
 	dcYml.osStruct = osStruct
 }
 
-func Construct(osStruct types.DcYmlOsInterface) *DcYml {
+func Construct(osStruct types.DcYmlOsInterface, config types.ConfigInterface) *DcYml {
 	dcYml := &DcYml{}
-	dcYml.New(osStruct)
+	dcYml.New(osStruct, config)
 	return dcYml
 }
 
@@ -109,10 +110,10 @@ func (dcYml *DcYml) getByFname(fName string) (dcYmlValue types.DcYmlValue, err e
 }
 
 func (dcYml *DcYml) Get() (dcYmlValue types.DcYmlValue, err error) {
-	dcEnvVar := dcYml.osStruct.Getenv(dcEnvVar)
+	fPath := dcYml.config.GetDcYmlFname()
 
-	if len(dcEnvVar) > 0 {
-		return dcYml.getByFname(dcEnvVar)
+	if len(fPath) > 0 {
+		return dcYml.getByFname(fPath)
 	} else {
 		workDir, errGetwd := dcYml.osStruct.Getwd()
 		if errGetwd != nil {

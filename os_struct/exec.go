@@ -10,10 +10,6 @@ type ExecOsStruct struct {
 	stdHandles types.StdHandlesType
 }
 
-func (execOsStruct ExecOsStruct) Getenv(key string) string {
-	return os.Getenv(key)
-}
-
 func (execOsStruct ExecOsStruct) ReadFile(name string) ([]byte, error) {
 	return os.ReadFile(name)
 }

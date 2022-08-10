@@ -10,7 +10,6 @@ type DcYmlOsStruct struct{}
 
 func (osStruct DcYmlOsStruct) Getwd() (dir string, err error)       { return os.Getwd() }
 func (osStruct DcYmlOsStruct) ReadFile(name string) ([]byte, error) { return os.ReadFile(name) }
-func (osStruct DcYmlOsStruct) Getenv(name string) string            { return os.Getenv(name) }
 func (osStruct DcYmlOsStruct) Stat(name string) (dfi types.FileInfoStruct, err error) {
 	fileInfo, err := os.Stat(name)
 	if err != nil {

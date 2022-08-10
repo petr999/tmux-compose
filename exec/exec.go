@@ -5,10 +5,10 @@ import (
 	"tmux_compose/types"
 )
 
-func Construct(osStruct types.ExecOsInterface) *Exec {
+func Construct(osStruct types.ExecOsInterface, config types.ConfigInterface) *Exec {
 	exec := &Exec{}
 	stdHandles := osStruct.GetStdHandles()
-	exec.New(osStruct, stdHandles)
+	exec.New(osStruct, stdHandles, config)
 	return exec
 }
 
@@ -21,10 +21,11 @@ type Exec struct {
 	Selector   any
 	osStruct   types.ExecOsInterface
 	stdHandles types.StdHandlesType
+	config     types.ConfigInterface
 }
 
-func (exec *Exec) New(osStruct types.ExecOsInterface, stdHandles types.StdHandlesType) {
-	exec.Selector, exec.osStruct, exec.stdHandles = false, osStruct, stdHandles
+func (exec *Exec) New(osStruct types.ExecOsInterface, stdHandles types.StdHandlesType, config types.ConfigInterface) {
+	exec.Selector, exec.osStruct, exec.stdHandles, exec.config = false, osStruct, stdHandles, config
 }
 
 func (exec *Exec) execCommand(cna types.CmdNameArgsValueType) *osExec.Cmd {
