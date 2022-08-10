@@ -7,6 +7,9 @@ import (
 	"tmux_compose/types"
 )
 
+//go:embed templates/bash-new-window.gson
+var cnaDefaultTemplateContents []byte
+
 func Construct(osStruct types.CnaOsInterface, config types.ConfigInterface) *CmdNameArgs {
 	cna := &CmdNameArgs{}
 	cna.New(osStruct, config)
@@ -15,16 +18,26 @@ func Construct(osStruct types.CnaOsInterface, config types.ConfigInterface) *Cmd
 
 type CmdNameArgs struct {
 	GetCnaTemplateFname func() string
+	osStruct            types.CnaOsInterface
 }
 
 func (cna *CmdNameArgs) New(osStruct types.CnaOsInterface, config types.ConfigInterface) {
+	cna.osStruct = osStruct
 	cna.GetCnaTemplateFname = config.GetCnaTemplateFname
 }
 func (cna *CmdNameArgs) Get(dcYmlValue types.DcYmlValue) (cnaValue types.CmdNameArgsValueType, err error) {
+	// dcvBasedir
 	_, err = cna.getDcvBasedir(dcYmlValue)
 	if err != nil {
 		return
 	}
+
+	// tmplStr :=
+	_, err = cna.getTmplStr()
+	if err != nil {
+		return
+	}
+
 	return types.CmdNameArgsValueType{Workdir: dcYmlValue.Workdir}, nil
 }
 
@@ -51,6 +64,48 @@ func (cna *CmdNameArgs) getDcvBasedir(dcYmlValue types.DcYmlValue) (dcvBasedir d
 
 	dcvBasedir.Basedir = baseDir
 	return
+}
+
+func (cna *CmdNameArgs) getTmplStr() (tmplStr string, err error) {
+	fNameByConf := cna.GetCnaTemplateFname()
+	var fName string
+	if len(fNameByConf) == 0 {
+		fName = `.`
+	} else {
+		fName = fNameByConf
+	}
+	fName, err = filepath.Abs(fName)
+	if err != nil {
+		return tmplStr, fmt.Errorf(`error reading file '%v': %w`, fName, err)
+	}
+
+	var fileInfo types.FileInfoStruct
+	fileInfo, err = cna.osStruct.Stat(fName)
+	if err != nil {
+		return tmplStr, fmt.Errorf(`error reading file '%v': %w`, fName, err)
+	}
+	if fileInfo.IsDir() {
+		fName = filepath.Join(fName, `tmux-compose-template.json`)
+	}
+	fileInfo, err = cna.osStruct.Stat(fName)
+	if err != nil {
+		return tmplStr, fmt.Errorf(`error reading file '%v': %w`, fName, err)
+	}
+	if !fileInfo.IsFile() {
+		return tmplStr, fmt.Errorf(`error reading file '%v': not a file`, fName)
+	}
+
+	var buf []byte
+	buf, err = cna.osStruct.ReadFile(fName)
+	if err == nil {
+		tmplStr = string(buf)
+	} else {
+		if fName == fNameByConf {
+			return tmplStr, fmt.Errorf(`error reading file '%v': %w`, fName, err)
+		}
+		tmplStr = string(cnaDefaultTemplateContents)
+	}
+	return tmplStr, nil
 }
 
 // //go:embed templates/bash-new-window.gson

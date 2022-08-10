@@ -5,15 +5,11 @@ type DcYmlInterface interface {
 	Get() (DcYmlValue, error)
 }
 
-type DcFileInfoStruct struct {
-	IsDir  func() bool
-	IsFile func() bool
-}
 type DcYmlOsInterface interface {
 	Getwd() (dir string, err error)
 	ReadFile(name string) ([]byte, error)
 	Getenv(string) string
-	Stat(name string) (DcFileInfoStruct, error)
+	Stat(name string) (FileInfoStruct, error)
 }
 
 type DcYmlValue = struct {

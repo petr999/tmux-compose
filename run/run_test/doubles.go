@@ -15,6 +15,10 @@ func (cnaOsFailingDouble) ReadFile(name string) ([]byte, error) {
 	return []byte{}, fmt.Errorf("unimplemented")
 }
 
+func (cnaOsFailingDouble) Stat(name string) (fileInfo types.FileInfoStruct, err error) {
+	return fileInfo, fmt.Errorf(`unimplemented`)
+}
+
 type dcYmlOsFailingDouble struct {
 }
 
@@ -31,7 +35,7 @@ func (*dcYmlOsFailingDouble) ReadFile(name string) ([]byte, error) {
 
 func (*dcYmlOsFailingDouble) Getenv(string) string { return `` }
 
-func (*dcYmlOsFailingDouble) Stat(name string) (dfi types.DcFileInfoStruct, err error) {
+func (*dcYmlOsFailingDouble) Stat(name string) (dfi types.FileInfoStruct, err error) {
 	return dfi, fmt.Errorf("unimplemented")
 }
 

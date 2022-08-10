@@ -25,9 +25,9 @@ func (dcYml *dcYmlOsFailingParse) ReadFile(name string) ([]byte, error) {
 }
 
 // Stat implements types.DcYmlOsInterface
-func (osStruct *dcYmlOsFailingParse) Stat(name string) (dfi types.DcFileInfoStruct, err error) {
+func (osStruct *dcYmlOsFailingParse) Stat(name string) (dfi types.FileInfoStruct, err error) {
 	if name == `/path/to/dumbclicker` {
-		return types.DcFileInfoStruct{
+		return types.FileInfoStruct{
 			IsDir: func() bool {
 				return true
 			},
@@ -36,7 +36,7 @@ func (osStruct *dcYmlOsFailingParse) Stat(name string) (dfi types.DcFileInfoStru
 			},
 		}, nil
 	} else if name == `/path/to/dumbclicker/docker-compose.yml` {
-		return types.DcFileInfoStruct{
+		return types.FileInfoStruct{
 			IsDir: func() bool {
 				return false
 			},

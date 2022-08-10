@@ -2,6 +2,7 @@ package run_test
 
 import (
 	"fmt"
+	"path/filepath"
 	"testing"
 	"tmux_compose/cmd_name_args"
 	"tmux_compose/dc_yml"
@@ -35,11 +36,11 @@ func (osStruct *dcYmlOsGetwdDouble) Getwd() (dir string, err error) {
 func (*dcYmlOsGetwdDouble) Getenv(string) string { return `` }
 
 // Stat implements types.DcYmlOsInterface
-func (osStruct *dcYmlOsGetwdDouble) Stat(name string) (dfi types.DcFileInfoStruct, err error) {
+func (osStruct *dcYmlOsGetwdDouble) Stat(name string) (dfi types.FileInfoStruct, err error) {
 	osStruct.wasCalled.Stat++
 	osStruct.wasCalledWith.Stat = append(osStruct.wasCalledWith.Stat, name)
 	if name == `/path/to/dumbclicker` {
-		return types.DcFileInfoStruct{
+		return types.FileInfoStruct{
 			IsDir: func() bool {
 				return true
 			},
@@ -48,7 +49,7 @@ func (osStruct *dcYmlOsGetwdDouble) Stat(name string) (dfi types.DcFileInfoStruc
 			},
 		}, nil
 	} else if name == `/path/to/dumbclicker/docker-compose.yml` {
-		return types.DcFileInfoStruct{
+		return types.FileInfoStruct{
 			IsDir: func() bool {
 				return false
 			},
@@ -88,6 +89,31 @@ func (osStruct *execOsStructFailingChdir) Chdir(dir string) (err error) {
 	return
 }
 
+type cnaOsGetpwd struct {
+	cnaOsFailingDouble
+	StatData struct {
+		Args []string
+	}
+}
+
+func (cnaOsStruct *cnaOsGetpwd) Stat(name string) (types.FileInfoStruct, error) {
+	isDir := false
+	for _, arg := range cnaOsStruct.StatData.Args {
+		if arg == filepath.Base(name) {
+			isDir = true
+			continue
+		}
+	}
+	return types.FileInfoStruct{
+		IsDir: func() bool {
+			return isDir
+		},
+		IsFile: func() bool {
+			return !isDir
+		},
+	}, nil
+}
+
 func TestGetwd(t *testing.T) {
 
 	dcYmlOsStruct := &dcYmlOsGetwdDouble{}
@@ -95,7 +121,7 @@ func TestGetwd(t *testing.T) {
 	osStruct := &osDouble{}
 
 	runner := run.Runner{
-		CmdNameArgs: cmd_name_args.Construct(&cnaOsFailingDouble{}, &configFailingDouble{}),
+		CmdNameArgs: cmd_name_args.Construct(&cnaOsGetpwd{}, &configFailingDouble{}),
 		DcYml:       dc_yml.Construct(dcYmlOsStruct),
 		Exec:        exec.Construct(execOsStruct),
 		Os:          osStruct,

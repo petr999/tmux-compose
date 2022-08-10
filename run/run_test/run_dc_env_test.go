@@ -50,7 +50,7 @@ func (osStruct *dcYmlOsGetenvDouble) Getwd() (dir string, err error) {
 	return
 }
 
-func (osStruct *dcYmlOsGetenvDouble) Stat(name string) (dfi types.DcFileInfoStruct, err error) {
+func (osStruct *dcYmlOsGetenvDouble) Stat(name string) (dfi types.FileInfoStruct, err error) {
 	osStruct.wasCalled.Stat++
 	return dfi, fmt.Errorf("unimplemented")
 }
@@ -191,11 +191,11 @@ func TestRunDcOsGetenvDir(t *testing.T) { // AndStdHandles {
 // }
 
 // // Stat implements types.DcYmlOsInterface
-// func (osStruct *dcYmlOsFailingChdirDouble) Stat(name string) (dfi types.DcFileInfoStruct, err error) {
+// func (osStruct *dcYmlOsFailingChdirDouble) Stat(name string) (dfi types.FileInfoStruct, err error) {
 // 	osStruct.wasCalled.Stat++
 // 	osStruct.StatData.Names = append(osStruct.StatData.Names, name)
 // 	if name == `/path/to/dumbclicker` {
-// 		return types.DcFileInfoStruct{
+// 		return types.FileInfoStruct{
 // 			IsDir: func() bool {
 // 				return false
 // 			},
@@ -274,10 +274,10 @@ func (osStruct *dcYmlOsFailingReadFileDouble) ReadFile(name string) ([]byte, err
 }
 
 // Stat implements types.DcYmlOsInterface
-func (osStruct *dcYmlOsFailingReadFileDouble) Stat(name string) (dfi types.DcFileInfoStruct, err error) {
+func (osStruct *dcYmlOsFailingReadFileDouble) Stat(name string) (dfi types.FileInfoStruct, err error) {
 	osStruct.wasCalled.Stat++ // .StatData.wasCalled++
 	if name == `/path/to/dumbclicker/docker-compose.yml` {
-		return types.DcFileInfoStruct{
+		return types.FileInfoStruct{
 			IsDir: func() bool {
 				return false
 			},
@@ -348,7 +348,7 @@ type dcYmlOsFailingStatInputDouble struct {
 }
 
 // Stat implements types.DcYmlOsInterface
-func (osStruct *dcYmlOsFailingStatInputDouble) Stat(name string) (dfi types.DcFileInfoStruct, err error) {
+func (osStruct *dcYmlOsFailingStatInputDouble) Stat(name string) (dfi types.FileInfoStruct, err error) {
 	osStruct.StatData.wasCalled++
 	osStruct.StatData.Names = append(osStruct.StatData.Names, name)
 	return dfi, fmt.Errorf("Failed to Stat() path: '%v'", name)
@@ -480,11 +480,11 @@ type dcYmlOsStatIsOtherInputDouble struct {
 }
 
 // Stat implements types.DcYmlOsInterface
-func (osStruct *dcYmlOsStatIsOtherInputDouble) Stat(name string) (dfi types.DcFileInfoStruct, err error) {
+func (osStruct *dcYmlOsStatIsOtherInputDouble) Stat(name string) (dfi types.FileInfoStruct, err error) {
 	osStruct.wasCalled.Stat++
 	osStruct.StatData.Names = append(osStruct.StatData.Names, name)
 	if name == `/path/to/dumbclicker` {
-		return types.DcFileInfoStruct{
+		return types.FileInfoStruct{
 			IsDir: func() bool {
 				return false
 			},
@@ -552,11 +552,11 @@ type dcYmlOsStatIsDirBothInputDouble struct {
 }
 
 // Stat implements types.DcYmlOsInterface
-func (osStruct *dcYmlOsStatIsDirBothInputDouble) Stat(name string) (dfi types.DcFileInfoStruct, err error) {
+func (osStruct *dcYmlOsStatIsDirBothInputDouble) Stat(name string) (dfi types.FileInfoStruct, err error) {
 	osStruct.wasCalled.Stat++ // .StatData.wasCalled++
 	osStruct.StatData.Names = append(osStruct.StatData.Names, name)
 	if (name == `/path/to/dumbclicker`) || (name == `/path/to/dumbclicker/docker-compose.yml`) {
-		return types.DcFileInfoStruct{
+		return types.FileInfoStruct{
 			IsDir: func() bool {
 				return true
 			},

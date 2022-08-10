@@ -7,6 +7,7 @@ type CnaInterface interface {
 
 type CnaOsInterface interface {
 	ReadFile(name string) ([]byte, error)
+	Stat(name string) (FileInfoStruct, error)
 }
 
 type CmdNameArgsValueType struct {
