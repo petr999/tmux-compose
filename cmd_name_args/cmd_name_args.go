@@ -3,6 +3,7 @@ package cmd_name_args
 import (
 	"bytes"
 	_ "embed"
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"path/filepath"
@@ -40,19 +41,39 @@ func (cna *CmdNameArgs) Get(dcYmlValue types.DcYmlValue) (cnaValue types.CmdName
 		return
 	}
 
-	_, err = tmplExecute(tmplStr, dcvBasedir)
+	var tmplJsonNew string
+	tmplJsonNew, err = tmplExecute(tmplStr, dcvBasedir)
 	if err != nil {
 		err = fmt.Errorf(`error executing template '%s' on with vars from: '%s': %w`, tmplStr, dcvBasedir, err)
 		return
 	}
 
-	return types.CmdNameArgsValueType{Workdir: dcYmlValue.Workdir}, nil
+	var cnaValues []types.CmdNameArgsValueType
+	cnaValues, err = tmplUnserialize(tmplJsonNew)
+	if err != nil {
+		err = fmt.Errorf(`error unserializing template '%s': %w`, tmplJsonNew, err)
+		return
+	}
+	if len(cnaValues) != 1 {
+		err = fmt.Errorf(`error unserializing template '%s': amount of commands '%v' is not '1' from '%v'`, tmplJsonNew, len(cnaValues), cnaValues)
+		return
+	}
+
+	cnaValue = cnaValues[0]
+	cnaValue.Workdir = dcYmlValue.Workdir
+
+	return cnaValue, nil
 }
 
 // type tmplType []struct {
 // 	Cmd  string
 // 	Args []string
 // }
+
+func tmplUnserialize(tmplJson string) (cnaValues []types.CmdNameArgsValueType, err error) {
+	err = json.Unmarshal([]byte(tmplJson), &cnaValues)
+	return
+}
 
 type dcvBasedirType struct {
 	Workdir         string
@@ -136,9 +157,9 @@ func tmplExecute(tmplJson string, dcvBasedir dcvBasedirType) (tmplJsonNew string
 	if err != nil {
 		return ``, fmt.Errorf("error reading name template: '%v': %w", tmplJson, err)
 	}
+
 	var nameBuf bytes.Buffer
 	err = nameTmplObj.Execute(&nameBuf, dcvBasedir)
-
 	if err != nil {
 		return ``, fmt.Errorf("error executing name template: '%v' on '%v': %w", tmplJson, dcvBasedir, err)
 	}

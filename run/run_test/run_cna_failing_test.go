@@ -262,18 +262,35 @@ func (cnaOsStruct *cnaOsStructFailingTmplExecute) ReadFile(name string) ([]byte,
 	return []byte(`{{.Nonexistent}}`), nil
 }
 
-func TestRunCnaOsFailingTmplExecute(t *testing.T) {
+type cnaOsStructFailingTmplJson struct {
+	cnaOsStatFile
+}
+
+func (cnaOsStruct *cnaOsStructFailingTmplJson) ReadFile(name string) ([]byte, error) {
+	return []byte(`{`), nil
+}
+
+type cnaOsStructFailingTmplSingleCommand struct {
+	cnaOsStatFile
+}
+
+func (cnaOsStruct *cnaOsStructFailingTmplSingleCommand) ReadFile(name string) ([]byte, error) {
+	return []byte(`[{"Cmd":"","Args":[]},{"Cmd":"","Args":[]}]`), nil
+}
+
+func TestRunCnaOsFailingTmpl(t *testing.T) {
 
 	for _, stdErrExpectedAndCnaOsStruct := range []map[string]types.CnaOsInterface{
 		{"Get command name and args error: error executing template '{{define}}' on with vars from: '{/path/to/dumbclicker [nginx h2o dumbclicker] dumbclicker}': error reading name template: '{{define}}': template: tmux_compose:1: unexpected \"}}\" in define clause": &cnaOsStructFailingTmplParse{}},
 		{"Get command name and args error: error executing template '{{.Nonexistent}}' on with vars from: '{/path/to/dumbclicker [nginx h2o dumbclicker] dumbclicker}': error executing name template: '{{.Nonexistent}}' on '{/path/to/dumbclicker [nginx h2o dumbclicker] dumbclicker}': template: tmux_compose:1:2: executing \"tmux_compose\" at <.Nonexistent>: can't evaluate field Nonexistent in type cmd_name_args.dcvBasedirType": &cnaOsStructFailingTmplExecute{}},
+		{"Get command name and args error: error unserializing template '{': unexpected end of JSON input": &cnaOsStructFailingTmplJson{}},
+		{`Get command name and args error: error unserializing template '[{"Cmd":"","Args":[]},{"Cmd":"","Args":[]}]': amount of commands '2' is not '1' from '[{  []} {  []}]'`: &cnaOsStructFailingTmplSingleCommand{}},
 	} {
 
 		for stderrExpected, cnaOsStruct := range stdErrExpectedAndCnaOsStruct {
 			configStruct := config.Construct(&ConfigOsCnaOsGetenvFile{})
 
 			dcYml := dc_yml.Construct(&dcYmlOsGetwdDouble{}, configStruct)
-			// cnaOsStruct := &cnaOsStrucFailingTmplExecute{}
 			cna := cmd_name_args.Construct(cnaOsStruct, configStruct)
 			execOsStruct := &execOsFailingDouble{}
 			exec := exec.Construct(execOsStruct, configStruct)
@@ -300,8 +317,6 @@ func TestRunCnaOsFailingTmplExecute(t *testing.T) {
 			if execOsStruct.StdHandlesDouble.Stdout.Len() != 0 {
 				t.Errorf(`Failing exec template made stdout not empty: '%s'`, execOsStruct.StdHandlesDouble.Stdout)
 			}
-
-			// stderrExpected := "Get command name and args error: error executing template '{{.Nonexistent}}' on with vars from: '{/path/to/dumbclicker [nginx h2o dumbclicker] dumbclicker}': error executing name template: '{{.Nonexistent}}' on '{/path/to/dumbclicker [nginx h2o dumbclicker] dumbclicker}': template: tmux_compose:1:2: executing \"tmux_compose\" at <.Nonexistent>: can't evaluate field Nonexistent in type cmd_name_args.dcvBasedirType" + "\n"
 			if execOsStruct.StdHandlesDouble.Stderr.String() != stderrExpected+"\n" {
 				t.Errorf(`Failing exec template made stderr '%s' not equal to: '%s'`, execOsStruct.StdHandlesDouble.Stderr, stderrExpected+"\n")
 			}
