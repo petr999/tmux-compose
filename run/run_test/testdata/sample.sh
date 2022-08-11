@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
-cd ../../sh/dumbclicker
+cd '/path/to/dumbclicker'
 
-tmux new -s dumbclicker-compose '
+'tmux' 'new' '-s' 'dumbclicker-compose' '
 	docker-compose up
 	bash -l
-' \; neww -n 'dumbclicker_nginx_1' '
+' '\;' 'neww' '-n' 'dumbclicker_nginx_1' '
 	PID=0;
 	try_next=1;
 	trap '\''
@@ -24,7 +24,7 @@ tmux new -s dumbclicker-compose '
 	done
 	trap - SIGINT
 	bash -l
-' \; neww -n 'dumbclicker_h2o_1' '
+' '\;' 'neww' '-n' 'dumbclicker_h2o_1' '
 	PID=0;
 	try_next=1;
 	trap '\''
@@ -43,7 +43,7 @@ tmux new -s dumbclicker-compose '
 	done
 	trap - SIGINT
 	bash -l
-' \; neww -n 'dumbclicker_dumbclicker_1' '
+' '\;' 'neww' '-n' 'dumbclicker_dumbclicker_1' '
 	PID=0;
 	try_next=1;
 	trap '\''

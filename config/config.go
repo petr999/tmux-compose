@@ -25,3 +25,7 @@ func (config *ConfigStruct) GetCnaTemplateFname() string {
 func (config *ConfigStruct) GetDcYmlFname() string {
 	return config.osStruct.Getenv(`TMUX_COMPOSE_DC_YML`)
 }
+
+func (config *ConfigStruct) GetDryRun() string {
+	return config.osStruct.Getenv(`TMUX_COMPOSE_DRY_RUN`)
+}

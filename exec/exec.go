@@ -2,6 +2,7 @@ package exec
 
 import (
 	osExec "os/exec"
+	"strings"
 	"tmux_compose/types"
 )
 
@@ -29,7 +30,7 @@ func (exec *Exec) New(osStruct types.ExecOsInterface, stdHandles types.StdHandle
 }
 
 func (exec *Exec) execCommand(cna types.CmdNameArgsValueType) *osExec.Cmd {
-	obj := osExec.Command(cna.Name, cna.Args...)
+	obj := osExec.Command(cna.Cmd, cna.Args...)
 	obj.Stdout = exec.stdHandles.Stdout
 	obj.Stderr = exec.stdHandles.Stderr
 	obj.Stdin = exec.stdHandles.Stdin
@@ -41,10 +42,16 @@ func (exec *Exec) dryRun(cna types.CmdNameArgsValueType) types.CmdInterface {
 	return &dryRunCmd{}
 }
 
-func (exec *Exec) GetSelector() any {
-	// if len(exec.osStruct.Getenv(`TMUX_COMPOSE_DRY_RUN`)) > 0 {
-	return false
+func cmdEscape(str string) string {
+	// regexp.MustCompile(`'`).ReplaceAllLiteralString()
+	return `'` + strings.ReplaceAll(str, `'`, `'\''`) + `'`
+}
+
+func (exec *Exec) GetSelector() (selector any) {
+	return len(exec.config.GetDryRun()) > 0 // {
+	// return true
 	// } // dry run
+	// return false
 }
 
 func (exec *Exec) GetCommand(cna types.CmdNameArgsValueType) *types.CmdType {
@@ -53,6 +60,20 @@ func (exec *Exec) GetCommand(cna types.CmdNameArgsValueType) *types.CmdType {
 	if dryRun, ok := selector.(bool); ok {
 		if dryRun {
 			obj = exec.dryRun(cna)
+			runFunc := func() error {
+				slice := []string{"#!/usr/bin/env env\n\ncd " + cmdEscape(cna.Workdir) + "\n\n" + cmdEscape(cna.Cmd)}
+				args := make([]string, len(cna.Args))
+				for i, arg := range cna.Args {
+					args[i] = cmdEscape(arg)
+				}
+				slice = append(slice, args...)
+
+				if _, err := exec.osStruct.GetStdHandles().Stdout.Write([]byte(strings.Join(slice, " "))); err != nil {
+					return err
+				}
+				return nil // obj.Run()
+			}
+			exec.Cmd = &types.CmdType{Obj: obj, Run: runFunc}
 		} else {
 			obj = exec.execCommand(cna)
 			runFunc := func() error {

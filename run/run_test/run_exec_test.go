@@ -40,11 +40,14 @@ func TestExecDryRun(t *testing.T) {
 
 	runner.Run()
 
-	if os.ExitData.wasCalledTimes != 0 {
-		t.Errorf(`Failing DcOsStruct.Stat() was called Runner.Os.Exit not '0' time(s): '%v'`, os.ExitData.code)
+	if os.ExitData.wasCalledTimes != 1 {
+		t.Errorf(`Dry run called Runner.Os.Exit not '1' time(s): '%v'`, os.ExitData.wasCalledTimes)
+	}
+	if os.ExitData.code != 0 {
+		t.Errorf(`Dry run provided not '0' to Runner.Os.Exit exit code but: '%v'`, os.ExitData.code)
 	}
 	if execOsStruct.StdHandlesDouble.Stderr.Len() != 0 {
-		t.Errorf(`Failing DcOsStruct.Stat() made stdout not empty: '%s'`, execOsStruct.StdHandlesDouble.Stderr)
+		t.Errorf(`Failing DcOsStruct.Stat() made stderr not empty: '%s'`, execOsStruct.StdHandlesDouble.Stderr)
 	}
 	stdoutExpected := string(dryRunOutput) + "\n"
 	if execOsStruct.StdHandlesDouble.Stdout.String() != stdoutExpected {

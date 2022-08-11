@@ -12,6 +12,6 @@ type CnaOsInterface interface {
 
 type CmdNameArgsValueType struct {
 	Workdir string
-	Name    string
+	Cmd     string
 	Args    []string
 }
