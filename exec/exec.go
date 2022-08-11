@@ -48,7 +48,7 @@ func (exec *Exec) GetSelector() any {
 }
 
 func (exec *Exec) GetCommand(cna types.CmdNameArgsValueType) *types.CmdType {
-	var obj interface{ Run() error }
+	var obj types.CmdInterface
 	selector := exec.GetSelector()
 	if dryRun, ok := selector.(bool); ok {
 		if dryRun {
