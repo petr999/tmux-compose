@@ -15,6 +15,7 @@ func Construct(osStruct types.ConfigOsInterface) *ConfigStruct {
 }
 
 func (config *ConfigStruct) New(osStruct types.ConfigOsInterface) {
+	config.osStruct = osStruct
 }
 
 func (config *ConfigStruct) GetCnaTemplateFname() string {

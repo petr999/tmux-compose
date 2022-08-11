@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 	"tmux_compose/cmd_name_args"
+	"tmux_compose/config"
 	"tmux_compose/dc_yml"
 	"tmux_compose/exec"
 	"tmux_compose/logger"
@@ -72,11 +73,12 @@ func TestRunDcParse(t *testing.T) {
 			execOsStruct := &execOsFailingDouble{}
 			osStruct := &osDouble{}
 			stderrExpected = stderrExpected + "\n"
+			configStruct := config.Construct(ConfigOsDouble{})
 
 			runner := run.Runner{
-				CmdNameArgs: cmd_name_args.Construct(&cnaOsFailingDouble{}, &configFailingDouble{}),
-				DcYml:       dc_yml.Construct(dcYmlOsStruct),
-				Exec:        exec.Construct(execOsStruct),
+				CmdNameArgs: cmd_name_args.Construct(&cnaOsFailingDouble{}, configStruct),
+				DcYml:       dc_yml.Construct(dcYmlOsStruct, configStruct),
+				Exec:        exec.Construct(execOsStruct, configStruct),
 				Os:          osStruct,
 				Logger:      logger.Construct(execOsStruct.GetStdHandles()),
 			}

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 	"tmux_compose/cmd_name_args"
+	"tmux_compose/config"
 	"tmux_compose/dc_yml"
 	"tmux_compose/exec"
 	"tmux_compose/logger"
@@ -214,10 +215,11 @@ func TestRunDcOsGetwdFail(t *testing.T) { // AndStdHandles {
 	// stdHandles, runner := makeRunnerForFatal(`/\\nonexistent`, &tle)
 
 	dcYmlOsStruct := &dcYmlOsFailingGetwdDouble{}
-	dcYml := dc_yml.Construct(dcYmlOsStruct)
-	cna := cmd_name_args.Construct(&cnaOsFailingDouble{}, &configFailingDouble{})
+	configStruct := config.Construct(ConfigOsDouble{})
+	dcYml := dc_yml.Construct(dcYmlOsStruct, configStruct)
+	cna := cmd_name_args.Construct(&cnaOsFailingDouble{}, configStruct)
 	execOsStruct := &execOsFailingDouble{}
-	exec := exec.Construct(execOsStruct)
+	exec := exec.Construct(execOsStruct, configStruct)
 
 	os := &osDouble{}
 	logger := logger.Construct(execOsStruct.GetStdHandles())

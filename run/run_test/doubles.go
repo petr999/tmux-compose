@@ -107,6 +107,6 @@ func (os *osDouble) Exit(code int) {
 	os.ExitData.code = code
 }
 
-type configFailingDouble struct{}
+type ConfigOsDouble struct{}
 
-func (*configFailingDouble) GetCnaTemplateFname() string { return `` }
+func (ConfigOsDouble) Getenv(string) string { return `` }

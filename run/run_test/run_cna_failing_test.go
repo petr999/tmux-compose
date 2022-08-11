@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 	"tmux_compose/cmd_name_args"
+	"tmux_compose/config"
 	"tmux_compose/dc_yml"
 	"tmux_compose/exec"
 	"tmux_compose/logger"
@@ -17,11 +18,11 @@ type dcYmlOsGetwdRootDouble struct {
 	dcYmlOsFailingDouble
 }
 
-//go:embed testdata/bash-new-window.gson
-var cnaDefaultTemplateContents []byte
+// //go:embed testdata/bash-new-window.gson
+// var cnaDefaultTemplateContents []byte
 
-//go:embed testdata/dumbclicker/docker-compose.yml
-var dcYmlDefault []byte
+// //go:embed testdata/dumbclicker/docker-compose.yml
+// var dcYmlDefault []byte
 
 // ReadFile implements types.DcYmlOsInterface
 func (osStruct *dcYmlOsGetwdRootDouble) ReadFile(name string) ([]byte, error) {
@@ -61,11 +62,12 @@ func (osStruct *dcYmlOsGetwdRootDouble) Stat(name string) (dfi types.FileInfoStr
 }
 
 func TestRunCnaWorkdirRoot(t *testing.T) {
+	configStruct := config.Construct(ConfigOsDouble{})
 
-	dcYml := dc_yml.Construct(&dcYmlOsGetwdRootDouble{})
-	cna := cmd_name_args.Construct(&cnaOsFailingDouble{}, &configFailingDouble{})
+	dcYml := dc_yml.Construct(&dcYmlOsGetwdRootDouble{}, configStruct)
+	cna := cmd_name_args.Construct(&cnaOsFailingDouble{}, configStruct)
 	execOsStruct := &execOsFailingDouble{}
-	exec := exec.Construct(execOsStruct)
+	exec := exec.Construct(execOsStruct, configStruct)
 
 	os := &osDouble{}
 	logger := logger.Construct(execOsStruct.GetStdHandles())
@@ -101,20 +103,25 @@ func (osStruct *cnaOsFailingStat) Stat(name string) (dfi types.FileInfoStruct, e
 	return dfi, fmt.Errorf("not found")
 }
 
-type configCnaTemplate struct {
-	configFailingDouble
+type configOsCnaTemplate struct {
+	ConfigOsDouble
 }
 
-func (*configCnaTemplate) GetCnaTemplateFname() string {
-	return `/path/to/dumbclicker/tmux-compose.json`
+func (configOsCnaTemplate) Getenv(name string) string {
+	if name == `TMUX_COMPOSE_TEMPLATE_FNAME` {
+		return `/path/to/dumbclicker/tmux-compose.json`
+	}
+	return ``
 }
 
 func TestRunCnaOsFailingStat(t *testing.T) {
 
-	dcYml := dc_yml.Construct(&dcYmlOsGetwdDouble{})
-	cna := cmd_name_args.Construct(&cnaOsFailingStat{}, &configCnaTemplate{})
+	configStruct := config.Construct(configOsCnaTemplate{})
+
+	dcYml := dc_yml.Construct(&dcYmlOsGetwdDouble{}, configStruct)
+	cna := cmd_name_args.Construct(&cnaOsFailingStat{}, configStruct)
 	execOsStruct := &execOsFailingDouble{}
-	exec := exec.Construct(execOsStruct)
+	exec := exec.Construct(execOsStruct, configStruct)
 
 	os := &osDouble{}
 	logger := logger.Construct(execOsStruct.GetStdHandles())
@@ -144,7 +151,25 @@ func TestRunCnaOsFailingStat(t *testing.T) {
 	}
 }
 
+type cnaOsStatFile struct{}
+
+// Stat implements types.DcYmlOsInterface
+func (osStruct *cnaOsStatFile) Stat(name string) (dfi types.FileInfoStruct, err error) {
+	if name == `/path/to/dumbclicker/tmux-compose.json` {
+		return types.FileInfoStruct{
+			IsDir: func() bool {
+				return false
+			},
+			IsFile: func() bool {
+				return true
+			},
+		}, nil
+	}
+	return dfi, fmt.Errorf("Failed to Stat() path: '%v':", name)
+}
+
 type cnaOsFailingReadFile struct {
+	cnaOsStatFile
 	ReadFileData struct {
 		WasCalled int
 		Args      []string
@@ -162,28 +187,26 @@ func (cnaOsStruct cnaOsFailingReadFile) ReadFile(name string) ([]byte, error) {
 	}
 }
 
-// Stat implements types.DcYmlOsInterface
-func (osStruct *cnaOsFailingReadFile) Stat(name string) (dfi types.FileInfoStruct, err error) {
-	if name == `/path/to/dumbclicker/tmux-compose.json` {
-		return types.FileInfoStruct{
-			IsDir: func() bool {
-				return false
-			},
-			IsFile: func() bool {
-				return true
-			},
-		}, nil
+type ConfigOsCnaOsGetenvFile struct {
+	ConfigOsDouble
+}
+
+func (osStruct *ConfigOsCnaOsGetenvFile) Getenv(name string) string {
+	if name == `TMUX_COMPOSE_TEMPLATE_FNAME` {
+		return `/path/to/dumbclicker/tmux-compose.json`
 	}
-	return dfi, fmt.Errorf("Failed to Stat() path: '%v':", name)
+	return ``
 }
 
 func TestRunCnaOsFailingReadFile(t *testing.T) {
 
-	dcYml := dc_yml.Construct(&dcYmlOsGetwdDouble{})
+	configStruct := config.Construct(&ConfigOsCnaOsGetenvFile{})
+
+	dcYml := dc_yml.Construct(&dcYmlOsGetwdDouble{}, configStruct)
 	cnaOsStruct := &cnaOsFailingReadFile{}
-	cna := cmd_name_args.Construct(cnaOsStruct, &configCnaTemplate{})
+	cna := cmd_name_args.Construct(cnaOsStruct, configStruct)
 	execOsStruct := &execOsFailingDouble{}
-	exec := exec.Construct(execOsStruct)
+	exec := exec.Construct(execOsStruct, configStruct)
 
 	os := &osDouble{}
 	logger := logger.Construct(execOsStruct.GetStdHandles())
@@ -223,49 +246,65 @@ func TestRunCnaOsFailingReadFile(t *testing.T) {
 	}
 }
 
+type cnaOsStructFailingTmplParse struct {
+	cnaOsStatFile
+}
+
+func (cnaOsStruct *cnaOsStructFailingTmplParse) ReadFile(name string) ([]byte, error) {
+	return []byte(`{{define}}`), nil
+}
+
+type cnaOsStructFailingTmplExecute struct {
+	cnaOsStatFile
+}
+
+func (cnaOsStruct *cnaOsStructFailingTmplExecute) ReadFile(name string) ([]byte, error) {
+	return []byte(`{{.Nonexistent}}`), nil
+}
+
 func TestRunCnaOsFailingTmplExecute(t *testing.T) {
 
-	dcYml := dc_yml.Construct(&dcYmlOsGetwdDouble{})
-	cnaOsStruct := &cnaOsFailingReadFile{}
-	cna := cmd_name_args.Construct(cnaOsStruct, &configCnaTemplate{})
-	execOsStruct := &execOsFailingDouble{}
-	exec := exec.Construct(execOsStruct)
+	for _, stdErrExpectedAndCnaOsStruct := range []map[string]types.CnaOsInterface{
+		{"Get command name and args error: error executing template '{{define}}' on with vars from: '{/path/to/dumbclicker [nginx h2o dumbclicker] dumbclicker}': error reading name template: '{{define}}': template: tmux_compose:1: unexpected \"}}\" in define clause": &cnaOsStructFailingTmplParse{}},
+		{"Get command name and args error: error executing template '{{.Nonexistent}}' on with vars from: '{/path/to/dumbclicker [nginx h2o dumbclicker] dumbclicker}': error executing name template: '{{.Nonexistent}}' on '{/path/to/dumbclicker [nginx h2o dumbclicker] dumbclicker}': template: tmux_compose:1:2: executing \"tmux_compose\" at <.Nonexistent>: can't evaluate field Nonexistent in type cmd_name_args.dcvBasedirType": &cnaOsStructFailingTmplExecute{}},
+	} {
 
-	os := &osDouble{}
-	logger := logger.Construct(execOsStruct.GetStdHandles())
+		for stderrExpected, cnaOsStruct := range stdErrExpectedAndCnaOsStruct {
+			configStruct := config.Construct(&ConfigOsCnaOsGetenvFile{})
 
-	runner := run.Runner{
-		CmdNameArgs: cna,
-		DcYml:       dcYml,
-		Exec:        exec,
-		Os:          os,
-		Logger:      logger,
-	}
+			dcYml := dc_yml.Construct(&dcYmlOsGetwdDouble{}, configStruct)
+			// cnaOsStruct := &cnaOsStrucFailingTmplExecute{}
+			cna := cmd_name_args.Construct(cnaOsStruct, configStruct)
+			execOsStruct := &execOsFailingDouble{}
+			exec := exec.Construct(execOsStruct, configStruct)
 
-	runner.Run()
+			os := &osDouble{}
+			logger := logger.Construct(execOsStruct.GetStdHandles())
 
-	if cnaOsStruct.ReadFileData.WasCalled != 1 {
-		if os.ExitData.code != 1 {
-			t.Errorf(`Failing CnaOsStruct.ReadFile() was called not '1' time(s)  but: '%v'`, os.ExitData.code)
+			runner := run.Runner{
+				CmdNameArgs: cna,
+				DcYml:       dcYml,
+				Exec:        exec,
+				Os:          os,
+				Logger:      logger,
+			}
+
+			runner.Run()
+
+			if os.ExitData.code != 1 {
+				t.Errorf(`Failing exec template was provided not '1' to Runner.Os.Exit exit code but: '%v'`, os.ExitData.code)
+			}
+			if os.ExitData.wasCalledTimes != 1 {
+				t.Errorf(`Failing exec template was called Runner.Os.Exit not '1' time: '%v'`, os.ExitData.code)
+			}
+			if execOsStruct.StdHandlesDouble.Stdout.Len() != 0 {
+				t.Errorf(`Failing exec template made stdout not empty: '%s'`, execOsStruct.StdHandlesDouble.Stdout)
+			}
+
+			// stderrExpected := "Get command name and args error: error executing template '{{.Nonexistent}}' on with vars from: '{/path/to/dumbclicker [nginx h2o dumbclicker] dumbclicker}': error executing name template: '{{.Nonexistent}}' on '{/path/to/dumbclicker [nginx h2o dumbclicker] dumbclicker}': template: tmux_compose:1:2: executing \"tmux_compose\" at <.Nonexistent>: can't evaluate field Nonexistent in type cmd_name_args.dcvBasedirType" + "\n"
+			if execOsStruct.StdHandlesDouble.Stderr.String() != stderrExpected+"\n" {
+				t.Errorf(`Failing exec template made stderr '%s' not equal to: '%s'`, execOsStruct.StdHandlesDouble.Stderr, stderrExpected+"\n")
+			}
 		}
-	} else {
-		if cnaOsStruct.ReadFileData.Args[0] != `/path/to/dumbclicker/tmux-compose.json` {
-			t.Errorf(`Failing CnaOsStruct.ReadFile() was called with '1' time(s)  but: '%v'`, cnaOsStruct.ReadFileData.Args[0])
-		}
-	}
-
-	if os.ExitData.code != 1 {
-		t.Errorf(`Failing exec template was provided not '1' to Runner.Os.Exit exit code but: '%v'`, os.ExitData.code)
-	}
-	if os.ExitData.wasCalledTimes != 1 {
-		t.Errorf(`Failing exec template was called Runner.Os.Exit not '1' time: '%v'`, os.ExitData.code)
-	}
-	if execOsStruct.StdHandlesDouble.Stdout.Len() != 0 {
-		t.Errorf(`Failing exec template made stdout not empty: '%s'`, execOsStruct.StdHandlesDouble.Stdout)
-	}
-
-	stderrExpected := fmt.Sprintf("Get command name and args error: error executing template '%s' on with vars from: '%s': %v\n", cnaDefaultTemplateContents, dcYmlDefault, ``)
-	if execOsStruct.StdHandlesDouble.Stderr.String() != stderrExpected {
-		t.Errorf(`Failing exec template made stderr '%s' not equal to: '%s'`, execOsStruct.StdHandlesDouble.Stderr, stderrExpected)
 	}
 }

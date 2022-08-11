@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 	"tmux_compose/cmd_name_args"
+	"tmux_compose/config"
 	"tmux_compose/dc_yml"
 	"tmux_compose/exec"
 	"tmux_compose/logger"
@@ -28,7 +29,7 @@ func (osStruct *dcYmlOsReadFileDouble) ReadFile(name string) ([]byte, error) {
 	return []byte{}, fmt.Errorf("Wrong path to Dc ReadFile(): '%v'", name)
 }
 
-type dcYmlOsGetenvDouble struct {
+type dcYmlOsEnvDouble struct {
 	dcYmlOsFailingDouble
 	dcYmlOsReadFileDouble
 	wasCalled struct {
@@ -38,30 +39,34 @@ type dcYmlOsGetenvDouble struct {
 	}
 }
 
-func (osStruct *dcYmlOsGetenvDouble) ReadFile(name string) ([]byte, error) {
+func (osStruct *dcYmlOsEnvDouble) ReadFile(name string) ([]byte, error) {
 	osStruct.wasCalled.ReadFile++
 	return osStruct.dcYmlOsReadFileDouble.ReadFile(name)
 }
 
-// Getwd implements types.DcYmlOsInterface
-func (osStruct *dcYmlOsGetenvDouble) Getwd() (dir string, err error) {
-	osStruct.wasCalled.Getwd++
-	err = fmt.Errorf("unimplemented")
-	return
+type dcYmlOsEnvFileDouble struct {
+	dcYmlOsEnvDouble
 }
 
-func (osStruct *dcYmlOsGetenvDouble) Stat(name string) (dfi types.FileInfoStruct, err error) {
+// Getwd implements types.DcYmlOsInterface
+// func (osStruct *dcYmlOsEnvFileDouble) Getwd() (dir string, err error) {
+// 	osStruct.wasCalled.Getwd++
+// 	err = fmt.Errorf("unimplemented")
+// 	return
+// }
+
+func (osStruct *dcYmlOsEnvFileDouble) Stat(name string) (dfi types.FileInfoStruct, err error) {
 	osStruct.wasCalled.Stat++
 	return dfi, fmt.Errorf("unimplemented")
 }
 
-type dcYmlOsGetenvToFileDouble struct {
-	dcYmlOsGetenvDouble
+type configOsGetDcYmlEnvFile struct {
+	ConfigOsDouble
 	GetenvData struct{ WascalledTimes int }
 }
 
-// Getwd implements types.DcYmlOsInterface
-func (osStruct *dcYmlOsGetenvToFileDouble) Getenv(key string) string {
+// Getwd implements types.ConfigOsInterface
+func (osStruct *configOsGetDcYmlEnvFile) Getenv(key string) string {
 	osStruct.GetenvData.WascalledTimes++
 	if key == `TMUX_COMPOSE_DC_YML` {
 		return `/path/to/dumbclicker/docker-compose.yml`
@@ -69,28 +74,15 @@ func (osStruct *dcYmlOsGetenvToFileDouble) Getenv(key string) string {
 	return ``
 }
 
-type dcYmlOsGetenvToDirDouble struct {
-	dcYmlOsGetenvDouble
-	GetenvData struct{ WascalledTimes int }
-}
-
-// Getwd implements types.DcYmlOsInterface
-func (osStruct *dcYmlOsGetenvToDirDouble) Getenv(key string) (val string) {
-	osStruct.GetenvData.WascalledTimes++
-	val = ``
-	if key == `TMUX_COMPOSE_DC_YML` {
-		val = `/path/to/dumbclicker`
-	}
-	return
-}
-
 func TestRunDcOsGetenvFile(t *testing.T) { // AndStdHandles {
 
-	dcYmlOsStruct := &dcYmlOsGetenvToFileDouble{}
-	dcYml := dc_yml.Construct(dcYmlOsStruct)
-	cna := cmd_name_args.Construct(&cnaOsFailingDouble{}, &configFailingDouble{})
+	dcYmlOsStruct := &dcYmlOsEnvFileDouble{}
+	configOsStruct := &configOsGetDcYmlEnvFile{}
+	configStruct := config.Construct(configOsStruct)
+	dcYml := dc_yml.Construct(dcYmlOsStruct, configStruct)
+	cna := cmd_name_args.Construct(&cnaOsFailingDouble{}, configStruct)
 	execOsStruct := &execOsFailingDouble{}
-	exec := exec.Construct(execOsStruct)
+	exec := exec.Construct(execOsStruct, configStruct)
 
 	os := &osDouble{}
 	logger := logger.Construct(execOsStruct.GetStdHandles())
@@ -105,8 +97,8 @@ func TestRunDcOsGetenvFile(t *testing.T) { // AndStdHandles {
 
 	runner.Run()
 
-	if dcYmlOsStruct.GetenvData.WascalledTimes != 1 {
-		t.Errorf(`Fqfn-resolving DcOsStruct.Getenv() was called not '1' time but: '%v'`, dcYmlOsStruct.GetenvData.WascalledTimes)
+	if configOsStruct.GetenvData.WascalledTimes != 1 {
+		t.Errorf(`Fqfn-resolving ConfigOsStruct.Getenv() was called not '1' time but: '%v'`, configOsStruct.GetenvData.WascalledTimes)
 	}
 	if dcYmlOsStruct.wasCalled.Stat != 1 {
 		t.Errorf(`Failing DcOsStruct.Stat() was called not '1' time but: '%v'`, dcYmlOsStruct.wasCalled.Stat)
@@ -134,15 +126,41 @@ func TestRunDcOsGetenvFile(t *testing.T) { // AndStdHandles {
 
 }
 
+type dcYmlOsEnvDirDouble struct {
+	dcYmlOsEnvDouble
+	StatData struct{ Names []string }
+}
+
+func (osStruct *dcYmlOsEnvDirDouble) Stat(name string) (dfi types.FileInfoStruct, err error) {
+	osStruct.wasCalled.Stat++
+	return osStruct.dcYmlOsEnvDouble.Stat(name)
+}
+
+type configOsGetDcYmlEnvDir struct {
+	ConfigOsDouble
+	GetenvData struct{ WascalledTimes int }
+}
+
+// Getwd implements types.ConfigOsInterface
+func (osStruct *configOsGetDcYmlEnvDir) Getenv(key string) string {
+	osStruct.GetenvData.WascalledTimes++
+	if key == `TMUX_COMPOSE_DC_YML` {
+		return `/path/to/dumbclicker`
+	}
+	return ``
+}
+
 func TestRunDcOsGetenvDir(t *testing.T) { // AndStdHandles {
 	// tle := getTestLogfuncExitType()
 	// stdHandles, runner := makeRunnerForFatal(`/\\nonexistent`, &tle)
 
-	dcYmlOsStruct := &dcYmlOsGetenvToDirDouble{}
-	dcYml := dc_yml.Construct(dcYmlOsStruct)
-	cna := cmd_name_args.Construct(&cnaOsFailingDouble{}, &configFailingDouble{})
+	configOsStruct := &configOsGetDcYmlEnvDir{}
+	configStruct := config.Construct(configOsStruct)
+	dcYmlOsStruct := &dcYmlOsEnvDirDouble{}
+	dcYml := dc_yml.Construct(dcYmlOsStruct, configStruct)
+	cna := cmd_name_args.Construct(&cnaOsFailingDouble{}, configStruct)
 	execOsStruct := &execOsFailingDouble{}
-	exec := exec.Construct(execOsStruct)
+	exec := exec.Construct(execOsStruct, configStruct)
 
 	os := &osDouble{}
 	logger := logger.Construct(execOsStruct.GetStdHandles())
@@ -157,8 +175,8 @@ func TestRunDcOsGetenvDir(t *testing.T) { // AndStdHandles {
 
 	runner.Run()
 
-	if dcYmlOsStruct.GetenvData.WascalledTimes != 1 {
-		t.Errorf(`Failing DcOsStruct.Getenv() was called not '1' time but: '%v'`, dcYmlOsStruct.GetenvData.WascalledTimes)
+	if configOsStruct.GetenvData.WascalledTimes != 1 {
+		t.Errorf(`Failing ConfigOsStruct.Getenv() was called not '1' time but: '%v'`, configOsStruct.GetenvData.WascalledTimes)
 	}
 	if dcYmlOsStruct.wasCalled.Stat != 1 {
 		t.Errorf(`Failing DcOsStruct.Stat() was called not '1' time but: '%v'`, dcYmlOsStruct.wasCalled.Stat)
@@ -231,7 +249,7 @@ func TestRunDcOsGetenvDir(t *testing.T) { // AndStdHandles {
 // 	runner.Run()
 
 // 	if dcYmlOsStruct.GetenvData.WascalledTimes != 1 {
-// 		t.Errorf(`Failing DcOsStruct.Getenv() was called not '1' time but: '%v'`, dcYmlOsStruct.GetenvData.WascalledTimes)
+// 		t.Errorf(`Failing ConfigOsStruct.Getenv() was called not '1' time but: '%v'`, dcYmlOsStruct.GetenvData.WascalledTimes)
 // 	}
 // 	if dcYmlOsStruct.wasCalled.Stat != 1 {
 // 		t.Errorf(`Failing DcOsStruct.Stat() was called not '1' time but: '%v'`, dcYmlOsStruct.wasCalled.Stat)
@@ -262,7 +280,7 @@ func TestRunDcOsGetenvDir(t *testing.T) { // AndStdHandles {
 // }
 
 type dcYmlOsFailingReadFileDouble struct {
-	dcYmlOsGetenvToFileDouble
+	dcYmlOsEnvDouble
 	ReadFileData struct{ Name string }
 }
 
@@ -294,10 +312,13 @@ func TestRunDcFailingReadFile(t *testing.T) { // AndStdHandles {
 	// stdHandles, runner := makeRunnerForFatal(`/\\nonexistent`, &tle)
 
 	dcYmlOsStruct := &dcYmlOsFailingReadFileDouble{}
-	dcYml := dc_yml.Construct(dcYmlOsStruct)
-	cna := cmd_name_args.Construct(&cnaOsFailingDouble{}, &configFailingDouble{})
+	configOsStruct := &configOsGetDcYmlEnvFile{}
+	configStruct := config.Construct(configOsStruct)
+
+	dcYml := dc_yml.Construct(dcYmlOsStruct, configStruct)
+	cna := cmd_name_args.Construct(&cnaOsFailingDouble{}, configStruct)
 	execOsStruct := &execOsFailingDouble{}
-	exec := exec.Construct(execOsStruct)
+	exec := exec.Construct(execOsStruct, configStruct)
 
 	os := &osDouble{}
 	logger := logger.Construct(execOsStruct.GetStdHandles())
@@ -312,8 +333,8 @@ func TestRunDcFailingReadFile(t *testing.T) { // AndStdHandles {
 
 	runner.Run()
 
-	if dcYmlOsStruct.GetenvData.WascalledTimes != 1 {
-		t.Errorf(`Failing DcOsStruct.Getenv() was called not '1' time but: '%v'`, dcYmlOsStruct.GetenvData.WascalledTimes)
+	if configOsStruct.GetenvData.WascalledTimes != 1 {
+		t.Errorf(`Failing ConfigOsStruct.Getenv() was called not '1' time but: '%v'`, configOsStruct.GetenvData.WascalledTimes)
 	}
 	if dcYmlOsStruct.wasCalled.Stat != 1 {
 		t.Errorf(`Failing DcOsStruct.Stat() was called not '1' times but: '%v'`, dcYmlOsStruct.wasCalled.Stat)
@@ -355,7 +376,7 @@ func (osStruct *dcYmlOsFailingStatInputDouble) Stat(name string) (dfi types.File
 }
 
 type dcYmlOsFailingStatInputDirDouble struct {
-	dcYmlOsGetenvToDirDouble
+	dcYmlOsEnvDouble
 	dcYmlOsFailingStatInputDouble
 }
 
@@ -364,10 +385,13 @@ func TestRunDcFailingStatInputDir(t *testing.T) { // AndStdHandles {
 	// stdHandles, runner := makeRunnerForFatal(`/\\nonexistent`, &tle)
 
 	dcYmlOsStruct := &dcYmlOsFailingStatInputDirDouble{}
-	dcYml := dc_yml.Construct(dcYmlOsStruct)
-	cna := cmd_name_args.Construct(&cnaOsFailingDouble{}, &configFailingDouble{})
+	configOsStruct := &configOsGetDcYmlEnvDir{}
+	configStruct := config.Construct(configOsStruct)
+
+	dcYml := dc_yml.Construct(dcYmlOsStruct, configStruct)
+	cna := cmd_name_args.Construct(&cnaOsFailingDouble{}, configStruct)
 	execOsStruct := &execOsFailingDouble{}
-	exec := exec.Construct(execOsStruct)
+	exec := exec.Construct(execOsStruct, configStruct)
 
 	os := &osDouble{}
 	logger := logger.Construct(execOsStruct.GetStdHandles())
@@ -382,8 +406,8 @@ func TestRunDcFailingStatInputDir(t *testing.T) { // AndStdHandles {
 
 	runner.Run()
 
-	if dcYmlOsStruct.GetenvData.WascalledTimes != 1 {
-		t.Errorf(`Failing DcOsStruct.Getenv() was called not '1' time but: '%v'`, dcYmlOsStruct.GetenvData.WascalledTimes)
+	if configOsStruct.GetenvData.WascalledTimes != 1 {
+		t.Errorf(`Failing ConfigOsStruct.Getenv() was called not '1' time but: '%v'`, configOsStruct.GetenvData.WascalledTimes)
 	}
 	if dcYmlOsStruct.StatData.wasCalled != 1 {
 		t.Errorf(`Failing DcOsStruct.Stat() was called not '1' time but: '%v'`, dcYmlOsStruct.StatData.wasCalled)
@@ -416,7 +440,7 @@ func TestRunDcFailingStatInputDir(t *testing.T) { // AndStdHandles {
 }
 
 type dcYmlOsFailingStatInputFileDouble struct {
-	dcYmlOsGetenvToFileDouble
+	dcYmlOsEnvDouble
 	dcYmlOsFailingStatInputDouble
 }
 
@@ -425,10 +449,13 @@ func TestRunDcFailingStatInputFile(t *testing.T) { // AndStdHandles {
 	// stdHandles, runner := makeRunnerForFatal(`/\\nonexistent`, &tle)
 
 	dcYmlOsStruct := &dcYmlOsFailingStatInputFileDouble{}
-	dcYml := dc_yml.Construct(dcYmlOsStruct)
-	cna := cmd_name_args.Construct(&cnaOsFailingDouble{}, &configFailingDouble{})
+	configOsStruct := configOsGetDcYmlEnvFile{}
+	configStruct := config.Construct(&configOsStruct)
+
+	dcYml := dc_yml.Construct(dcYmlOsStruct, configStruct)
+	cna := cmd_name_args.Construct(&cnaOsFailingDouble{}, configStruct)
 	execOsStruct := &execOsFailingDouble{}
-	exec := exec.Construct(execOsStruct)
+	exec := exec.Construct(execOsStruct, configStruct)
 
 	os := &osDouble{}
 	logger := logger.Construct(execOsStruct.GetStdHandles())
@@ -443,8 +470,8 @@ func TestRunDcFailingStatInputFile(t *testing.T) { // AndStdHandles {
 
 	runner.Run()
 
-	if dcYmlOsStruct.GetenvData.WascalledTimes != 1 {
-		t.Errorf(`Failing DcOsStruct.Getenv() was called not '1' time but: '%v'`, dcYmlOsStruct.GetenvData.WascalledTimes)
+	if configOsStruct.GetenvData.WascalledTimes != 1 {
+		t.Errorf(`Failing ConfigOsStruct.Getenv() was called not '1' time but: '%v'`, configOsStruct.GetenvData.WascalledTimes)
 	}
 	if dcYmlOsStruct.wasCalled.ReadFile != 0 {
 		t.Errorf(`Failing DcOsStruct.ReadFile() was called not '0' time but: '%v'`, dcYmlOsStruct.wasCalled.ReadFile)
@@ -473,7 +500,7 @@ func TestRunDcFailingStatInputFile(t *testing.T) { // AndStdHandles {
 
 // DcYml supplied is neither dir nor file
 type dcYmlOsStatIsOtherInputDouble struct {
-	dcYmlOsGetenvToDirDouble
+	dcYmlOsEnvDirDouble
 	StatData struct {
 		Names []string
 	}
@@ -483,7 +510,7 @@ type dcYmlOsStatIsOtherInputDouble struct {
 func (osStruct *dcYmlOsStatIsOtherInputDouble) Stat(name string) (dfi types.FileInfoStruct, err error) {
 	osStruct.wasCalled.Stat++
 	osStruct.StatData.Names = append(osStruct.StatData.Names, name)
-	if name == `/path/to/dumbclicker` {
+	if name == `/path/to/dumbclicker` || (name == `/path/to/dumbclicker/docker-compose.yml`) {
 		return types.FileInfoStruct{
 			IsDir: func() bool {
 				return false
@@ -499,10 +526,13 @@ func (osStruct *dcYmlOsStatIsOtherInputDouble) Stat(name string) (dfi types.File
 func TestRunDcStatIsOtherInputFile(t *testing.T) { // AndStdHandles {
 
 	dcYmlOsStruct := &dcYmlOsStatIsOtherInputDouble{}
-	dcYml := dc_yml.Construct(dcYmlOsStruct)
-	cna := cmd_name_args.Construct(&cnaOsFailingDouble{}, &configFailingDouble{})
+	configOsStruct := configOsGetDcYmlEnvDir{}
+	configStruct := config.Construct(&configOsStruct)
+
+	dcYml := dc_yml.Construct(dcYmlOsStruct, configStruct)
+	cna := cmd_name_args.Construct(&cnaOsFailingDouble{}, configStruct)
 	execOsStruct := &execOsFailingDouble{}
-	exec := exec.Construct(execOsStruct)
+	exec := exec.Construct(execOsStruct, configStruct)
 
 	os := &osDouble{}
 	logger := logger.Construct(execOsStruct.GetStdHandles())
@@ -517,8 +547,8 @@ func TestRunDcStatIsOtherInputFile(t *testing.T) { // AndStdHandles {
 
 	runner.Run()
 
-	if dcYmlOsStruct.GetenvData.WascalledTimes != 1 {
-		t.Errorf(`Failing DcOsStruct.Getenv() was called not '1' time but: '%v'`, dcYmlOsStruct.GetenvData.WascalledTimes)
+	if configOsStruct.GetenvData.WascalledTimes != 1 {
+		t.Errorf(`Failing ConfigOsStruct.Getenv() was called not '1' time but: '%v'`, configOsStruct.GetenvData.WascalledTimes)
 	}
 	if dcYmlOsStruct.wasCalled.ReadFile != 0 {
 		t.Errorf(`Failing DcOsStruct.ReadFile() was called not '0' time but: '%v'`, dcYmlOsStruct.wasCalled.ReadFile)
@@ -547,7 +577,7 @@ func TestRunDcStatIsOtherInputFile(t *testing.T) { // AndStdHandles {
 
 // Both dir and file are directories
 type dcYmlOsStatIsDirBothInputDouble struct {
-	dcYmlOsGetenvToDirDouble
+	dcYmlOsEnvDouble
 	StatData struct{ Names []string }
 }
 
@@ -571,10 +601,13 @@ func (osStruct *dcYmlOsStatIsDirBothInputDouble) Stat(name string) (dfi types.Fi
 func TestRunDcStatIsDirBothInputFile(t *testing.T) { // AndStdHandles {
 
 	dcYmlOsStruct := &dcYmlOsStatIsDirBothInputDouble{}
-	dcYml := dc_yml.Construct(dcYmlOsStruct)
-	cna := cmd_name_args.Construct(&cnaOsFailingDouble{}, &configFailingDouble{})
+	configOsStruct := &configOsGetDcYmlEnvDir{}
+	configStruct := config.Construct(configOsStruct)
+
+	dcYml := dc_yml.Construct(dcYmlOsStruct, configStruct)
+	cna := cmd_name_args.Construct(&cnaOsFailingDouble{}, configStruct)
 	execOsStruct := &execOsFailingDouble{}
-	exec := exec.Construct(execOsStruct)
+	exec := exec.Construct(execOsStruct, configStruct)
 
 	os := &osDouble{}
 	logger := logger.Construct(execOsStruct.GetStdHandles())
@@ -589,8 +622,8 @@ func TestRunDcStatIsDirBothInputFile(t *testing.T) { // AndStdHandles {
 
 	runner.Run()
 
-	if dcYmlOsStruct.GetenvData.WascalledTimes != 1 {
-		t.Errorf(`Failing DcOsStruct.Getenv() was called not '1' time but: '%v'`, dcYmlOsStruct.GetenvData.WascalledTimes)
+	if configOsStruct.GetenvData.WascalledTimes != 1 {
+		t.Errorf(`Failing ConfigOsStruct.Getenv() was called not '1' time but: '%v'`, configOsStruct.GetenvData.WascalledTimes)
 	}
 	if dcYmlOsStruct.wasCalled.ReadFile != 0 {
 		t.Errorf(`Failing DcOsStruct.ReadFile() was called not '0' time but: '%v'`, dcYmlOsStruct.wasCalled.ReadFile)

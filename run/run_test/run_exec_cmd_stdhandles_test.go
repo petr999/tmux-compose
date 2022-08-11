@@ -3,6 +3,7 @@ package run_test
 import (
 	"testing"
 	"tmux_compose/cmd_name_args"
+	"tmux_compose/config"
 	"tmux_compose/dc_yml"
 	"tmux_compose/exec"
 	"tmux_compose/logger"
@@ -20,11 +21,13 @@ func TestExecCmdStdhandles(t *testing.T) {
 
 	execOsStruct := &execOsStructChdir{}
 	osStruct := &osDouble{}
-	exec := exec.Construct(execOsStruct)
+	configStruct := config.Construct(ConfigOsDouble{})
+
+	exec := exec.Construct(execOsStruct, configStruct)
 
 	runner := run.Runner{
-		CmdNameArgs: cmd_name_args.Construct(&cnaOsFailingDouble{}, &configFailingDouble{}),
-		DcYml:       dc_yml.Construct(&dcYmlOsGetwdDouble{}),
+		CmdNameArgs: cmd_name_args.Construct(&cnaOsFailingDouble{}, configStruct),
+		DcYml:       dc_yml.Construct(&dcYmlOsGetwdDouble{}, configStruct),
 		Exec:        exec,
 		Os:          osStruct,
 		Logger:      logger.Construct(execOsStruct.GetStdHandles()),

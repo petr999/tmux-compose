@@ -1,8 +1,10 @@
 package cmd_name_args
 
 import (
+	"bytes"
 	_ "embed"
 	"fmt"
+	"html/template"
 	"path/filepath"
 	"tmux_compose/types"
 )
@@ -26,15 +28,21 @@ func (cna *CmdNameArgs) New(osStruct types.CnaOsInterface, config types.ConfigIn
 	cna.GetCnaTemplateFname = config.GetCnaTemplateFname
 }
 func (cna *CmdNameArgs) Get(dcYmlValue types.DcYmlValue) (cnaValue types.CmdNameArgsValueType, err error) {
-	// dcvBasedir
-	_, err = cna.getDcvBasedir(dcYmlValue)
+	var dcvBasedir dcvBasedirType
+	dcvBasedir, err = cna.getDcvBasedir(dcYmlValue)
 	if err != nil {
 		return
 	}
 
-	// tmplStr :=
-	_, err = cna.getTmplStr()
+	var tmplStr string
+	tmplStr, err = cna.getTmplStr()
 	if err != nil {
+		return
+	}
+
+	_, err = tmplExecute(tmplStr, dcvBasedir)
+	if err != nil {
+		err = fmt.Errorf(`error executing template '%s' on with vars from: '%s': %w`, tmplStr, dcvBasedir, err)
 		return
 	}
 
@@ -53,6 +61,8 @@ type dcvBasedirType struct {
 }
 
 func (cna *CmdNameArgs) getDcvBasedir(dcYmlValue types.DcYmlValue) (dcvBasedir dcvBasedirType, err error) {
+	dcvBasedir.Workdir = dcYmlValue.Workdir
+	dcvBasedir.DcServicesNames = dcYmlValue.DcServicesNames
 	baseDir := filepath.Base(dcYmlValue.Workdir)
 
 	if len(baseDir) == 0 { // XXX impossible?
@@ -117,26 +127,26 @@ func (cna *CmdNameArgs) getTmplStr() (tmplStr string, err error) {
 // 	return tmplJson
 // }
 
-// func tmplExecute(tmplJson string, dcvBasedir dcvBasedirType) (tmplJsonNew string, err error) {
-// 	tmplObj := template.New(`tmux_compose`).Funcs(template.FuncMap{
-// 		"IsNotLast": func(i int, length int) bool {
-// 			return i < length-1
-// 		}})
-// 	nameTmplObj, err := tmplObj.Parse(tmplJson)
-// 	if err != nil {
-// 		return ``, fmt.Errorf("error reading name template: '%v'\n\t%w", tmplJson, err)
-// 	}
-// 	var nameBuf bytes.Buffer
-// 	err = nameTmplObj.Execute(&nameBuf, dcvBasedir)
+func tmplExecute(tmplJson string, dcvBasedir dcvBasedirType) (tmplJsonNew string, err error) {
+	tmplObj := template.New(`tmux_compose`).Funcs(template.FuncMap{
+		"IsNotLast": func(i int, length int) bool {
+			return i < length-1
+		}})
+	nameTmplObj, err := tmplObj.Parse(tmplJson)
+	if err != nil {
+		return ``, fmt.Errorf("error reading name template: '%v': %w", tmplJson, err)
+	}
+	var nameBuf bytes.Buffer
+	err = nameTmplObj.Execute(&nameBuf, dcvBasedir)
 
-// 	if err != nil {
-// 		return ``, fmt.Errorf("error executing name template: '%v' on '%v':\n\t%w", tmplJson, dcvBasedir, err)
-// 	}
+	if err != nil {
+		return ``, fmt.Errorf("error executing name template: '%v' on '%v': %w", tmplJson, dcvBasedir, err)
+	}
 
-// 	tmplJsonNew = nameBuf.String()
+	tmplJsonNew = nameBuf.String()
 
-// 	return
-// }
+	return
+}
 
 // func CmdNameArgs(dcConfigReader dc_config.ReaderInterface, osStruct OsStructCmdNameArgs) (types.CmdNameArgsType, error) {
 // 	dcConfig, err := dcConfigReader.Read()

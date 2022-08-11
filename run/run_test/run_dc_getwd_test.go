@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 	"tmux_compose/cmd_name_args"
+	"tmux_compose/config"
 	"tmux_compose/dc_yml"
 	"tmux_compose/exec"
 	"tmux_compose/logger"
@@ -33,7 +34,6 @@ func (osStruct *dcYmlOsGetwdDouble) Getwd() (dir string, err error) {
 	osStruct.wasCalled.Getwd++
 	return `/path/to/dumbclicker`, nil
 }
-func (*dcYmlOsGetwdDouble) Getenv(string) string { return `` }
 
 // Stat implements types.DcYmlOsInterface
 func (osStruct *dcYmlOsGetwdDouble) Stat(name string) (dfi types.FileInfoStruct, err error) {
@@ -119,11 +119,12 @@ func TestGetwd(t *testing.T) {
 	dcYmlOsStruct := &dcYmlOsGetwdDouble{}
 	execOsStruct := &execOsStructFailingChdir{}
 	osStruct := &osDouble{}
+	configStruct := config.Construct(ConfigOsDouble{})
 
 	runner := run.Runner{
-		CmdNameArgs: cmd_name_args.Construct(&cnaOsGetpwd{}, &configFailingDouble{}),
-		DcYml:       dc_yml.Construct(dcYmlOsStruct),
-		Exec:        exec.Construct(execOsStruct),
+		CmdNameArgs: cmd_name_args.Construct(&cnaOsGetpwd{}, configStruct),
+		DcYml:       dc_yml.Construct(dcYmlOsStruct, configStruct),
+		Exec:        exec.Construct(execOsStruct, configStruct),
 		Os:          osStruct,
 		Logger:      logger.Construct(execOsStruct.GetStdHandles()),
 	}
