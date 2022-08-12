@@ -210,6 +210,27 @@ func (osStruct *dcYmlOsFailingGetwdDouble) Getwd() (dir string, err error) {
 	return ``, fmt.Errorf(`current working directory not found`)
 }
 
+type execOsStructFailingChdir struct {
+	execOsFailingDouble
+	chdirData struct {
+		wasCalled int
+		dirs      []string
+	}
+}
+
+func (osStruct *execOsStructFailingChdir) Chdir(dir string) (err error) {
+	osStruct.chdirData.wasCalled++
+	osStruct.chdirData.dirs = append(osStruct.chdirData.dirs, dir)
+
+	if dir == `/path/to/dumbclicker` {
+		err = fmt.Errorf(`Changing directory to: '/path/to/dumbclicker' error: 'not found'`)
+	} else {
+		err = fmt.Errorf(`Changing directory to: '%v' error: 'wrong directory'`, dir)
+	}
+
+	return
+}
+
 func TestRunDcOsGetwdFail(t *testing.T) { // AndStdHandles {
 	// tle := getTestLogfuncExitType()
 	// stdHandles, runner := makeRunnerForFatal(`/\\nonexistent`, &tle)

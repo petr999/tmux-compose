@@ -55,7 +55,7 @@ func (exec *Exec) GetSelector() (selector any) {
 	if len(exec.config.GetDryRun()) > 0 { // dry run
 		return true
 	}
-	return selector
+	return false
 }
 
 func (exec *Exec) GetCommand(cna types.CmdNameArgsValueType) *types.CmdType {
