@@ -41,26 +41,6 @@ func (runner *Runner) runWithExitcode() int {
 		return 1
 	}
 
-	// DcConfigReader, ExecStruct, OsStruct, LogFunc := runner.DcConfigReader, runner.ExecStruct, runner.OsStruct, runner.LogFunc
-	// CmdNameArgs := runner.CmdNameArgs
-	// cmdNameArgs, err := CmdNameArgs(DcConfigReader, cmd_name_args.OsStructCmdNameArgs)
-	// if err != nil {
-	// 	LogFunc(fmt.Sprintf("%v,\n", err))
-	// 	return 1
-	// }
-
-	// ExecStruct.MakeCommand(&exec.MakeCommandDryRunType{DryRun: OsStruct.Getenv(DryRunEnvVarName), OsStruct: OsStruct},
-	// 	cmdNameArgs)
-	// cmd := ExecStruct.GetCommand()
-	// cmd.StdCommute(OsStruct)
-
-	// err = cmd.Run()
-
-	// if err != nil {
-	// 	LogFunc(fmt.Sprintf("%v,\n", err))
-	// 	return 1
-	// }
-
 	return 0
 }
 

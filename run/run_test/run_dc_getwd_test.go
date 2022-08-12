@@ -25,11 +25,6 @@ type dcYmlOsGetwdDouble struct {
 	}
 }
 
-// func (osStruct *dcYmlOsGetwdDouble) ReadFile(name string) ([]byte, error) {
-// 	osStruct.wasCalled.ReadFile++
-// 	return []byte{}, fmt.Errorf(`Failed to Stat() path: '%v'`, name)
-// }
-
 func (osStruct *dcYmlOsGetwdDouble) Getwd() (dir string, err error) {
 	osStruct.wasCalled.Getwd++
 	return `/path/to/dumbclicker`, nil
@@ -59,34 +54,6 @@ func (osStruct *dcYmlOsGetwdDouble) Stat(name string) (dfi types.FileInfoStruct,
 		}, nil
 	}
 	return dfi, fmt.Errorf("Failed to Stat() path: '%v':", name)
-}
-
-// type execOsDryrunDouble struct {
-// 	execOsFailingDouble
-// }
-
-// func (execOsStruct *execOsDryrunDouble) Getenv(name string) string {
-// 	if name == `TMUX_COMPOSE_DRY_RUN` {
-// 		return `1` // dry run
-// 	}
-// 	return ``
-// }
-
-type execOsStructFailingChdir struct {
-	execOsFailingDouble
-	wasCalled struct {
-		Chdir int
-	}
-}
-
-func (osStruct *execOsStructFailingChdir) Chdir(dir string) (err error) {
-	osStruct.wasCalled.Chdir++
-	if dir == `/path/to/dumbclicker` {
-		err = fmt.Errorf(`Changing directory to: '/path/to/dumbclicker' error: 'not found'`)
-	} else {
-		err = fmt.Errorf(`Changing directory to: '%v' error: 'wrong directory'`, dir)
-	}
-	return
 }
 
 type cnaOsGetpwd struct {
@@ -142,9 +109,6 @@ func TestGetwd(t *testing.T) {
 	}
 	if execOsStruct.StdHandlesDouble.Stdout.Len() != 0 {
 		t.Errorf(`Failing DcOsStruct.Stat() made stdout not empty: '%s'`, execOsStruct.StdHandlesDouble.Stdout)
-	}
-	if execOsStruct.wasCalled.Chdir != 1 {
-		t.Errorf(`'execOsStruct.Chdir()' was called not '1' times but: '%v'`, execOsStruct.wasCalled.Chdir)
 	}
 	stderrExpected := "Changing directory to: '/path/to/dumbclicker' error: 'not found'\n"
 	if execOsStruct.StdHandlesDouble.Stderr.String() != stderrExpected {

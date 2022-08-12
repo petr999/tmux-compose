@@ -51,9 +51,9 @@ func (execOsDouble) Chdir(dir string) error {
 }
 
 // GetStdHandles implements types.ExecOsInterface
-// func (execOsDouble) GetStdHandles() types.StdHandlesType {
-// 	panic("unimplemented")
-// }
+func (execOsDouble) GetStdHandles() types.StdHandlesType {
+	panic("unimplemented")
+}
 
 // Getenv implements types.ExecOsInterface
 func (execOsDouble) Getenv(key string) string {

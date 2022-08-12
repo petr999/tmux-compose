@@ -18,12 +18,6 @@ type dcYmlOsGetwdRootDouble struct {
 	dcYmlOsFailingDouble
 }
 
-// //go:embed testdata/bash-new-window.gson
-// var cnaDefaultTemplateContents []byte
-
-// //go:embed testdata/dumbclicker/docker-compose.yml
-// var dcYmlDefault []byte
-
 // ReadFile implements types.DcYmlOsInterface
 func (osStruct *dcYmlOsGetwdRootDouble) ReadFile(name string) ([]byte, error) {
 	if name == `/docker-compose.yml` {

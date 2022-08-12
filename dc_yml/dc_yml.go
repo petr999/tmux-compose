@@ -42,11 +42,11 @@ func (dcYml *DcYml) getServiceNames(fName string) (dcYmlValue types.DcYmlValue, 
 
 	err = yaml.Unmarshal(buf, &mapSlices)
 	if err != nil {
-		return // DcConfigValueType{}, fmt.Errorf("parsing config file: '%s' error:\n\t%w", fqfn, err)
+		return
 	}
 
 	services, err := getServices(mapSlices)
-	if err != nil { // err = fmt.Errorf("parsing config file: '%s' error:\n\t%w", fqfn, err)
+	if err != nil {
 		return
 	}
 
@@ -55,7 +55,6 @@ func (dcYml *DcYml) getServiceNames(fName string) (dcYmlValue types.DcYmlValue, 
 	return
 }
 
-// if len(dcYml.osStruct.Getenv(dcEnvVar)) > 0 {
 func (dcYml *DcYml) getByFname(fName string) (dcYmlValue types.DcYmlValue, err error) {
 	fPath, err := filepath.Abs(fName)
 	if err != nil {
@@ -124,20 +123,6 @@ func (dcYml *DcYml) Get() (dcYmlValue types.DcYmlValue, err error) {
 	}
 }
 
-// type DcConfig struct {
-// 	OsStruct DcConfigOsInterface
-// 	Fqfn     string
-// }
-
-// type DcConfigValueType = struct {
-// 	Workdir         string
-// 	DcServicesNames []string
-// } // map[string]interface{}
-
-// type DcConfigFileType = struct {
-// 	Services map[string]map[string]interface{}
-// }
-
 func getServices(mapSlices yaml.MapSlice) ([]string, error) {
 	services := []string{}
 
@@ -160,71 +145,5 @@ func getServices(mapSlices yaml.MapSlice) ([]string, error) {
 		}
 	}
 
-	// for _, mapSlice := range mapSlices {
-	// 	dcKeyValue, ok := mapSlice.Key.(string)
-	// }
-
 	return services, nil
 }
-
-// func (dcConfig DcConfig) readConfigFile() (value DcConfigValueType, err error) {
-// 	var buf []byte
-// 	fqfn := dcConfig.Fqfn
-
-// 	buf, err = dcConfig.OsStruct.ReadFile(fqfn)
-// 	if err != nil {
-// 		return DcConfigValueType{}, fmt.Errorf("reading config file: '%s' error:\n\t%w", fqfn, err)
-// 	}
-
-// 	mapSlices := yaml.MapSlice{}
-
-// 	err = yaml.Unmarshal(buf, &mapSlices)
-// 	if err != nil {
-// 		return DcConfigValueType{}, fmt.Errorf("parsing config file: '%s' error:\n\t%w", fqfn, err)
-// 	}
-
-// 	services, err := getServices(mapSlices)
-// 	if err != nil {
-// 		err = fmt.Errorf("parsing config file: '%s' error:\n\t%w", fqfn, err)
-// 		return
-// 	}
-
-// 	value.DcServicesNames = services
-// 	return
-// }
-
-// func (dcConfig DcConfig) Read() (DcConfigValueType, error) {
-// 	dir := filepath.Dir(dcConfig.Fqfn)
-// 	err := dcConfig.OsStruct.Chdir(dir)
-// 	if err != nil {
-// 		return DcConfigValueType{}, fmt.Errorf("failed to change to dir: '%v' error:\n\t%w", dir, err)
-// 	}
-// 	workDir, err := dcConfig.OsStruct.Getwd()
-// 	if err != nil {
-// 		return DcConfigValueType{}, fmt.Errorf("failed to get current directory:\n\t%w", err)
-// 	}
-// 	if len(workDir) == 0 {
-// 		return DcConfigValueType{}, fmt.Errorf("work directory is empty")
-// 	}
-
-// 	value, err := dcConfig.readConfigFile()
-// 	if err != nil {
-// 		return value, err
-// 	}
-
-// 	if len(value.DcServicesNames) == 0 {
-// 		return DcConfigValueType{}, fmt.Errorf("no service names in config: '%v'", dcConfig.Fqfn)
-// 	} else {
-// 		for _, serviceName := range value.DcServicesNames {
-// 			if len(serviceName) == 0 || !regexp.MustCompile(`^\w[\w\d]*$`).MatchString(serviceName) {
-// 				return DcConfigValueType{}, fmt.Errorf("empty or inappropriate service name '%v' in config: '%v'", serviceName, dcConfig.Fqfn)
-// 			}
-// 		}
-// 	}
-
-// 	value.Workdir = workDir
-
-// 	return value, err
-// }
-
-// func (dcConfig DcConfig) SetFqfn(fqfn string) {}

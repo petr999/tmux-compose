@@ -48,13 +48,6 @@ type dcYmlOsEnvFileDouble struct {
 	dcYmlOsEnvDouble
 }
 
-// Getwd implements types.DcYmlOsInterface
-// func (osStruct *dcYmlOsEnvFileDouble) Getwd() (dir string, err error) {
-// 	osStruct.wasCalled.Getwd++
-// 	err = fmt.Errorf("unimplemented")
-// 	return
-// }
-
 func (osStruct *dcYmlOsEnvFileDouble) Stat(name string) (dfi types.FileInfoStruct, err error) {
 	osStruct.wasCalled.Stat++
 	return dfi, fmt.Errorf("unimplemented")
@@ -150,9 +143,7 @@ func (osStruct *configOsGetDcYmlEnvDir) Getenv(key string) string {
 	return ``
 }
 
-func TestRunDcOsGetenvDir(t *testing.T) { // AndStdHandles {
-	// tle := getTestLogfuncExitType()
-	// stdHandles, runner := makeRunnerForFatal(`/\\nonexistent`, &tle)
+func TestRunDcOsGetenvDir(t *testing.T) {
 
 	configOsStruct := &configOsGetDcYmlEnvDir{}
 	configStruct := config.Construct(configOsStruct)
@@ -202,82 +193,6 @@ func TestRunDcOsGetenvDir(t *testing.T) { // AndStdHandles {
 		t.Errorf(`Failing DcOsStruct.Getwd() made stderr '%s' not equal to: '%s'`, execOsStruct.StdHandlesDouble.Stderr, stderrExpected)
 	}
 }
-
-// type dcYmlOsFailingChdirDouble struct {
-// 	dcYmlOsGetenvToFileDouble
-// 	ChdirData struct{ Dir string }
-// }
-
-// // Stat implements types.DcYmlOsInterface
-// func (osStruct *dcYmlOsFailingChdirDouble) Stat(name string) (dfi types.FileInfoStruct, err error) {
-// 	osStruct.wasCalled.Stat++
-// 	osStruct.StatData.Names = append(osStruct.StatData.Names, name)
-// 	if name == `/path/to/dumbclicker` {
-// 		return types.FileInfoStruct{
-// 			IsDir: func() bool {
-// 				return false
-// 			},
-// 			IsFile: func() bool {
-// 				return true
-// 			},
-// 		}, nil
-// 	}
-// 	return dfi, fmt.Errorf("Failed to Stat() path: '%v':", name)
-// }
-
-// func TestRunDcFailingChdir(t *testing.T) { // AndStdHandles {
-// 	// tle := getTestLogfuncExitType()
-// 	// stdHandles, runner := makeRunnerForFatal(`/\\nonexistent`, &tle)
-
-// 	dcYmlOsStruct := &dcYmlOsFailingChdirDouble{}
-// 	dcYml := dc_yml.Construct(dcYmlOsStruct)
-// 	cna := cmd_name_args.Construct(&cnaOsFailingDouble{})
-// 	execOsStruct := &execOsFailingDouble{}
-// 	exec := exec.Construct(execOsStruct)
-
-// 	os := &osDouble{}
-// 	logger := logger.Construct(execOsStruct.GetStdHandles())
-
-// 	runner := run.Runner{
-// 		CmdNameArgs: cna,
-// 		DcYml:       dcYml,
-// 		Exec:        exec,
-// 		Os:          os,
-// 		Logger:      logger,
-// 	}
-
-// 	runner.Run()
-
-// 	if dcYmlOsStruct.GetenvData.WascalledTimes != 1 {
-// 		t.Errorf(`Failing ConfigOsStruct.Getenv() was called not '1' time but: '%v'`, dcYmlOsStruct.GetenvData.WascalledTimes)
-// 	}
-// 	if dcYmlOsStruct.wasCalled.Stat != 1 {
-// 		t.Errorf(`Failing DcOsStruct.Stat() was called not '1' time but: '%v'`, dcYmlOsStruct.wasCalled.Stat)
-// 	}
-// 	if dcYmlOsStruct.wasCalled.Chdir != 1 {
-// 		t.Errorf(`Failing DcOsStruct.Chdir() was called not '1' time but: '%v'`, dcYmlOsStruct.wasCalled.Chdir)
-// 	}
-// 	if dcYmlOsStruct.wasCalled.ReadFile != 0 {
-// 		t.Errorf(`Failing DcOsStruct.ReadFile() was called not '0' time but: '%v'`, dcYmlOsStruct.wasCalled.ReadFile)
-// 	}
-// 	if dcYmlOsStruct.wasCalled.Getwd != 0 {
-// 		t.Errorf(`Failing DcOsStruct.Getwd() was called not '0' time but: '%v'`, dcYmlOsStruct.wasCalled.Getwd)
-// 	}
-
-// if os.ExitData.code != 1 {
-// 	t.Errorf(`Failing DcOsStruct.Getwd() was provided not '1' to Runner.Os.Exit exit code but: '%v'`, os.ExitData.code)
-// }
-// if os.ExitData.wasCalledTimes != 1 {
-// 	t.Errorf(`Failing DcOsStruct.Getwd() was called Runner.Os.Exit not '1' time: '%v'`, os.ExitData.code)
-// }
-// if execOsStruct.StdHandlesDouble.Stdout.Len() != 0 {
-// 	t.Errorf(`Failing DcOsStruct.Getwd() made stdout not empty: '%s'`, execOsStruct.StdHandlesDouble.Stdout)
-// }
-// stderrExpected := "exec: no command\n"
-// if execOsStruct.StdHandlesDouble.Stderr.String() != stderrExpected {
-// 	t.Errorf(`Failing DcOsStruct.Getwd() made stderr '%s' not equal to: '%s'`, execOsStruct.StdHandlesDouble.Stderr, stderrExpected)
-// }
-// }
 
 type dcYmlOsFailingReadFileDouble struct {
 	dcYmlOsEnvDouble
