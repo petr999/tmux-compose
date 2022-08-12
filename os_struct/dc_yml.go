@@ -16,8 +16,6 @@ func (osStruct DcYmlOsStruct) Stat(name string) (dfi types.FileInfoStruct, err e
 		err = fmt.Errorf(`stat file name: '%v' error: '%v'`, name, err)
 		return
 	}
-	return types.FileInfoStruct{IsDir: func() bool { return fileInfo.IsDir() }}, nil
+	return types.FileInfoStruct{IsDir: func() bool { return fileInfo.IsDir() },
+		IsFile: func() bool { return fileInfo.Mode().IsRegular() }}, nil
 }
-
-// type FileInfoStruct struct{}
-// func (fileInfo FileInfoStruct) IsDir() bool {}

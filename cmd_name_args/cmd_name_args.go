@@ -120,10 +120,18 @@ func (cna *CmdNameArgs) getTmplStr() (tmplStr string, err error) {
 	}
 	fileInfo, err = cna.osStruct.Stat(fName)
 	if err != nil {
-		return tmplStr, fmt.Errorf(`error reading file '%v': %w`, fName, err)
+		if len(fNameByConf) > 0 {
+			return tmplStr, fmt.Errorf(`error reading file '%v': %w`, fName, err)
+		} else {
+			return string(cnaDefaultTemplateContents), nil
+		}
 	}
 	if !fileInfo.IsFile() {
-		return tmplStr, fmt.Errorf(`error reading file '%v': not a file`, fName)
+		if len(fNameByConf) > 0 {
+			return tmplStr, fmt.Errorf(`error reading file '%v': not a file`, fName)
+		} else {
+			return string(cnaDefaultTemplateContents), nil
+		}
 	}
 
 	var buf []byte
@@ -131,7 +139,7 @@ func (cna *CmdNameArgs) getTmplStr() (tmplStr string, err error) {
 	if err == nil {
 		tmplStr = string(buf)
 	} else {
-		if fName == fNameByConf {
+		if len(fNameByConf) > 0 {
 			return tmplStr, fmt.Errorf(`error reading file '%v': %w`, fName, err)
 		}
 		tmplStr = string(cnaDefaultTemplateContents)
