@@ -47,11 +47,11 @@ func TestExecDryRun(t *testing.T) {
 		t.Errorf(`Dry run provided not '0' to Runner.Os.Exit exit code but: '%v'`, os.ExitData.code)
 	}
 	if execOsStruct.StdHandlesDouble.Stderr.Len() != 0 {
-		t.Errorf(`Failing DcOsStruct.Stat() made stderr not empty: '%s'`, execOsStruct.StdHandlesDouble.Stderr)
+		t.Errorf(`Dry run made stderr not empty: '%s'`, execOsStruct.StdHandlesDouble.Stderr)
 	}
 	stdoutExpected := string(dryRunOutput) + "\n"
 	if execOsStruct.StdHandlesDouble.Stdout.String() != stdoutExpected {
-		t.Errorf(`Failing DcOsStruct.Stat() made stdout '%s' not equal to: '%s'`, execOsStruct.StdHandlesDouble.Stdout, stdoutExpected)
+		t.Errorf(`Dry run made stdout '%s' not equal to: '%s'`, execOsStruct.StdHandlesDouble.Stdout, stdoutExpected)
 	}
 
 }

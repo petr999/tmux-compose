@@ -44,7 +44,10 @@ func (exec *Exec) dryRun(cna types.CmdNameArgsValueType) types.CmdInterface {
 
 func cmdEscape(str string) string {
 	// regexp.MustCompile(`'`).ReplaceAllLiteralString()
-	return `'` + strings.ReplaceAll(str, `'`, `'\''`) + `'`
+	if strings.ContainsAny(str, " \t\n'") {
+		return `'` + strings.ReplaceAll(str, `'`, `'\''`) + `'`
+	}
+	return str
 }
 
 func (exec *Exec) GetSelector() (selector any) {
@@ -61,14 +64,14 @@ func (exec *Exec) GetCommand(cna types.CmdNameArgsValueType) *types.CmdType {
 		if dryRun {
 			obj = exec.dryRun(cna)
 			runFunc := func() error {
-				slice := []string{"#!/usr/bin/env env\n\ncd " + cmdEscape(cna.Workdir) + "\n\n" + cmdEscape(cna.Cmd)}
+				slice := []string{"#!/usr/bin/env bash\n\ncd " + cmdEscape(cna.Workdir) + "\n\n" + cmdEscape(cna.Cmd)}
 				args := make([]string, len(cna.Args))
 				for i, arg := range cna.Args {
 					args[i] = cmdEscape(arg)
 				}
 				slice = append(slice, args...)
 
-				if _, err := exec.osStruct.GetStdHandles().Stdout.Write([]byte(strings.Join(slice, " "))); err != nil {
+				if _, err := exec.osStruct.GetStdHandles().Stdout.Write([]byte(strings.Join(slice, " ") + "\n")); err != nil {
 					return err
 				}
 				return nil // obj.Run()
