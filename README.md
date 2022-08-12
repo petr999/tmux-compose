@@ -9,6 +9,6 @@ It's enough to have a docker-compose configuration to run your services in a nam
 
 Let me introduce you to Tmux-compose which is basically a convinient way to run docker-compose under tmux in a managed way. It's not necessary to have the Tmux-compose on your server as with Tmux-compose dry run feature you can be provided the Shell command line to copy and paste to your machine. Another interesting feature is: no matter if your particular container is created, running and attached, you can have its dedicated console right away to poke around it.
 
-This may effectively bring your shell back as a tool to investigate post-mortems and observe log messages interactively. You may want to raise up the scroll buffer of tmux for that, and a tmux-compose templates may suit for that purpose, too. With tools like FCGI::Spawn module you may even debug the particular backend request on your deployment right away each on its own console even if it's a separate process.
+This may effectively bring your shell back as a tool to investigate post-mortems and observe log messages interactively. You may want to raise up the scroll buffer of tmux for that, and a tmux-compose templates may suit for that purpose, too. With tools like FCGI::Spawn and Debug-Fork-Tmux modules you may even debug the particular backend request on your deployment right away each on its own console even if it's a separate process.
 
 The overall project is open source in Go language and the statically linked binary is on its way, too.
