@@ -111,7 +111,7 @@ func (cna *CmdNameArgs) getTmplStr() (tmplStr string, err error) {
 		return tmplStr, fmt.Errorf(`error reading file '%v': %w`, fName, err)
 	}
 	if fileInfo.IsDir() {
-		fName = filepath.Join(fName, `tmux-compose-template.json`)
+		fName = filepath.Join(fName, `tmux-compose-template.gson`)
 	}
 	fileInfo, err = cna.osStruct.Stat(fName)
 	if err != nil {
