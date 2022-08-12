@@ -19,4 +19,8 @@ type CmdType struct {
 	Obj        CmdInterface
 	Stdhandles StdHandlesType
 	Run        func() error
+	RunData    struct {
+		WasCalledTimes int
+		Cnas           []CmdNameArgsValueType
+	}
 }

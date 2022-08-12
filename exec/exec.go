@@ -2,6 +2,7 @@ package exec
 
 import (
 	osExec "os/exec"
+	"regexp"
 	"strings"
 	"tmux_compose/types"
 )
@@ -43,7 +44,7 @@ func (exec *Exec) dryRun(cna types.CmdNameArgsValueType) types.CmdInterface {
 }
 
 func cmdEscape(str string) string {
-	// regexp.MustCompile(`'`).ReplaceAllLiteralString()
+	str = string(regexp.MustCompile(`^;$`).ReplaceAll([]byte(str), []byte(`\;`)))
 	if strings.ContainsAny(str, " \t\n'") {
 		return `'` + strings.ReplaceAll(str, `'`, `'\''`) + `'`
 	}
@@ -60,10 +61,11 @@ func (exec *Exec) GetSelector() (selector any) {
 func (exec *Exec) GetCommand(cna types.CmdNameArgsValueType) *types.CmdType {
 	var obj types.CmdInterface
 	selector := exec.GetSelector()
+	var runFunc func() error
 	if dryRun, ok := selector.(bool); ok {
 		if dryRun {
 			obj = exec.dryRun(cna)
-			runFunc := func() error {
+			runFunc = func() error {
 				slice := []string{"#!/usr/bin/env bash\n\ncd " + cmdEscape(cna.Workdir) + "\n\n" + cmdEscape(cna.Cmd)}
 				args := make([]string, len(cna.Args))
 				for i, arg := range cna.Args {
@@ -76,24 +78,28 @@ func (exec *Exec) GetCommand(cna types.CmdNameArgsValueType) *types.CmdType {
 				}
 				return nil // obj.Run()
 			}
-			exec.Cmd = &types.CmdType{Obj: obj, Run: runFunc}
 		} else {
 			obj = exec.execCommand(cna)
-			runFunc := func() error {
+			runFunc = func() error {
 				if err := exec.osStruct.Chdir(cna.Workdir); err != nil {
 					return err
 				}
 				return obj.Run()
 			}
-			exec.Cmd = &types.CmdType{Obj: obj, Run: runFunc}
 		}
 	} else {
 		if objWithRun, ok := selector.(interface{ Run() error }); ok {
 			obj = objWithRun
 		}
-		runFunc := func() error { return obj.Run() }
-		exec.Cmd = &types.CmdType{Obj: obj, Run: runFunc}
+		runFunc = func() error { return obj.Run() }
 	}
+	exec.Cmd = &types.CmdType{Obj: obj}
+	runFuncNew := func() error {
+		exec.Cmd.RunData.WasCalledTimes++
+		exec.Cmd.RunData.Cnas = append(exec.Cmd.RunData.Cnas, cna)
+		return runFunc()
+	}
+	exec.Cmd.Run = runFuncNew
 
 	exec.Cmd.Stdhandles = exec.stdHandles
 	return exec.Cmd
