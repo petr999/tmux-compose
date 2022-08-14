@@ -3,6 +3,7 @@ package run_test
 import (
 	_ "embed"
 	"encoding/json"
+	"fmt"
 	"testing"
 	"tmux_compose/cmd_name_args"
 	"tmux_compose/config"
@@ -10,6 +11,7 @@ import (
 	"tmux_compose/exec"
 	"tmux_compose/logger"
 	"tmux_compose/run"
+	"tmux_compose/types"
 )
 
 //go:embed testdata/sample.sh
@@ -84,6 +86,49 @@ func (cna *cnaOsGrid) ReadFile(name string) ([]byte, error) {
 	return cnaTemplateGrid, nil
 }
 
+type dcYmlOsGrid struct {
+	dcYmlOsGetwdDouble
+}
+
+// ReadFile implements types.DcYmlOsInterface
+func (osStruct *dcYmlOsGrid) ReadFile(name string) ([]byte, error) {
+	if name == `/path/to/dumbclicker-grid/docker-compose.yml` {
+		return dcContents, nil
+	}
+	return []byte{}, fmt.Errorf("Wrong path to Dc ReadFile(): '%v'", name)
+}
+
+func (osStruct *dcYmlOsGrid) Getwd() (dir string, err error) {
+	osStruct.wasCalled.Getwd++
+	return `/path/to/dumbclicker-grid`, nil
+}
+
+// Stat implements types.DcYmlOsInterface
+func (osStruct *dcYmlOsGrid) Stat(name string) (dfi types.FileInfoStruct, err error) {
+	osStruct.wasCalled.Stat++
+	osStruct.wasCalledWith.Stat = append(osStruct.wasCalledWith.Stat, name)
+	if name == `/path/to/dumbclicker-grid` {
+		return types.FileInfoStruct{
+			IsDir: func() bool {
+				return true
+			},
+			IsFile: func() bool {
+				return false
+			},
+		}, nil
+	} else if name == `/path/to/dumbclicker-grid/docker-compose.yml` {
+		return types.FileInfoStruct{
+			IsDir: func() bool {
+				return false
+			},
+			IsFile: func() bool {
+				return true
+			},
+		}, nil
+	}
+	return dfi, fmt.Errorf("Failed to Stat() path: '%v':", name)
+}
+
 func TestExecDryRunGrid(t *testing.T) {
 
 	configOsStruct := &configOsDryRunGrid{}
@@ -93,7 +138,7 @@ func TestExecDryRunGrid(t *testing.T) {
 
 	runner := run.Runner{
 		CmdNameArgs: cmd_name_args.Construct(&cnaOsGrid{}, configStruct),
-		DcYml:       dc_yml.Construct(&dcYmlOsGetwdDouble{}, configStruct),
+		DcYml:       dc_yml.Construct(&dcYmlOsGrid{}, configStruct),
 		Exec:        exec.Construct(execOsStruct, configStruct),
 		Os:          os,
 		Logger:      logger.Construct(execOsStruct.GetStdHandles()),
