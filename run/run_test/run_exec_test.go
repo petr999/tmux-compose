@@ -15,6 +15,12 @@ import (
 //go:embed testdata/sample.sh
 var dryRunOutput []byte
 
+//go:embed testdata/sample-grid.sh
+var dryRunOutputGrid []byte
+
+//go:embed testdata/dumbclicker-grid/tmux-compose-template.gson
+var cnaTemplateGrid []byte
+
 type configOsDryRun struct{}
 
 func (config *configOsDryRun) Getenv(name string) string {
@@ -51,6 +57,60 @@ func TestExecDryRun(t *testing.T) {
 		t.Errorf(`Dry run made stderr not empty: '%s'`, execOsStruct.StdHandlesDouble.Stderr)
 	}
 	stdoutExpected := string(dryRunOutput) + "\n"
+	if execOsStruct.StdHandlesDouble.Stdout.String() != stdoutExpected {
+		t.Errorf(`Dry run made stdout '%s' not equal to: '%s'`, execOsStruct.StdHandlesDouble.Stdout, stdoutExpected)
+	}
+
+}
+
+type configOsDryRunGrid struct {
+	ConfigOsCnaOsGetenvFile
+	configOsDryRun
+}
+
+func (config *configOsDryRunGrid) Getenv(name string) (val string) {
+	val = config.configOsDryRun.Getenv(name)
+	if len(val) == 0 {
+		val = config.ConfigOsCnaOsGetenvFile.Getenv(name)
+	}
+	return
+}
+
+type cnaOsGrid struct {
+	cnaOsStatFile
+}
+
+func (cna *cnaOsGrid) ReadFile(name string) ([]byte, error) {
+	return cnaTemplateGrid, nil
+}
+
+func TestExecDryRunGrid(t *testing.T) {
+
+	configOsStruct := &configOsDryRunGrid{}
+	configStruct := config.Construct(configOsStruct)
+	execOsStruct := &execOsStructChdir{}
+	os := &osDouble{}
+
+	runner := run.Runner{
+		CmdNameArgs: cmd_name_args.Construct(&cnaOsGrid{}, configStruct),
+		DcYml:       dc_yml.Construct(&dcYmlOsGetwdDouble{}, configStruct),
+		Exec:        exec.Construct(execOsStruct, configStruct),
+		Os:          os,
+		Logger:      logger.Construct(execOsStruct.GetStdHandles()),
+	}
+
+	runner.Run()
+
+	if os.ExitData.wasCalledTimes != 1 {
+		t.Errorf(`Dry run called Runner.Os.Exit not '1' time(s): '%v'`, os.ExitData.wasCalledTimes)
+	}
+	if os.ExitData.code != 0 {
+		t.Errorf(`Dry run provided not '0' to Runner.Os.Exit exit code but: '%v'`, os.ExitData.code)
+	}
+	if execOsStruct.StdHandlesDouble.Stderr.Len() != 0 {
+		t.Errorf(`Dry run made stderr not empty: '%s'`, execOsStruct.StdHandlesDouble.Stderr)
+	}
+	stdoutExpected := string(dryRunOutputGrid) + "\n"
 	if execOsStruct.StdHandlesDouble.Stdout.String() != stdoutExpected {
 		t.Errorf(`Dry run made stdout '%s' not equal to: '%s'`, execOsStruct.StdHandlesDouble.Stdout, stdoutExpected)
 	}
