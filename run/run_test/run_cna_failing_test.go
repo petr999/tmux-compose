@@ -103,7 +103,7 @@ type configOsCnaTemplate struct {
 
 func (configOsCnaTemplate) Getenv(name string) string {
 	if name == `TMUX_COMPOSE_TEMPLATE_FNAME` {
-		return `/path/to/dumbclicker/tmux-compose.json`
+		return `/path/to/dumbclicker/tmux-compose-template.gson`
 	}
 	return ``
 }
@@ -139,7 +139,7 @@ func TestRunCnaOsFailingStat(t *testing.T) {
 	if execOsStruct.StdHandlesDouble.Stdout.Len() != 0 {
 		t.Errorf(`Failing CnaOsStruct.ReadFile() made stdout not empty: '%s'`, execOsStruct.StdHandlesDouble.Stdout)
 	}
-	stderrExpected := "Get command name and args error: error reading file '/path/to/dumbclicker/tmux-compose.json': not found\n"
+	stderrExpected := "Get command name and args error: error reading file '/path/to/dumbclicker/tmux-compose-template.gson': not found\n"
 	if execOsStruct.StdHandlesDouble.Stderr.String() != stderrExpected {
 		t.Errorf(`Failing CnaOsStruct.ReadFile() made stderr '%s' not equal to: '%s'`, execOsStruct.StdHandlesDouble.Stderr, stderrExpected)
 	}
@@ -149,7 +149,7 @@ type cnaOsStatFile struct{}
 
 // Stat implements types.DcYmlOsInterface
 func (osStruct *cnaOsStatFile) Stat(name string) (dfi types.FileInfoStruct, err error) {
-	if name == `/path/to/dumbclicker/tmux-compose.json` {
+	if name == `/path/to/dumbclicker/tmux-compose-template.gson` {
 		return types.FileInfoStruct{
 			IsDir: func() bool {
 				return false
@@ -174,10 +174,10 @@ type cnaOsFailingReadFile struct {
 func (cnaOsStruct cnaOsFailingReadFile) ReadFile(name string) ([]byte, error) {
 	cnaOsStruct.ReadFileData.WasCalled++
 	cnaOsStruct.ReadFileData.Args = append(cnaOsStruct.ReadFileData.Args, name)
-	if name == `/path/to/dumbclicker/tmux-compose.json` {
+	if name == `/path/to/dumbclicker/tmux-compose-template.gson` {
 		return []byte{}, fmt.Errorf("permission denied")
 	} else {
-		return []byte{}, fmt.Errorf(`Wrong file name: '%v' not '/path/to/dumbclicker/tmux-compose.json'`, name)
+		return []byte{}, fmt.Errorf(`Wrong file name: '%v' not '/path/to/dumbclicker/tmux-compose-template.gson'`, name)
 	}
 }
 
@@ -187,7 +187,7 @@ type ConfigOsCnaOsGetenvFile struct {
 
 func (osStruct *ConfigOsCnaOsGetenvFile) Getenv(name string) string {
 	if name == `TMUX_COMPOSE_TEMPLATE_FNAME` {
-		return `/path/to/dumbclicker/tmux-compose.json`
+		return `/path/to/dumbclicker/tmux-compose-template.gson`
 	}
 	return ``
 }
@@ -220,8 +220,8 @@ func TestRunCnaOsFailingReadFile(t *testing.T) {
 			t.Errorf(`Failing CnaOsStruct.ReadFile() was called not '1' time(s)  but: '%v'`, os.ExitData.code)
 		}
 	} else {
-		if cnaOsStruct.ReadFileData.Args[0] != `/path/to/dumbclicker/tmux-compose.json` {
-			t.Errorf(`Failing CnaOsStruct.ReadFile() was called with '%v' arg(s) not with: '%v'`, cnaOsStruct.ReadFileData.Args[0], `/path/to/dumbclicker/tmux-compose.json`)
+		if cnaOsStruct.ReadFileData.Args[0] != `/path/to/dumbclicker/tmux-compose-template.gson` {
+			t.Errorf(`Failing CnaOsStruct.ReadFile() was called with '%v' arg(s) not with: '%v'`, cnaOsStruct.ReadFileData.Args[0], `/path/to/dumbclicker/tmux-compose-template.gson`)
 		}
 	}
 
@@ -234,7 +234,7 @@ func TestRunCnaOsFailingReadFile(t *testing.T) {
 	if execOsStruct.StdHandlesDouble.Stdout.Len() != 0 {
 		t.Errorf(`Failing CnaOsStruct.ReadFile() made stdout not empty: '%s'`, execOsStruct.StdHandlesDouble.Stdout)
 	}
-	stderrExpected := "Get command name and args error: error reading file '/path/to/dumbclicker/tmux-compose.json': permission denied\n"
+	stderrExpected := "Get command name and args error: error reading file '/path/to/dumbclicker/tmux-compose-template.gson': permission denied\n"
 	if execOsStruct.StdHandlesDouble.Stderr.String() != stderrExpected {
 		t.Errorf(`Failing CnaOsStruct.ReadFile() made stderr '%s' not equal to: '%s'`, execOsStruct.StdHandlesDouble.Stderr, stderrExpected)
 	}
