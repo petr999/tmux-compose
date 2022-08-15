@@ -8,21 +8,11 @@ tmux new -s dumbclicker-compose '
 ' \; neww -n dumbclicker_nginx_1 '
   PID=0
   try_next=1
-  TRAPINT() {
-    echo "trap pid: ${PID}"
-    kill -INT $PID
-    try_next=""
-  }
-
-
   trap '\''
     echo "trap pid: ${PID}"
     kill -INT $PID
     try_next=""
   '\'' SIGINT
-
-
-
   while [ '\''x1'\'' == "x${try_next}" ]; do
     zsh -lc '\''
       docker attach dumbclicker_nginx_1

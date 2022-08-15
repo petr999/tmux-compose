@@ -2,7 +2,7 @@
 
 cd /path/to/dumbclicker
 
-tmux new -s dumbclicker-compose '
+tmux new -s "dumbclicker-compose" '
   printf '\''\033]2;%s\033\\'\'' '\''dumbclicker-compose'\''
   docker-compose up
   echo "
@@ -10,7 +10,7 @@ Commands for your consideration:
   docker-compose up
   docker-compose up -d"
   echo "Welcome to shell."
-  zsh -l
+  /usr/bin/zsh -l
 ' \; split-window '
   printf '\''\033]2;%s\033\\'\'' '\''dumbclicker_nginx_1'\''
   echo "Commands for your consideration:
@@ -28,7 +28,7 @@ Commands for your consideration:
   '\'' SIGINT
   while [ '\''x1'\'' == "x${try_next}" ]; do
     /usr/bin/zsh -lc '\''
-      docker attach dumbclicker_nginx_1
+      docker attach '\''dumbclicker_nginx_1'\''
       sleep 1
     '\'' &
     PID=$!
@@ -60,7 +60,7 @@ Commands for your consideration:
   '\'' SIGINT
   while [ '\''x1'\'' == "x${try_next}" ]; do
     /usr/bin/zsh -lc '\''
-      docker attach dumbclicker_h2o_1
+      docker attach '\''dumbclicker_h2o_1'\''
       sleep 1
     '\'' &
     PID=$!
@@ -92,7 +92,7 @@ Commands for your consideration:
   '\'' SIGINT
   while [ '\''x1'\'' == "x${try_next}" ]; do
     /usr/bin/zsh -lc '\''
-      docker attach dumbclicker_dumbclicker_1
+      docker attach '\''dumbclicker_dumbclicker_1'\''
       sleep 1
     '\'' &
     PID=$!

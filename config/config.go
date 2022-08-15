@@ -32,8 +32,8 @@ func (config *ConfigStruct) GetDryRun() string {
 
 func (config *ConfigStruct) GetShell() (val string) {
 	val = config.osStruct.Getenv(`SHELL`)
-	if len(val) == 0 {
-		val = `/usr/bin/env bash`
-	}
+	// if len(val) == 0 {
+	// 	val = `/usr/bin/env bash`
+	// }
 	return
 }
