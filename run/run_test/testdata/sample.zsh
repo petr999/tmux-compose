@@ -24,7 +24,7 @@ tmux new -s dumbclicker-compose '
 
 
   while [ '\''x1'\'' == "x${try_next}" ]; do
-    bash -lc '\''
+    zsh -lc '\''
       docker attach dumbclicker_nginx_1
       sleep 1
     '\'' &
@@ -33,7 +33,7 @@ tmux new -s dumbclicker-compose '
     wait $PID
   done
   trap - SIGINT
-  bash -l
+  zsh -l
 ' \; neww -n dumbclicker_h2o_1 '
   PID=0
   try_next=1
@@ -43,7 +43,7 @@ tmux new -s dumbclicker-compose '
     try_next=""
   '\'' SIGINT
   while [ '\''x1'\'' == "x${try_next}" ]; do
-    bash -lc '\''
+    zsh -lc '\''
       docker attach dumbclicker_h2o_1
       sleep 1
     '\'' &
@@ -52,7 +52,7 @@ tmux new -s dumbclicker-compose '
     wait $PID
   done
   trap - SIGINT
-  bash -l
+  zsh -l
 ' \; neww -n dumbclicker_dumbclicker_1 '
   PID=0
   try_next=1
@@ -62,7 +62,7 @@ tmux new -s dumbclicker-compose '
     try_next=""
   '\'' SIGINT
   while [ '\''x1'\'' == "x${try_next}" ]; do
-    bash -lc '\''
+    zsh -lc '\''
       docker attach dumbclicker_dumbclicker_1
       sleep 1
     '\'' &
@@ -71,5 +71,5 @@ tmux new -s dumbclicker-compose '
     wait $PID
   done
   trap - SIGINT
-  bash -l
+  zsh -l
 '

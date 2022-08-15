@@ -10,8 +10,6 @@ import (
 	"tmux_compose/logger"
 	"tmux_compose/run"
 	"tmux_compose/types"
-
-	_ "embed"
 )
 
 type dcYmlOsGetwdRootDouble struct {

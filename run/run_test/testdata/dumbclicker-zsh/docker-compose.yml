@@ -1,0 +1,10 @@
+version: "3.7"
+
+services:
+  nginx:
+    image: nginx:latest
+  h2o:
+    image: lkwg82/h2o-http2-server:latest
+  dumbclicker:
+    image: busybox:latest
+    command: sh -c 'while :; do echo -ne  GET / HTTP/1.0"\n\n" | nc h2o 8080 | head -5 | tail -1; echo -ne  GET / HTTP/1.0"\n\n" | nc nginx 80 | head -2 | tail -1; sleep 1; done'

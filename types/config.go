@@ -5,6 +5,7 @@ type ConfigInterface interface {
 	GetCnaTemplateFname() string
 	GetDcYmlFname() string
 	GetDryRun() string
+	GetShell() string
 }
 
 type ConfigOsInterface interface {

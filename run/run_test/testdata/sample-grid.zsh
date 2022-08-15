@@ -1,4 +1,4 @@
-#!/usr/bin/env zsh
+#!/usr/bin/zsh
 
 cd /path/to/dumbclicker
 
@@ -27,7 +27,7 @@ Commands for your consideration:
     try_next=""
   '\'' SIGINT
   while [ '\''x1'\'' == "x${try_next}" ]; do
-    bash -lc '\''
+    /usr/bin/zsh -lc '\''
       docker attach dumbclicker_nginx_1
       sleep 1
     '\'' &
@@ -42,7 +42,7 @@ Commands for your consideration:
   docker attach '\''dumbclicker_nginx_1'\''
   docker exec -it '\''dumbclicker_nginx_1'\''"
   echo "Welcome to shell."
-  bash -l
+  /usr/bin/zsh -l
 ' \; split-window '
   printf '\''\033]2;%s\033\\'\'' '\''dumbclicker_h2o_1'\''
   echo "Commands for your consideration:
@@ -59,7 +59,7 @@ Commands for your consideration:
     try_next=""
   '\'' SIGINT
   while [ '\''x1'\'' == "x${try_next}" ]; do
-    bash -lc '\''
+    /usr/bin/zsh -lc '\''
       docker attach dumbclicker_h2o_1
       sleep 1
     '\'' &
@@ -74,7 +74,7 @@ Commands for your consideration:
   docker attach '\''dumbclicker_h2o_1'\''
   docker exec -it '\''dumbclicker_h2o_1'\''"
   echo "Welcome to shell."
-  bash -l
+  /usr/bin/zsh -l
 ' \; split-window '
   printf '\''\033]2;%s\033\\'\'' '\''dumbclicker_dumbclicker_1'\''
   echo "Commands for your consideration:
@@ -91,7 +91,7 @@ Commands for your consideration:
     try_next=""
   '\'' SIGINT
   while [ '\''x1'\'' == "x${try_next}" ]; do
-    bash -lc '\''
+    /usr/bin/zsh -lc '\''
       docker attach dumbclicker_dumbclicker_1
       sleep 1
     '\'' &
@@ -106,5 +106,5 @@ Commands for your consideration:
   docker attach '\''dumbclicker_dumbclicker_1'\''
   docker exec -it '\''dumbclicker_dumbclicker_1'\''"
   echo "Welcome to shell."
-  bash -l
+  /usr/bin/zsh -l
 ' \; set -g pane-border-status bottom \; set-option status off \; select-layout tiled

@@ -29,3 +29,11 @@ func (config *ConfigStruct) GetDcYmlFname() string {
 func (config *ConfigStruct) GetDryRun() string {
 	return config.osStruct.Getenv(`TMUX_COMPOSE_DRY_RUN`)
 }
+
+func (config *ConfigStruct) GetShell() (val string) {
+	val = config.osStruct.Getenv(`SHELL`)
+	if len(val) == 0 {
+		val = `/usr/bin/env bash`
+	}
+	return
+}
