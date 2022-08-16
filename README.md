@@ -56,7 +56,7 @@ Refer to `.env-sample` for information on environment variables and apply enviro
 
 - `TMUX_COMPOSE_DRY_RUN` any non empty value triggers dry run mode with shell script contents to standard output instead of running commands for you
 
-- `TMUX_COMPOSE_TEMPLATE_FNAME` points to directory with your 'tmux-compose-template.gson' template, or to a template file to use itself.
+- `TMUX_COMPOSE_TEMPLATE_FNAME` points to directory with your `tmux-compose-template.gson` template, or to a template file to use itself.
 
 
 ## Template
@@ -89,3 +89,11 @@ Based on `docker-compose.yml` contents and other circumstances, the variable are
   - Repeatedly trying to `attach` to running `service`/`container`
   - After container stopped, repeatedly trying to `attach` again
   - This can be stopped by the user (`Ctrl` `C`), then user shell is launched. Every previous output content is displayed and available in scroll buffer (`Ctrl` `b` `PgUp`).
+
+### Your app adaptation
+
+With zero-conf features of `tmux-compose`:
+- directory is enough to search for template, as `tmux-compose-template.gson` is a default file name to look out for
+- current directory is a default place to seek for template
+
+the straight way is to keep your `tmux-compose-template.gson` at the same directory where the `docker-compose.yml` of your application resides.
