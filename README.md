@@ -40,3 +40,20 @@ Compile-time dependencies are:
 - go 1.18+
 
 - yaml.v2
+
+## Configuration
+
+Apart of having `docker-compose.yml`, every another configuration variable is optional. While `gson` template defines the way `tmux` and `docker-compose` to run, the `tmux-compose` behavior is controlled by environment variables.
+
+Refer to `.env-sample` for information on environment variables and apply environment variables the appropriate way. You can use it as a tenplate if you apply with `.env`:
+```
+  cp -v .env-sample .env
+```
+
+### Environment
+
+- `TMUX_COMPOSE_DC_YML` points to directory with your `docker-compose.yml`, or to configuration file that you'd want to use with `tmux-compose`. Be sure to use a particular template with `-f` argument supplied for `docker-compose` in that case
+
+- `TMUX_COMPOSE_DRY_RUN` any non empty value triggers dry run mode with shell script contents to standard output instead of running commands for you
+
+- `TMUX_COMPOSE_TEMPLATE_FNAME` points to directory with your 'tmux-compose-template.gson' template, or to a template file to use itself.
