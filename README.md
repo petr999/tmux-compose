@@ -56,4 +56,44 @@ Refer to `.env-sample` for information on environment variables and apply enviro
 
 - `TMUX_COMPOSE_DRY_RUN` any non empty value triggers dry run mode with shell script contents to standard output instead of running commands for you
 
-- `TMUX_COMPOSE_TEMPLATE_FNAME` points to directory with your 'tmux-compose-template.gson' template, or to a template file to use itself.
+- `TMUX_COMPOSE_TEMPLATE_FNAME` points to directory with your `tmux-compose-template.gson` template, or to a template file to use itself.
+
+
+## Template
+
+Three things to know about `gson` templates:
+
+- It's not `json`.
+- It becomes `json` after [text/template](https://pkg.go.dev/text/template) transformation.
+- Default template  `cmd_name_args/templates/bash-new-window.gson` is used to be applied under the hood if none specified by user, e. g., no `TMUX_COMPOSE_TEMPLATE_FNAME` environment variable is set.
+
+### Template Fields
+
+- `Shebang` helps you to supply the shell - `bash` by default
+- `Cmd` is a path to your `tmux` binary to run
+- `Args` are the `tmux` arguments
+
+### Template Variables
+
+Based on `docker-compose.yml` contents and other circumstances, the variable are supplied for template transformation:
+
+- `Shebang` for shell of the preference
+- `Basedir` base name of your `docker-compose.yml` directory that `docker-compose` use to name the containers
+- `DcServicesNames` names of services found in `services:` section of `docker-compose.yml`
+
+### Default template
+
+- Takes `tmux` binary found in the `PATH` by the `os`
+- Starts session with `docker-compose up`. This is the place where you can make it detached - just copy template to your file, add `-d` thereafter, have `TMUX_COMPOSE_TEMPLATE_FNAME` pointing to it then.
+- For every `$serviceName` in `DcServicesNames`, creates its own `tmux` window that runs the following:
+  - Repeatedly trying to `attach` to running `service`/`container`
+  - After container stopped, repeatedly trying to `attach` again
+  - This can be stopped by the user (`Ctrl` `C`), then user shell is launched. Every previous output content is displayed and available in scroll buffer (`Ctrl` `b` `PgUp`).
+
+### Your app adaptation
+
+With zero-conf features of `tmux-compose`:
+- directory is enough to search for template, as `tmux-compose-template.gson` is a default file name to look out for
+- current directory is a default place to seek for template
+
+the straight way is to keep your `tmux-compose-template.gson` at the same directory where the `docker-compose.yml` of your application resides.
