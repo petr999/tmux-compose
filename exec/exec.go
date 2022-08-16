@@ -2,6 +2,7 @@ package exec
 
 import (
 	osExec "os/exec"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"tmux_compose/types"
@@ -65,8 +66,9 @@ func (exec *Exec) GetCommand(cna types.CmdNameArgsValueType) *types.CmdType {
 	if dryRun, ok := selector.(bool); ok {
 		if dryRun {
 			obj = exec.dryRun(cna)
+			firstLineShebang := getFirstShebang(cna.Shebang)
 			runFunc = func() error {
-				slice := []string{"#!/usr/bin/env bash\n\ncd " + cmdEscape(cna.Workdir) + "\n\n" + cmdEscape(cna.Cmd)}
+				slice := []string{`#!` + firstLineShebang + "\n\ncd " + cmdEscape(cna.Workdir) + "\n\n" + cmdEscape(cna.Cmd)}
 				args := make([]string, len(cna.Args))
 				for i, arg := range cna.Args {
 					args[i] = cmdEscape(arg)
@@ -103,4 +105,11 @@ func (exec *Exec) GetCommand(cna types.CmdNameArgsValueType) *types.CmdType {
 
 	exec.Cmd.Stdhandles = exec.stdHandles
 	return exec.Cmd
+}
+
+func getFirstShebang(shebang string) string {
+	if rel := filepath.Base(shebang); rel == shebang {
+		return `/usr/bin/env ` + shebang
+	}
+	return shebang
 }

@@ -11,6 +11,7 @@ type CnaOsInterface interface {
 }
 
 type CmdNameArgsValueType struct {
+	Shebang string
 	Workdir string
 	Cmd     string
 	Args    []string

@@ -10,8 +10,6 @@ import (
 	"tmux_compose/logger"
 	"tmux_compose/run"
 	"tmux_compose/types"
-
-	_ "embed"
 )
 
 type dcYmlOsGetwdRootDouble struct {
@@ -274,11 +272,11 @@ func (cnaOsStruct *cnaOsStructFailingTmplSingleCommand) ReadFile(name string) ([
 
 func TestRunCnaOsFailingTmpl(t *testing.T) {
 
-	for _, stdErrExpectedAndCnaOsStruct := range []map[string]types.CnaOsInterface{
-		{"Get command name and args error: error executing template '{{define}}' on with vars from: '{/path/to/dumbclicker [nginx h2o dumbclicker] dumbclicker}': error reading name template: '{{define}}': template: tmux_compose:1: unexpected \"}}\" in define clause": &cnaOsStructFailingTmplParse{}},
-		{"Get command name and args error: error executing template '{{.Nonexistent}}' on with vars from: '{/path/to/dumbclicker [nginx h2o dumbclicker] dumbclicker}': error executing name template: '{{.Nonexistent}}' on '{/path/to/dumbclicker [nginx h2o dumbclicker] dumbclicker}': template: tmux_compose:1:2: executing \"tmux_compose\" at <.Nonexistent>: can't evaluate field Nonexistent in type cmd_name_args.dcvBasedirType": &cnaOsStructFailingTmplExecute{}},
+	for i, stdErrExpectedAndCnaOsStruct := range []map[string]types.CnaOsInterface{
+		{"Get command name and args error: error executing template '{{define}}' on with vars from: '{/path/to/dumbclicker [nginx h2o dumbclicker] dumbclicker }': error reading name template: '{{define}}': template: tmux_compose:1: unexpected \"}}\" in define clause": &cnaOsStructFailingTmplParse{}},
+		{"Get command name and args error: error executing template '{{.Nonexistent}}' on with vars from: '{/path/to/dumbclicker [nginx h2o dumbclicker] dumbclicker {{.Shebang}}}': error executing name template: '{{.Nonexistent}}' on '&{/path/to/dumbclicker [nginx h2o dumbclicker] dumbclicker {{.Shebang}}}': template: tmux_compose:1:2: executing \"tmux_compose\" at <.Nonexistent>: can't evaluate field Nonexistent in type *cmd_name_args.tmplVarsType": &cnaOsStructFailingTmplExecute{}},
 		{"Get command name and args error: error unserializing template '{': unexpected end of JSON input": &cnaOsStructFailingTmplJson{}},
-		{`Get command name and args error: error unserializing template '[{"Cmd":"","Args":[]},{"Cmd":"","Args":[]}]': amount of commands '2' is not '1' from '[{  []} {  []}]'`: &cnaOsStructFailingTmplSingleCommand{}},
+		{`Get command name and args error: error unserializing template '[{"Cmd":"","Args":[]},{"Cmd":"","Args":[]}]': amount of commands '2' is not '1' from '[{   []} {   []}]'`: &cnaOsStructFailingTmplSingleCommand{}},
 	} {
 
 		for stderrExpected, cnaOsStruct := range stdErrExpectedAndCnaOsStruct {
@@ -312,7 +310,7 @@ func TestRunCnaOsFailingTmpl(t *testing.T) {
 				t.Errorf(`Failing exec template made stdout not empty: '%s'`, execOsStruct.StdHandlesDouble.Stdout)
 			}
 			if execOsStruct.StdHandlesDouble.Stderr.String() != stderrExpected+"\n" {
-				t.Errorf(`Failing exec template made stderr '%s' not equal to: '%s'`, execOsStruct.StdHandlesDouble.Stderr, stderrExpected+"\n")
+				t.Errorf(`Failing '%v' exec template made stderr '%s' not equal to: '%s'`, i, execOsStruct.StdHandlesDouble.Stderr, stderrExpected+"\n")
 			}
 		}
 	}

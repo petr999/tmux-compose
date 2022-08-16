@@ -3,7 +3,6 @@ package run_test
 import (
 	_ "embed"
 	"encoding/json"
-	"fmt"
 	"testing"
 	"tmux_compose/cmd_name_args"
 	"tmux_compose/config"
@@ -11,30 +10,57 @@ import (
 	"tmux_compose/exec"
 	"tmux_compose/logger"
 	"tmux_compose/run"
-	"tmux_compose/types"
 )
 
-//go:embed testdata/sample.sh
-var dryRunOutput []byte
+//go:embed testdata/sample.zsh
+var dryRunOutputZsh []byte
 
-//go:embed testdata/sample-grid.sh
-var dryRunOutputGrid []byte
+//go:embed testdata/sample-grid.zsh
+var dryRunOutputGridZsh []byte
 
-//go:embed testdata/dumbclicker-grid/tmux-compose-template.gson
-var cnaTemplateGrid []byte
+//go:embed testdata/dumbclicker-grid-zsh/tmux-compose-template.gson
+var cnaTemplateGridZsh []byte
 
-type configOsDryRun struct{}
-
-func (config *configOsDryRun) Getenv(name string) string {
-	if name == `TMUX_COMPOSE_DRY_RUN` {
-		return `1`
-	}
-	return ``
+type configOsDryRunZshByEnvNoDir struct {
+	// ConfigOsCnaOsGetenvFile
+	configOsDryRun
 }
 
-func TestExecDryRun(t *testing.T) {
+func (config *configOsDryRunZshByEnvNoDir) Getenv(name string) (val string) {
+	if name == `SHELL` {
+		val = `zsh`
+	} else {
+		// val = config.ConfigOsCnaOsGetenvFile.Getenv(name)
+		// if len(val) == 0 {
+		val = config.configOsDryRun.Getenv(name)
+	}
+	// }
+	return
+}
 
-	configOsStruct := &configOsDryRun{}
+// type cnaOsDryRunZshByEnvNoDir struct {
+// 	// cnaOsStatFile
+// 	cnaOsGetpwd
+// }
+
+// func (cna *cnaOsDryRunZshByEnvNoDir) ReadFile(name string) ([]byte, error) {
+// 	return cnaTemplate, nil
+// }
+
+// type configOsDryRunZsh struct {
+// 	configOsZsh
+// }
+
+// func (config *configOsDryRunZsh) Getenv(name string) string {
+// 	if name == `TMUX_COMPOSE_DRY_RUN` {
+// 		return `1`
+// 	}
+// 	return config.configOsZsh.Getenv(name)
+// }
+
+func TestExecDryRunZshByEnvNoDir(t *testing.T) {
+
+	configOsStruct := &configOsDryRunZshByEnvNoDir{}
 	configStruct := config.Construct(configOsStruct)
 	execOsStruct := &execOsStructChdir{}
 	os := &osDouble{}
@@ -58,87 +84,48 @@ func TestExecDryRun(t *testing.T) {
 	if execOsStruct.StdHandlesDouble.Stderr.Len() != 0 {
 		t.Errorf(`Dry run made stderr not empty: '%s'`, execOsStruct.StdHandlesDouble.Stderr)
 	}
-	stdoutExpected := string(dryRunOutput) + "\n"
+	stdoutExpected := string(dryRunOutputZsh) + "\n"
 	if execOsStruct.StdHandlesDouble.Stdout.String() != stdoutExpected {
 		t.Errorf(`Dry run made stdout '%s' not equal to: '%s'`, execOsStruct.StdHandlesDouble.Stdout, stdoutExpected)
 	}
 
 }
 
-type configOsDryRunGrid struct {
+type configOsDryRunGridZshByTmpl struct {
 	ConfigOsCnaOsGetenvFile
 	configOsDryRun
 }
 
-func (config *configOsDryRunGrid) Getenv(name string) (val string) {
+func (config *configOsDryRunGridZshByTmpl) Getenv(name string) (val string) {
 	val = config.configOsDryRun.Getenv(name)
 	if len(val) == 0 {
 		val = config.ConfigOsCnaOsGetenvFile.Getenv(name)
 	}
+	// if len(val) == 0 && name == `SHELL` {
+	// 	val = "/usr/bin/zsh"
+	// }
 	return
+
 }
 
-type cnaOsGrid struct {
+type cnaOsGridZsh struct {
 	cnaOsStatFile
 }
 
-func (cna *cnaOsGrid) ReadFile(name string) ([]byte, error) {
-	return cnaTemplateGrid, nil
+func (cna *cnaOsGridZsh) ReadFile(name string) ([]byte, error) {
+	return cnaTemplateGridZsh, nil
 }
 
-type dcYmlOsGrid struct {
-	dcYmlOsGetwdDouble
-}
+func TestExecDryRunGridZsh(t *testing.T) {
 
-// ReadFile implements types.DcYmlOsInterface
-func (osStruct *dcYmlOsGrid) ReadFile(name string) ([]byte, error) {
-	if name == `/path/to/dumbclicker-grid/docker-compose.yml` {
-		return dcContents, nil
-	}
-	return []byte{}, fmt.Errorf("Wrong path to Dc ReadFile(): '%v'", name)
-}
-
-func (osStruct *dcYmlOsGrid) Getwd() (dir string, err error) {
-	osStruct.wasCalled.Getwd++
-	return `/path/to/dumbclicker-grid`, nil
-}
-
-// Stat implements types.DcYmlOsInterface
-func (osStruct *dcYmlOsGrid) Stat(name string) (dfi types.FileInfoStruct, err error) {
-	osStruct.wasCalled.Stat++
-	osStruct.wasCalledWith.Stat = append(osStruct.wasCalledWith.Stat, name)
-	if name == `/path/to/dumbclicker-grid` {
-		return types.FileInfoStruct{
-			IsDir: func() bool {
-				return true
-			},
-			IsFile: func() bool {
-				return false
-			},
-		}, nil
-	} else if name == `/path/to/dumbclicker-grid/docker-compose.yml` {
-		return types.FileInfoStruct{
-			IsDir: func() bool {
-				return false
-			},
-			IsFile: func() bool {
-				return true
-			},
-		}, nil
-	}
-	return dfi, fmt.Errorf("Failed to Stat() path: '%v':", name)
-}
-
-func TestExecDryRunGrid(t *testing.T) {
-
-	configOsStruct := &configOsDryRunGrid{}
+	configOsStruct := &configOsDryRunGridZshByTmpl{}
 	configStruct := config.Construct(configOsStruct)
 	execOsStruct := &execOsStructChdir{}
 	os := &osDouble{}
 
 	runner := run.Runner{
-		CmdNameArgs: cmd_name_args.Construct(&cnaOsGrid{}, configStruct),
-		DcYml:       dc_yml.Construct(&dcYmlOsGrid{}, configStruct),
+		CmdNameArgs: cmd_name_args.Construct(&cnaOsGridZsh{}, configStruct),
+		DcYml:       dc_yml.Construct(&dcYmlOsGetwdDouble{}, configStruct),
 		Exec:        exec.Construct(execOsStruct, configStruct),
 		Os:          os,
 		Logger:      logger.Construct(execOsStruct.GetStdHandles()),
@@ -155,16 +142,25 @@ func TestExecDryRunGrid(t *testing.T) {
 	if execOsStruct.StdHandlesDouble.Stderr.Len() != 0 {
 		t.Errorf(`Dry run made stderr not empty: '%s'`, execOsStruct.StdHandlesDouble.Stderr)
 	}
-	stdoutExpected := string(dryRunOutputGrid) + "\n"
+	stdoutExpected := string(dryRunOutputGridZsh) + "\n"
 	if execOsStruct.StdHandlesDouble.Stdout.String() != stdoutExpected {
 		t.Errorf(`Dry run made stdout '%s' not equal to: '%s'`, execOsStruct.StdHandlesDouble.Stdout, stdoutExpected)
 	}
 
 }
 
-func TestExecFail(t *testing.T) {
+type configOsZsh struct{}
 
-	configOsStruct := &ConfigOsDouble{}
+func (config *configOsZsh) Getenv(name string) string {
+	if name == `SHELL` {
+		return `/usr/bin/zsh`
+	}
+	return ``
+}
+
+func TestExecFailZsh(t *testing.T) {
+
+	configOsStruct := &configOsZsh{}
 	configStruct := config.Construct(configOsStruct)
 	execOsStruct := &execOsStructChdir{}
 	execStruct := exec.Construct(execOsStruct, configStruct)
@@ -190,7 +186,7 @@ func TestExecFail(t *testing.T) {
 		t.Errorf(`Run was called  not '1' time(s): '%v'`, execStruct.Cmd.RunData.WasCalledTimes)
 	}
 	act, _ := json.Marshal(execStruct.Cmd.RunData.Cnas)
-	actStr, expectedStr := string(act), `[{"Shebang":"bash","Workdir":"/path/to/dumbclicker","Cmd":"tmux","Args":["new","-s","dumbclicker-compose","\n  docker-compose up\n  bash -l\n",";","neww","-n","dumbclicker_nginx_1","\n  PID=0\n  try_next=1\n  trap '\n    echo \"trap pid: ${PID}\"\n    kill -INT $PID\n    try_next=\"\"\n  ' SIGINT\n  while [ 'x1' == \"x${try_next}\" ]; do\n    bash -lc '\n      docker attach dumbclicker_nginx_1\n      sleep 1\n    ' \u0026\n    PID=$!\n    echo \"pid: ${PID}\"\n    wait $PID\n  done\n  trap - SIGINT\n  bash -l\n",";","neww","-n","dumbclicker_h2o_1","\n  PID=0\n  try_next=1\n  trap '\n    echo \"trap pid: ${PID}\"\n    kill -INT $PID\n    try_next=\"\"\n  ' SIGINT\n  while [ 'x1' == \"x${try_next}\" ]; do\n    bash -lc '\n      docker attach dumbclicker_h2o_1\n      sleep 1\n    ' \u0026\n    PID=$!\n    echo \"pid: ${PID}\"\n    wait $PID\n  done\n  trap - SIGINT\n  bash -l\n",";","neww","-n","dumbclicker_dumbclicker_1","\n  PID=0\n  try_next=1\n  trap '\n    echo \"trap pid: ${PID}\"\n    kill -INT $PID\n    try_next=\"\"\n  ' SIGINT\n  while [ 'x1' == \"x${try_next}\" ]; do\n    bash -lc '\n      docker attach dumbclicker_dumbclicker_1\n      sleep 1\n    ' \u0026\n    PID=$!\n    echo \"pid: ${PID}\"\n    wait $PID\n  done\n  trap - SIGINT\n  bash -l\n"]}]`
+	actStr, expectedStr := string(act), `[{"Shebang":"/usr/bin/zsh","Workdir":"/path/to/dumbclicker","Cmd":"tmux","Args":["new","-s","dumbclicker-compose","\n  docker-compose up\n  /usr/bin/zsh -l\n",";","neww","-n","dumbclicker_nginx_1","\n  PID=0\n  try_next=1\n  trap '\n    echo \"trap pid: ${PID}\"\n    kill -INT $PID\n    try_next=\"\"\n  ' SIGINT\n  while [ 'x1' == \"x${try_next}\" ]; do\n    /usr/bin/zsh -lc '\n      docker attach dumbclicker_nginx_1\n      sleep 1\n    ' \u0026\n    PID=$!\n    echo \"pid: ${PID}\"\n    wait $PID\n  done\n  trap - SIGINT\n  /usr/bin/zsh -l\n",";","neww","-n","dumbclicker_h2o_1","\n  PID=0\n  try_next=1\n  trap '\n    echo \"trap pid: ${PID}\"\n    kill -INT $PID\n    try_next=\"\"\n  ' SIGINT\n  while [ 'x1' == \"x${try_next}\" ]; do\n    /usr/bin/zsh -lc '\n      docker attach dumbclicker_h2o_1\n      sleep 1\n    ' \u0026\n    PID=$!\n    echo \"pid: ${PID}\"\n    wait $PID\n  done\n  trap - SIGINT\n  /usr/bin/zsh -l\n",";","neww","-n","dumbclicker_dumbclicker_1","\n  PID=0\n  try_next=1\n  trap '\n    echo \"trap pid: ${PID}\"\n    kill -INT $PID\n    try_next=\"\"\n  ' SIGINT\n  while [ 'x1' == \"x${try_next}\" ]; do\n    /usr/bin/zsh -lc '\n      docker attach dumbclicker_dumbclicker_1\n      sleep 1\n    ' \u0026\n    PID=$!\n    echo \"pid: ${PID}\"\n    wait $PID\n  done\n  trap - SIGINT\n  /usr/bin/zsh -l\n"]}]`
 	if actStr != expectedStr {
 		t.Errorf(`Run was called with '%s' not with '%s' arg`, actStr, expectedStr)
 	}

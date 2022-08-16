@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"html/template"
 	"path/filepath"
+	"strings"
 	"tmux_compose/types"
 )
 
@@ -20,17 +21,17 @@ func Construct(osStruct types.CnaOsInterface, config types.ConfigInterface) *Cmd
 }
 
 type CmdNameArgs struct {
-	GetCnaTemplateFname func() string
-	osStruct            types.CnaOsInterface
+	config   types.ConfigInterface
+	osStruct types.CnaOsInterface
 }
 
 func (cna *CmdNameArgs) New(osStruct types.CnaOsInterface, config types.ConfigInterface) {
 	cna.osStruct = osStruct
-	cna.GetCnaTemplateFname = config.GetCnaTemplateFname
+	cna.config = config
 }
 func (cna *CmdNameArgs) Get(dcYmlValue types.DcYmlValue) (cnaValue types.CmdNameArgsValueType, err error) {
-	var dcvBasedir dcvBasedirType
-	dcvBasedir, err = cna.getDcvBasedir(dcYmlValue)
+	var tmplVars tmplVarsType
+	tmplVars, err = cna.getTmplVars(dcYmlValue)
 	if err != nil {
 		return
 	}
@@ -42,14 +43,14 @@ func (cna *CmdNameArgs) Get(dcYmlValue types.DcYmlValue) (cnaValue types.CmdName
 	}
 
 	var tmplJsonNew string
-	tmplJsonNew, err = tmplExecute(tmplStr, dcvBasedir)
+	tmplJsonNew, err = cna.tmplExecute(tmplStr, &tmplVars)
 	if err != nil {
-		err = fmt.Errorf(`error executing template '%s' on with vars from: '%s': %w`, tmplStr, dcvBasedir, err)
+		err = fmt.Errorf(`error executing template '%s' on with vars from: '%s': %w`, tmplStr, tmplVars, err)
 		return
 	}
 
 	var cnaValues []types.CmdNameArgsValueType
-	cnaValues, err = tmplUnserialize(tmplJsonNew)
+	cnaValues, err = cna.tmplUnserialize(tmplJsonNew)
 	if err != nil {
 		err = fmt.Errorf(`error unserializing template '%s': %w`, tmplJsonNew, err)
 		return
@@ -60,40 +61,62 @@ func (cna *CmdNameArgs) Get(dcYmlValue types.DcYmlValue) (cnaValue types.CmdName
 	}
 
 	cnaValue = cnaValues[0]
-	cnaValue.Workdir = dcYmlValue.Workdir
-
+	cna.getShebangToCnaValues(&cnaValue)
+	newArgs := make([]string, len(cnaValue.Args))
+	for i, arg := range cnaValue.Args {
+		newArg := strings.ReplaceAll(arg, `{{.Shebang}}`, cnaValue.Shebang)
+		// newArg = strings.ReplaceAll(newArg, `{{$shebang}}`, tmplVars.Shebang)
+		newArgs[i] = newArg
+	}
+	cnaValue.Args = newArgs
+	cnaValue.Workdir = tmplVars.Workdir
+	if len(cnaValue.Shebang) == 0 {
+		cnaValue.Shebang = tmplVars.Shebang
+	}
 	return cnaValue, nil
 }
 
-func tmplUnserialize(tmplJson string) (cnaValues []types.CmdNameArgsValueType, err error) {
+func (cna *CmdNameArgs) getShebangToCnaValues(cnaValue *types.CmdNameArgsValueType) {
+	shebangFromOs := cna.config.GetShell()
+	if len(shebangFromOs) > 0 {
+		cnaValue.Shebang = shebangFromOs
+	} else {
+		if len(cnaValue.Shebang) == 0 {
+			cnaValue.Shebang = `bash`
+		}
+	}
+}
+
+func (cna *CmdNameArgs) tmplUnserialize(tmplJson string) (cnaValues []types.CmdNameArgsValueType, err error) {
 	err = json.Unmarshal([]byte(tmplJson), &cnaValues)
 	return
 }
 
-type dcvBasedirType struct {
+type tmplVarsType struct {
 	Workdir         string
 	DcServicesNames []string
 	Basedir         string
+	Shebang         string
 }
 
-func (cna *CmdNameArgs) getDcvBasedir(dcYmlValue types.DcYmlValue) (dcvBasedir dcvBasedirType, err error) {
-	dcvBasedir.Workdir = dcYmlValue.Workdir
-	dcvBasedir.DcServicesNames = dcYmlValue.DcServicesNames
+func (cna *CmdNameArgs) getTmplVars(dcYmlValue types.DcYmlValue) (tmplVars tmplVarsType, err error) {
+	tmplVars.Workdir = dcYmlValue.Workdir
+	tmplVars.DcServicesNames = dcYmlValue.DcServicesNames
 	baseDir := filepath.Base(dcYmlValue.Workdir)
 
 	if len(baseDir) == 0 { // XXX impossible?
-		return dcvBasedir, fmt.Errorf("error finding base dir name '%v' for work dir: '%v'", baseDir, dcYmlValue.Workdir)
+		return tmplVars, fmt.Errorf("error finding base dir name '%v' for work dir: '%v'", baseDir, dcYmlValue.Workdir)
 	}
 	if len(baseDir) >= len(dcYmlValue.Workdir) {
-		return dcvBasedir, fmt.Errorf("error finding base dir name '%v' same length for work dir: '%v'", baseDir, dcYmlValue.Workdir)
+		return tmplVars, fmt.Errorf("error finding base dir name '%v' same length for work dir: '%v'", baseDir, dcYmlValue.Workdir)
 	}
 
-	dcvBasedir.Basedir = baseDir
+	tmplVars.Basedir = baseDir
 	return
 }
 
 func (cna *CmdNameArgs) getTmplStr() (tmplStr string, err error) {
-	fNameByConf := cna.GetCnaTemplateFname()
+	fNameByConf := cna.config.GetCnaTemplateFname()
 	var fName string
 	if len(fNameByConf) == 0 {
 		fName = `.`
@@ -142,7 +165,7 @@ func (cna *CmdNameArgs) getTmplStr() (tmplStr string, err error) {
 	return tmplStr, nil
 }
 
-func tmplExecute(tmplJson string, dcvBasedir dcvBasedirType) (tmplJsonNew string, err error) {
+func (cna *CmdNameArgs) tmplExecute(tmplJson string, tmplVars *tmplVarsType) (tmplJsonNew string, err error) {
 	tmplObj := template.New(`tmux_compose`).Funcs(template.FuncMap{
 		"IsNotLast": func(i int, length int) bool {
 			return i < length-1
@@ -153,9 +176,10 @@ func tmplExecute(tmplJson string, dcvBasedir dcvBasedirType) (tmplJsonNew string
 	}
 
 	var nameBuf bytes.Buffer
-	err = nameTmplObj.Execute(&nameBuf, dcvBasedir)
+	tmplVars.Shebang = `{{.Shebang}}`
+	err = nameTmplObj.Execute(&nameBuf, tmplVars)
 	if err != nil {
-		return ``, fmt.Errorf("error executing name template: '%v' on '%v': %w", tmplJson, dcvBasedir, err)
+		return ``, fmt.Errorf("error executing name template: '%v' on '%v': %w", tmplJson, tmplVars, err)
 	}
 
 	tmplJsonNew = nameBuf.String()
